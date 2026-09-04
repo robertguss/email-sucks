@@ -10,11 +10,11 @@ This is the current status and next-action tracker. The [product specification](
 
 **Active implementation:** local Phase 0 reliability probes. The owner deferred hosted deployment while away from the computer; continue local work without requesting Render login.
 
-**Latest completed slice:** actual encrypted local database export/restore rehearsal. Corrupt/wrong-key archives and nonempty targets were rejected; restored jobs stayed inert and synthetic vault data decrypted with the separate correct key. [Evidence](docs/evidence/phase-0/2026-09-04-local-backup-restore.md). R2/Render proof remains open.
+**Latest completed slice:** durable synthetic batch notification receipts. All 93 backend tests pass; unknown transport outcomes cannot trigger blind retries. [Evidence](docs/evidence/phase-0/2026-09-04-batch-notification.md). No real notification transport connected.
 
 ## Next action
 
-**Test durable one-batch notification receipts and uncertain transport outcomes locally.**
+**Prepare read-only Gmail identity/filter discovery using the existing scope, then review remaining local versus owner-dependent Phase 0 gates.**
 
 Render deployment is deferred by the owner, not a blocker for local development. Continue autonomously, commit verified slices and push regularly. Live account/device operations remain deferred until the owner can participate. The current app remains read-only.
 
