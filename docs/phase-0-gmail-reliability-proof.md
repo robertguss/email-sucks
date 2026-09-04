@@ -2,9 +2,9 @@
 
 Date: 2026-09-04
 
-Status: In progress. The [local foundation and synthetic persistence probe](evidence/phase-0/2026-09-04-foundation.md) have passed their checks. No real Gmail, device, external-alert, or restore experiment has passed yet.
+Status: In progress. The [local foundation and synthetic persistence probe](evidence/phase-0/2026-09-04-foundation.md) have passed their checks. The [read-only Google connection](evidence/phase-0/2026-09-04-google-connection.md) also passes local automated checks; owner consent and the live profile check remain pending. No real Gmail, device, external-alert, or restore experiment has passed yet.
 
-This expands Phase 0 of the [product specification](email-client-product-implementation-spec.md) using [ADR-0001](decisions/0001-application-architecture.md). It authorizes a small feasibility implementation when implementation begins, not the full Room. Passing Phase 0 does not authorize connecting the owner's personal mailbox; later security, operational, and dogfood gates still apply.
+This expands Phase 0 of the [product specification](email-client-product-implementation-spec.md) using [ADR-0001](decisions/0001-application-architecture.md). It authorizes a small feasibility implementation when implementation begins, not the full Room. The owner has explicitly authorized a read-only connection for the selected Gmail account. This does not authorize interception, sending, or full personal-mail dogfooding; later security and operational gates still apply.
 
 ## Objective and sequence
 
@@ -13,7 +13,7 @@ Prove arrival interception and recovery first, finite delivery second, and the s
 | Step | Deliverable | Verification |
 |---|---|---|
 | 1 | State contract and decision register | Every action has defined before/after state; unresolved semantics are visible |
-| 2 | Isolated test setup and OAuth inventory | Correct identity/scopes; no personal mailbox credentials; direct Gmail access works |
+| 2 | Isolated test setup and OAuth inventory | Correct identity/scopes; only the owner-authorized account; direct Gmail access works |
 | 3 | Interception and notification matrix | Provider state plus actual device observations for each fixture |
 | 4 | Durable batch prototype | Crash, retry, and concurrency tests preserve exact membership |
 | 5 | Recovery and independent alerting | Panic, direct Gmail recovery, disconnect, and full Render outage rehearsals |

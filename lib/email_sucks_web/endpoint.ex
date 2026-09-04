@@ -1,13 +1,15 @@
 defmodule EmailSucksWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :email_sucks
 
-  # The session will be stored in the cookie and signed,
-  # this means its contents can be read but not tampered with.
-  # Set :encryption_salt if you would also like to encrypt it.
+  # The cookie carries opaque server-side references, never Google credentials.
   @session_options [
     store: :cookie,
     key: "_email_sucks_key",
     signing_salt: "d1yGUIw8",
+    encryption_salt: "gmail-session-v1",
+    http_only: true,
+    secure: Application.compile_env(:email_sucks, :secure_cookies, false),
+    max_age: 28_800,
     same_site: "Lax"
   ]
 

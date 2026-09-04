@@ -1,30 +1,55 @@
-# Phase 0 test-account preparation
+# Phase 0 Google connection setup
 
-Status: Preparation only. The current application does not yet have OAuth routes or token storage. Do not activate any Gmail interception filter at this step.
+Status: Read-only OAuth is implemented and locally tested. The selected account's client has been configured, and the local app can offer **Connect Gmail**. Owner consent and a live **Check connection** result are still pending. Interception and sending are unavailable.
 
-## Account and Google project
+## Google project
 
-Use a dedicated Gmail test mailbox containing synthetic mail. Keep direct Gmail sign-in and account recovery available. Record whether it is consumer Gmail or Workspace and which aliases/forwarding addresses actually exist.
+Use a separate development project with Gmail API enabled. Configure an External Google Auth Platform audience in Testing and add the selected account as a test user. The owner has explicitly authorized the selected account for this read-only slice. Retain direct Gmail access and account recovery independently of this app.
 
-In a separate development Google API project, enable Gmail API and configure the Google Auth Platform branding/audience. For an External app in Testing, list the dedicated mailbox as a test user. Create a **Web application** OAuth client. Store the downloaded secret in a password manager or another private location outside the repository; never paste it into a conversation. [Google OAuth web-server setup](https://developers.google.com/identity/protocols/oauth2/web-server), [Gmail project setup](https://developers.google.com/workspace/gmail/api/quickstart/python)
+Create a **Web application** OAuth client with this exact local redirect:
 
-The proposed callback path is `/auth/google/callback`. Configure exact local and Render callback URLs only when the connection slice establishes the hostname and implements that endpoint. Google requires redirect URI matching; a placeholder URL is not an operational integration.
+```text
+http://localhost:4000/auth/google/callback
+```
 
-## Scope inventory to verify during connection work
+Authorized JavaScript origins are unnecessary for the server-side flow. Use `localhost` when opening the app so the callback returns to the same browser cookie origin. [Google web-server OAuth setup](https://developers.google.com/identity/protocols/oauth2/web-server)
 
-| Capability | Candidate scopes / validation |
-|---|---|
-| Identify the signed-in user | `openid email`; validate stable Google identity and the configured account allowlist |
-| Read/synchronize mail and modify labels | `https://www.googleapis.com/auth/gmail.modify` |
-| Manage interception filters | `https://www.googleapis.com/auth/gmail.settings.basic` |
-| Sending and sending identities | Inventory exact methods before compose; do not add broad scopes speculatively |
+Configure only these scopes for the current slice:
 
-`gmail.modify` is powerful and includes capabilities beyond reading. Adding this scope does not mean sending is implemented or enabled. Validate actual granted scopes and endpoint requirements, including identity discovery, before activating interception. [Official Gmail scope reference](https://developers.google.com/workspace/gmail/api/auth/scopes)
+```text
+openid
+https://www.googleapis.com/auth/userinfo.email
+https://www.googleapis.com/auth/gmail.readonly
+```
 
-Testing-mode token lifetime is unsuitable to assume indefinite authorization; the existing Phase 0 plan includes the seven-day refresh-token issue and a later dogfood authorization gate. Test revocation and reconnect explicitly.
+The authorization request uses `email`, Google's OIDC shorthand for the email scope. It validates signed identity, verified email, the configured account allowlist, and the read-only grant. The stored Google subject is pinned on first connection and must match on reconnect. [Google OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect)
 
-## What the owner needs to provide
+## Private local files
 
-Provide the dedicated test account address and whether the OAuth client exists. Configure the client secret through the private environment/secret store when the OAuth implementation specifies the required keys. No secrets belong in tracked files, browser storage, logs, screenshots, or chat.
+Keep both files outside the repository, under a directory with mode `0700`; each file must have mode `0600`:
 
-For Render, the next setup also needs the selected region, service/database plans, and independent alert destination. These choices will be documented before provisioning. Development and production will have separate credentials and databases.
+- `~/.config/email-sucks/google-oauth.dev.json`: Google's downloaded web-client JSON.
+- `~/.config/email-sucks/keys.dev.json`: JSON containing `allowed_email`, `vault_key`, and `session_secret`. Generate each key independently from 64 random bytes, encoded as URL-safe base64. Never use example strings as keys.
+
+These files have been prepared on the owner's machine. Keep the vault key stable: changing or losing it makes previously stored credentials unreadable. The session key is separate, so signing out or rotating browser sessions does not change credential encryption.
+
+Run `bin/dev-gmail`. It sets `GMAIL_OAUTH_FILE` and `GMAIL_KEYS_FILE` to those paths and starts Phoenix. Environment overrides allow other private paths. `GMAIL_REDIRECT_URI` defaults to the local callback; any override must match a registered redirect. Non-development callbacks must use HTTPS. Startup fails on missing or incomplete configuration without printing its contents.
+
+The native loopback-only development database assumes a trusted local machine. Hosted credentials, database authentication, TLS, and secret-file provisioning must be configured and verified separately before Render deployment. Do not expose this development server or local PostgreSQL port to a network.
+
+## Connection behavior
+
+1. **Connect Gmail** starts a CSRF-protected POST and redirects to Google. OAuth state, nonce, and PKCE verifier are encrypted in a ten-minute server-side flow record; the cookie carries only a random reference.
+2. The callback consumes that flow once, validates Google's signature/issuer/audience/expiry/nonce/state, checks the allowed account, encrypts credentials, and creates a revocable eight-hour browser session. Tokens never enter React props or browser storage.
+3. **Check connection** reads `users/me/profile`. No message contents or profile counts are stored. Expired access tokens are refreshed under a durable lease; rotated refresh tokens are saved, absent replacements preserve the existing refresh token, and an in-flight refresh cannot overwrite a reconnect.
+4. Revoked grants require reconnection. Temporary provider failures keep credentials for a later attempt. **Sign out of this app** invalidates the browser session; it does not revoke Google access. Safe disconnect/revocation is a later recovery feature.
+
+Consumed flow payloads are cleared immediately. Expired flows are removed when another authorization attempt starts; expiry remains enforced even while the app is idle. Authorization starts are capped at ten per minute across this single-user app. There is no background Gmail polling yet.
+
+Google External/Testing refresh tokens can expire after seven days. This is expected in the development project and must be addressed before the later two-week dogfood gate. [Google token expiration](https://developers.google.com/identity/protocols/oauth2#expiration)
+
+## Later scope and deployment gates
+
+Do not add `gmail.modify` or `gmail.settings.basic` until the interception/recovery experiment inventories its exact methods, supplies the offline recovery card, and is authorized. Sending requires its own scope and behavior review. Read-only consent does not authorize those experiments. [Gmail scope reference](https://developers.google.com/workspace/gmail/api/auth/scopes)
+
+Render region, service/database plans, separate hosted Google credentials, and the independent alert destination remain to be selected and verified before provisioning.

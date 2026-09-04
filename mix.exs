@@ -56,7 +56,9 @@ defmodule EmailSucks.MixProject do
       {:ash, "~> 3.32.3"},
       {:ash_postgres, "~> 2.13.0"},
       {:oban, "~> 2.24.1"},
-      {:inertia, "~> 2.6.2"}
+      {:inertia, "~> 2.6.2"},
+      {:assent, "~> 0.3.1"},
+      {:req, "~> 0.7.4"}
     ]
   end
 

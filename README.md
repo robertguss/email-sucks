@@ -1,6 +1,6 @@
 # Deliberate email
 
-A personal Gmail client in Phase 0: prove delivery and recovery before building the full Room. This repository currently has a Phoenix/Ash/PostgreSQL/Oban foundation with a React/TypeScript/Inertia browser shell. No Gmail account is connected and no mail can be intercepted or sent.
+A personal Gmail client in Phase 0: prove delivery and recovery before building the full Room. This repository currently has a Phoenix/Ash/PostgreSQL/Oban foundation with a React/TypeScript/Inertia browser shell. It supports a restricted, read-only Google connection and a profile check. No mail can be intercepted or sent.
 
 ## Requirements
 
@@ -25,7 +25,7 @@ mkdir -p .local
 /opt/homebrew/opt/postgresql@18/bin/pg_ctl -D .local/postgres -l .local/postgres.log -o '-p 55432 -h 127.0.0.1' start
 ```
 
-This cluster trusts local connections and binds only to loopback. It is for synthetic development data only. `.local/` is ignored by git.
+This cluster trusts local connections and binds only to loopback. It is for a trusted, single-user local development machine; it is not a hosted database configuration. OAuth credentials are encrypted before storage. `.local/` is ignored by git.
 
 ```sh
 mise exec -- mix ecto.setup
@@ -33,6 +33,18 @@ mise exec -- mix phx.server
 ```
 
 Open [localhost:4000](http://localhost:4000). During frontend work, run `mise exec -- npm run watch` from `assets/` in another terminal.
+
+## Read-only Gmail connection
+
+The local callback is `http://localhost:4000/auth/google/callback`. After preparing the private files described in [Google setup](docs/phase-0-test-account-setup.md), run:
+
+```sh
+bin/dev-gmail
+```
+
+Open [localhost:4000](http://localhost:4000), connect the configured Google account, and then use **Check connection**. The check reads the Gmail account profile; it does not download or modify messages. Google consent must be completed by the account owner. **Sign out of this app** invalidates the browser session but retains the saved Google grant.
+
+Ordinary `mix phx.server` runs without OAuth unless `GMAIL_OAUTH_FILE` is explicitly set. ExUnit ignores these credential files; browser tests remove the credential-file environment variables from their server process. Keep the private encryption key stable across restarts. See [connection evidence](docs/evidence/phase-0/2026-09-04-google-connection.md) for tests and remaining proof gates.
 
 ## Synthetic snapshot probe
 
@@ -68,4 +80,4 @@ The browser test builds assets and starts its own Phoenix process at port 4010; 
 - [Architecture decision](docs/decisions/0001-application-architecture.md)
 - [Phase 0 plan and exit gates](docs/phase-0-gmail-reliability-proof.md)
 
-Hosted environments will use Render. Deployment, OAuth, Sentry, Better Stack, R2 backups, and real Gmail/device/recovery experiments are not configured yet. The status page is a read-only development shell, not an authenticated mail client.
+Hosted environments will use Render. Deployment, Sentry, Better Stack, R2 backups, and real Gmail/device/recovery experiments are not completed. The authenticated connection shell is available; the full mail client is not implemented.

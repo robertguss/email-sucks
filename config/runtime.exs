@@ -34,7 +34,7 @@ if config_env() == :dev do
   # Reload browser tabs when matching files change.
   config :email_sucks, EmailSucksWeb.Endpoint,
     live_reload: [
-      web_console_logger: true,
+      web_console_logger: false,
       patterns: [
         # Static assets, except user uploads
         ~r"priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$"E,
@@ -121,4 +121,63 @@ if config_env() == :prod do
   #       force_ssl: [hsts: true]
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.
+end
+
+# Explicit opt-in: ordinary development and all automated tests run without real credentials.
+if config_env() != :test && System.get_env("GMAIL_OAUTH_FILE") do
+  load_private_json = fn path ->
+    case path && File.read(path) do
+      {:ok, body} ->
+        case Jason.decode(body) do
+          {:ok, value} when is_map(value) -> value
+          _ -> raise "Gmail configuration must be a JSON object"
+        end
+
+      _ ->
+        raise "Gmail configuration file could not be read"
+    end
+  end
+
+  oauth = load_private_json.(System.get_env("GMAIL_OAUTH_FILE"))["web"] || %{}
+  keys = load_private_json.(System.get_env("GMAIL_KEYS_FILE"))
+  redirect = System.get_env("GMAIL_REDIRECT_URI", "http://localhost:4000/auth/google/callback")
+  uri = URI.parse(redirect)
+
+  valid_origin =
+    (uri.scheme == "https" && is_binary(uri.host) && uri.host != "") ||
+      (config_env() == :dev && uri.scheme == "http" && uri.host == "localhost")
+
+  unless valid_origin && uri.path == "/auth/google/callback" && is_nil(uri.query) &&
+           is_nil(uri.fragment) && is_nil(uri.userinfo) &&
+           redirect in (oauth["redirect_uris"] || []) do
+    raise "Gmail redirect must match the registered callback and use HTTPS (localhost HTTP in development)"
+  end
+
+  for field <- ["client_id", "client_secret"] do
+    unless is_binary(oauth[field]) && byte_size(oauth[field]) > 0,
+      do: raise("Gmail OAuth client configuration is incomplete")
+  end
+
+  for field <- ["vault_key", "session_secret"] do
+    unless is_binary(keys[field]) && byte_size(keys[field]) >= 64,
+      do:
+        raise(
+          "Gmail keys must contain separate random vault_key and session_secret values of at least 64 bytes"
+        )
+  end
+
+  unless keys["vault_key"] != keys["session_secret"] && is_binary(keys["allowed_email"]) &&
+           String.contains?(keys["allowed_email"], "@"),
+         do: raise("Gmail configuration requires separate keys and one allowed email address")
+
+  config :email_sucks, :gmail,
+    client_id: oauth["client_id"],
+    client_secret: oauth["client_secret"],
+    redirect_uri: redirect,
+    allowed_email: String.downcase(String.trim(keys["allowed_email"])),
+    vault_key: keys["vault_key"]
+
+  config :email_sucks, EmailSucksWeb.Endpoint,
+    secret_key_base: keys["session_secret"],
+    debug_errors: false
 end

@@ -23,7 +23,8 @@ config :email_sucks, EmailSucksWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}],
   check_origin: false,
   code_reloader: true,
-  debug_errors: true,
+  # This app can hold real OAuth credentials; never render exception bindings.
+  debug_errors: false,
   secret_key_base: "s+cgdAgeEEgvqJh/SoQlc1nk8WeV1zW4OLW+tyWoIVJ6njtmpiGqM2YEyl7+x236",
   watchers: []
 

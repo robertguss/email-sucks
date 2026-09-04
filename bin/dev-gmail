@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+cd -- "$(dirname -- "$0")/.."
+export GMAIL_OAUTH_FILE="${GMAIL_OAUTH_FILE:-$HOME/.config/email-sucks/google-oauth.dev.json}"
+export GMAIL_KEYS_FILE="${GMAIL_KEYS_FILE:-$HOME/.config/email-sucks/keys.dev.json}"
+exec mise exec -- mix phx.server

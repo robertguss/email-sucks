@@ -16,3 +16,9 @@ a:focus-visible { outline: 3px solid #67845c; outline-offset: 6px; }
   .eyebrow, a { color: #bdd1b4; }
   section { border-color: #63705d; }
 }
+
+button { font: inherit; padding: .65rem 1rem; border: 1px solid currentColor; border-radius: .35rem; cursor: pointer; background: transparent; color: inherit; }
+button:hover { background: #67845c22; }
+button:focus-visible { outline: 3px solid #67845c; outline-offset: 4px; }
+form + form { margin-top: 1.25rem; }
+.detail { font-size: .9rem; }

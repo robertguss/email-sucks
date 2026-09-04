@@ -14,6 +14,8 @@ Checked 2026-09-04 against live official release feeds, Hex, and npm, then resol
 | Ecto / Ecto SQL | 3.14.2 / 3.14.0 | [Ecto](https://hex.pm/api/packages/ecto), [Ecto SQL](https://hex.pm/api/packages/ecto_sql); resolved requirements agree with Ash and Oban |
 | Postgrex | 0.22.4 | [Hex metadata](https://hex.pm/api/packages/postgrex) |
 | Oban | 2.24.1 | [Release requirements](https://hex.pm/api/packages/oban/releases/2.24.1); [migration version 14](https://hexdocs.pm/oban/Oban.Migration.html) |
+| Assent | 0.3.1 | [Hex release metadata](https://hex.pm/api/packages/assent/releases/0.3.1); Google OIDC validation, PKCE and nonce; native JWT adapter |
+| Req | 0.7.4 | [Hex release metadata](https://hex.pm/api/packages/req/releases/0.7.4); supported by Assent’s optional Req dependency; bounded requests and Req.Test fixtures |
 | Bandit | 1.12.5 | [Hex metadata](https://hex.pm/api/packages/bandit) |
 | Phoenix Inertia adapter | 2.6.2 | [Hex metadata](https://hex.pm/api/packages/inertia); latest stable; 3.0.0-rc5 is a prerelease |
 | Inertia React client | 2.3.27 | [npm metadata](https://registry.npmjs.org/@inertiajs/react/2.3.27); latest stable v2 paired with stable Phoenix adapter |
@@ -26,7 +28,7 @@ Use lockfiles for the full transitive dependency graph and exact React type-pack
 
 ## Compatibility exception: Inertia
 
-The latest npm client is 3.7.0, but the Phoenix v3 adapter is still a release candidate. Use the stable v2 adapter/client pair for the initial proof. The [tagged adapter documentation](https://github.com/inertiajs/inertia-phoenix/blob/v2.6.2/README.md) describes the v2 integration. Upgrade both sides together when a stable v3 adapter is available and rerun navigation, forms/CSRF, history, and error-handling tests. Only navigation/history are proven in the current slice.
+The latest npm client is 3.7.0, but the Phoenix v3 adapter is still a release candidate. Use the stable v2 adapter/client pair for the initial proof. The [tagged adapter documentation](https://github.com/inertiajs/inertia-phoenix/blob/v2.6.2/README.md) describes the v2 integration. Upgrade both sides together when a stable v3 adapter is available and rerun navigation, forms/CSRF, history, and error-handling tests. Navigation/history and standard HTML forms with Phoenix CSRF protection are tested. Inertia asynchronous form submission is not used in the connection slice.
 
 ## Dependency audit and caveats
 
@@ -36,4 +38,6 @@ The machine's npm minimum-release-age setting initially excluded this fix. Insta
 
 Fresh dependency compilation emits upstream warnings in packages including Ash, Multigraph, Crux, DNSCluster, Inertia, and Yamerl under Elixir 1.20/OTP 29, plus deprecated dependency `xref` configuration. They currently compile successfully. Do not edit vendored dependencies or suppress application warnings to hide these. Re-evaluate if any becomes a runtime failure or blocks a future compiler update.
 
-Sentry, Google OAuth/HTTP libraries, and backup tooling will be verified again when their implementation slice begins. They are architecture selections, not installed integrations in this slice.
+Sentry and backup tooling will be verified again when their implementation slice begins. They are architecture selections, not installed integrations in this slice.
+
+The OAuth slice uses Phoenix.Token authenticated encryption with an independent storage key; no extra encryption library was added. Assent and Req were selected from live Hex metadata on 2026-09-04 and verified with signed OIDC fixtures and a full local compile/test run. `mix hex.audit` reported no retired or security-advisory packages.
