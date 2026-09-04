@@ -5,6 +5,7 @@ const options = {
   outdir: '../priv/static/assets',
   entryNames: '[name]',
   bundle: true,
+  loader: { '.ttf': 'file' },
   format: 'esm',
   target: 'es2022',
   jsx: 'automatic',

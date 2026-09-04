@@ -8,23 +8,23 @@ This is the current status and next-action tracker. The [product specification](
 
 **Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. Nothing is deployed to Render yet.
 
-**Active implementation:** none. The progress-tracking setup is complete. The next slice below is proposed, not started.
+**Active implementation:** none. The approved Desk-inspired preview slice is complete and ready for owner review.
 
-**Latest completed slice:** five-message Inbox preview, verified against Gmail. Recorded checks: 47 backend tests, three Chromium tests, TypeScript checking, formatting, and application compilation. These are results from that slice, not a continuously running health guarantee.
+**Latest completed slice:** Desk-inspired styling for the read-only preview, using the design skill. Recorded checks: 47 backend tests, seven Chromium tests, TypeScript checking, formatting, and desktop/mobile light/dark visual review. See [design evidence](docs/evidence/phase-0/2026-09-04-desk-preview-design.md). These are results from that slice, not a continuously running health guarantee.
 
 ## Recommended next action
 
-**Adapt the existing read-only preview to the Desk mockup using the design skill.**
+**Review the updated preview, then settle the Phase 0 state/transition contract.**
 
-Status: **Proposed — awaiting the owner's approval or discussion.**
+Status: **Proposed — awaiting the owner's review and discussion.**
 
-Scope: apply the mockup's typography, spacing, restrained controls, and light/dark treatment to the existing preview and connection feedback. Adapt the layout for desktop and mobile. This is a small visual foundation, not implementation of the full Desk, horizons, triage, or the Room.
+First decision: how to handle mail already in the Inbox at onboarding. Recommended starting policy: leave existing Inbox messages untouched and apply future delivery controls only to new arrivals after explicit activation. An optional historical import would be a separate decision, not an implied permission to move existing mail.
 
-Done when: the existing connection and listing behaviors still work; desktop/mobile and loading/empty/error states are checked; relevant automated tests pass; visual evidence and this tracker are updated.
+Scope: work through the open semantic questions one at a time, then write the transition table and illegal-state rules. Do not enable interception or build the full Room as part of this discussion.
 
-References: [Desk](design/claude-design-mockups/03-desk.dc.html), [dark Desk](design/claude-design-mockups/07-desk-dark-mode.dc.html), and the owner's `design` skill at `/Users/robertguss/.agents/skills/design/SKILL.md` (load its applicable guidelines before UI changes).
+Done when: every primary action has a before-state, guard, after-state and Gmail effect; the owner has approved the remaining state semantics; contract tests and the tracker reflect those decisions.
 
-**After that:** settle the Phase 0 state/transition contract and its open product questions. Full Room implementation remains behind the Phase 0 exit gate.
+**After that:** prepare the isolated hosted test environment and the interception/recovery experiment plan, with an offline recovery card before any activation.
 
 ## Completed work and evidence
 
@@ -38,7 +38,7 @@ References: [Desk](design/claude-design-mockups/03-desk.dc.html), [dark Desk](de
 | Automatic token refresh | Verified live with simulated local expiry | Connection evidence: real Google refresh and profile check, same browser session, valid future expiry, released lease. Natural expiry and provider refresh-token rotation remain unproven. |
 | Revocation detection and reconnection | Owner-reported live pass | Owner removed the Google grant, observed the reconnect message, reauthorized, and reported “connection verified.” This did not exercise held-mail recovery. |
 | Five-message Inbox metadata preview | Implemented and verified live | [Listing evidence](docs/evidence/phase-0/2026-09-04-read-only-message-list.md). No bodies/attachments, database persistence of email metadata, or Gmail mutations. |
-| Design direction | Confirmed; implementation pending | [Mockups](design/claude-design-mockups/) plus the `design` skill. Current diagnostic styling is not the final design. |
+| Desk-inspired preview design | Implemented and visually verified | [Design evidence](docs/evidence/phase-0/2026-09-04-desk-preview-design.md): local Newsreader, responsive whitespace-led layout, light/dark themes, connection disclosure and interaction states. Full Room design implementation remains later work. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
@@ -99,6 +99,7 @@ The detailed options live in the Phase 0 plan and ADR; proposals there are not s
 
 | Date | Result | Reference |
 |---|---|---|
+| 2026-09-04 | Desk-inspired preview styling and visual checks | Design evidence; 47 backend and seven browser tests |
 | 2026-09-04 | Read-only five-message preview | `0618405`, listing evidence |
 | 2026-09-04 | Real refresh after simulated local expiry | `c79bc69`, connection evidence |
 | 2026-09-04 | Restricted encrypted Google connection | `75be2ad`, connection evidence |
