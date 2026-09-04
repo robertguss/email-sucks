@@ -76,6 +76,10 @@ mise exec -- npm test
 
 The browser test builds assets and starts its own Phoenix process at port 4010; leave that port available. Restart your manual development server after changing configuration or dependencies. Application compilation is warning-free; some upstream packages emit warnings on a fresh Elixir 1.20/OTP 29 dependency compilation. Those are recorded in the version notes rather than hidden.
 
+## Backup rehearsal
+
+[Encrypted local export/restore tooling](docs/local-backup-restore.md) is implemented and tested with disposable databases. R2 upload, hosted recovery and backup monitoring remain unconfigured.
+
 ## Project documents
 
 - [Product specification](docs/email-client-product-implementation-spec.md)

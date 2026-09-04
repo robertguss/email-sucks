@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+backup_bin=$(cd -- "$(dirname -- "$0")" && pwd)
+: "${BACKUP_DATABASE_URL:?Set the source database URL in BACKUP_DATABASE_URL}"
+: "${BACKUP_AGE_RECIPIENT:?Set the public age recipient}"
+[[ $# == 1 ]] || { echo 'Usage: bin/backup-export /private/path/export.dump.age' >&2; exit 2; }
+backup_destination=$1
+[[ ! -e "$backup_destination" && ! -L "$backup_destination" ]] || { echo 'Backup destination already exists' >&2; exit 1; }
+backup_tmp=$(mktemp -d "$(dirname "$backup_destination")/.email-backup.XXXXXX")
+trap 'rm -rf -- "$backup_tmp"' EXIT
+"$backup_bin/backup-pg" source pg_dump --format=custom --no-owner --no-privileges |
+  age --encrypt --recipient "$BACKUP_AGE_RECIPIENT" --output "$backup_tmp/export.dump.age"
+# Publish only a complete encrypted dump, atomically and without overwriting.
+ln "$backup_tmp/export.dump.age" "$backup_destination"
+echo 'Encrypted database export complete'

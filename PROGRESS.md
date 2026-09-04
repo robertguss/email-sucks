@@ -10,11 +10,11 @@ This is the current status and next-action tracker. The [product specification](
 
 **Active implementation:** local Phase 0 reliability probes. The owner deferred hosted deployment while away from the computer; continue local work without requesting Render login.
 
-**Latest completed slice:** fault-injected synthetic release runner. All 89 backend tests pass, including lost responses without duplicate writes and provider I/O outside transactions. [Evidence](docs/evidence/phase-0/2026-09-04-release-runner.md).
+**Latest completed slice:** actual encrypted local database export/restore rehearsal. Corrupt/wrong-key archives and nonempty targets were rejected; restored jobs stayed inert and synthetic vault data decrypted with the separate correct key. [Evidence](docs/evidence/phase-0/2026-09-04-local-backup-restore.md). R2/Render proof remains open.
 
 ## Next action
 
-**Build and rehearse encrypted local database export/restore with restored jobs and Gmail access disabled.**
+**Test durable one-batch notification receipts and uncertain transport outcomes locally.**
 
 Render deployment is deferred by the owner, not a blocker for local development. Continue autonomously, commit verified slices and push regularly. Live account/device operations remain deferred until the owner can participate. The current app remains read-only.
 
@@ -40,6 +40,7 @@ Render deployment is deferred by the owner, not a blocker for local development.
 | Finite batch review | Verified with synthetic outcomes | [Evidence](docs/evidence/phase-0/2026-09-04-batch-review.md); separate per-batch review and pending-delivery status, no UI integration. |
 | Local occurrence resolution | Verified with IANA data | [Evidence](docs/evidence/phase-0/2026-09-04-delivery-occurrences.md); DST gaps/overlaps, stable identity and explicit date exceptions. Durable scheduler remains unimplemented. |
 | Durable scheduling probe | Verified locally | [Evidence](docs/evidence/phase-0/2026-09-04-durable-scheduling.md); saved occurrences, coalescing, revision edits, manual receipts and account serialization. No timer/Gmail integration. |
+| Encrypted local backup and restore | Verified on disposable databases | [Evidence](docs/evidence/phase-0/2026-09-04-local-backup-restore.md); actual pg_dump/age/pg_restore, corruption/key checks, inert restored jobs. No R2/Render proof. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining

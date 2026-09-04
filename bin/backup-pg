@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+// Keep secret connection URLs out of PostgreSQL command-line arguments.
+const { spawnSync } = require('node:child_process');
+const [mode, command, ...args] = process.argv.slice(2);
+if (!['source', 'restore'].includes(mode) || !['pg_dump', 'pg_restore', 'psql'].includes(command)) {
+  process.stderr.write('Usage: backup-pg source|restore pg_dump|pg_restore|psql [arguments]\n');
+  process.exit(2);
+}
+const env = { ...process.env };
+try {
+  const key = mode === 'source' ? 'BACKUP_DATABASE_URL' : 'BACKUP_RESTORE_DATABASE_URL';
+  const uri = new URL(env[key]);
+  if (!['postgres:', 'postgresql:', 'ecto:'].includes(uri.protocol) || !uri.hostname || uri.pathname.length < 2 || uri.hash) throw new Error();
+  for (const name of ['PGSERVICE', 'PGSERVICEFILE', 'PGOPTIONS', 'PGHOSTADDR']) delete env[name];
+  env.PGHOST = uri.hostname.replace(/^\[|\]$/g, '');
+  env.PGPORT = uri.port || '5432';
+  env.PGDATABASE = decodeURIComponent(uri.pathname.slice(1));
+  if (uri.username) env.PGUSER = decodeURIComponent(uri.username);
+  if (uri.password) env.PGPASSWORD = decodeURIComponent(uri.password);
+  env.PGCONNECT_TIMEOUT ||= '10';
+  const options = {
+    sslmode: 'PGSSLMODE', sslrootcert: 'PGSSLROOTCERT', sslcert: 'PGSSLCERT', sslkey: 'PGSSLKEY',
+    connect_timeout: 'PGCONNECT_TIMEOUT', application_name: 'PGAPPNAME', channel_binding: 'PGCHANNELBINDING',
+  };
+  for (const [name, value] of uri.searchParams) {
+    if (!Object.hasOwn(options, name)) throw new Error();
+    env[options[name]] = value;
+  }
+} catch {
+  process.stderr.write('Invalid backup database URL or unsupported connection option\n');
+  process.exit(1);
+}
+const result = spawnSync(command, args, { env, stdio: 'inherit' });
+process.exit(result.status ?? 1);

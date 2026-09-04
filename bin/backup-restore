@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+backup_bin=$(cd -- "$(dirname -- "$0")" && pwd)
+: "${BACKUP_RESTORE_DATABASE_URL:?Set a new isolated empty target database URL}"
+: "${BACKUP_AGE_IDENTITY_FILE:?Set the private age identity file path}"
+[[ ${RESTORE_MODE:-false} == true ]] || { echo 'RESTORE_MODE=true is required' >&2; exit 1; }
+[[ $# == 1 ]] || { echo 'Usage: bin/backup-restore /private/path/export.dump.age' >&2; exit 2; }
+backup_relations=$("$backup_bin/backup-pg" restore psql -X -qAt --set ON_ERROR_STOP=1 -c "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname NOT IN ('pg_catalog', 'information_schema') AND n.nspname NOT LIKE 'pg_toast%'")
+[[ "$backup_relations" == 0 ]] || { echo 'Restore target must be empty' >&2; exit 1; }
+backup_tmp=$(mktemp -d "${TMPDIR:-/tmp}/email-restore.XXXXXX")
+trap 'rm -rf -- "$backup_tmp"' EXIT
+# Authenticate the entire archive before any SQL can run. A streaming decrypt
+# could emit plaintext before discovering corruption at the end of the file.
+age --decrypt --identity "$BACKUP_AGE_IDENTITY_FILE" --output "$backup_tmp/export.dump" "$1"
+# Empty dbname selects the libpq environment; the secret URL stays out of argv.
+"$backup_bin/backup-pg" restore pg_restore --dbname '' --single-transaction --exit-on-error --no-owner --no-privileges "$backup_tmp/export.dump"
+echo 'Restore complete; keep this isolated database in RESTORE_MODE=true'
