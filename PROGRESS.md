@@ -10,11 +10,11 @@ This is the current status and next-action tracker. The [product specification](
 
 **Active implementation:** local Phase 0 reliability probes. The owner deferred hosted deployment while away from the computer; continue local work without requesting Render login.
 
-**Latest completed slice:** durable synthetic scheduling and Check Now receipts. All 85 backend tests pass, including scheduled/manual contention on separate database connections. [Evidence](docs/evidence/phase-0/2026-09-04-durable-scheduling.md).
+**Latest completed slice:** fault-injected synthetic release runner. All 89 backend tests pass, including lost responses without duplicate writes and provider I/O outside transactions. [Evidence](docs/evidence/phase-0/2026-09-04-release-runner.md).
 
 ## Next action
 
-**Exercise release claims and reconciliation through a fault-injected synthetic provider runner. Then continue local recovery, notification and restore checks.**
+**Build and rehearse encrypted local database export/restore with restored jobs and Gmail access disabled.**
 
 Render deployment is deferred by the owner, not a blocker for local development. Continue autonomously, commit verified slices and push regularly. Live account/device operations remain deferred until the owner can participate. The current app remains read-only.
 
