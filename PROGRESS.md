@@ -8,9 +8,9 @@ This is the current status and next-action tracker. The [product specification](
 
 **Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. Nothing is deployed to Render yet.
 
-**Active implementation:** autonomous Phase 0 work. The written state contract is complete; preparing the isolated hosted test environment and recovery materials next.
+**Active implementation:** autonomous Phase 0 work. The written state contract and Render configuration are complete; preparing recovery materials while the owner completes Render login.
 
-**Latest completed slice:** Desk-inspired styling for the read-only preview, using the design skill. Recorded checks: 47 backend tests, seven Chromium tests, TypeScript checking, formatting, and desktop/mobile light/dark visual review. See [design evidence](docs/evidence/phase-0/2026-09-04-desk-preview-design.md). These are results from that slice, not a continuously running health guarantee.
+**Latest completed slice:** Render deployment preparation and restore startup guard. Local release build, disposable-database migration/startup/worker checks, published Blueprint schema validation and 52 backend tests passed. Hosted validation/provisioning is blocked on Render login. See [evidence](docs/evidence/phase-0/2026-09-04-render-preparation.md).
 
 ## Next action
 
@@ -36,6 +36,7 @@ Next external gate: establish the hosted test environment and test-only authoriz
 | Five-message Inbox metadata preview | Implemented and verified live | [Listing evidence](docs/evidence/phase-0/2026-09-04-read-only-message-list.md). No bodies/attachments, database persistence of email metadata, or Gmail mutations. |
 | Desk-inspired preview design | Implemented and visually verified | [Design evidence](docs/evidence/phase-0/2026-09-04-desk-preview-design.md): local Newsreader, responsive whitespace-led layout, light/dark themes, connection disclosure and interaction states. Full Room design implementation remains later work. |
 | Written state contract | Complete as documentation | [Contract](docs/phase-0-state-contract.md); runtime and live-provider proof remain separate. |
+| Render release and restore startup | Verified locally; not deployed | [Evidence](docs/evidence/phase-0/2026-09-04-render-preparation.md), [setup](docs/render-phase-0-setup.md). CLI login required for hosted checks. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
@@ -43,7 +44,7 @@ Next external gate: establish the hosted test environment and test-only authoriz
 Checked items require their stated evidence; implementation alone does not pass a proof gate.
 
 - [x] **0.1 — Written state and workflow contract:** [transition table and decisions](docs/phase-0-state-contract.md), with illegal states, calendar semantics and acceptance examples. Runtime implementation and provider experiments are separate gates; the static app page is not the full contract.
-- [ ] **Test environment:** document test identities, controlled fixtures, existing Gmail filters, devices and notification settings. Select and provision the isolated Render environment before test interception.
+- [ ] **Test environment:** [Render configuration/setup](docs/render-phase-0-setup.md) prepared and locally tested; login required for provisioning. Still document test identities, controlled fixtures, existing Gmail filters, devices and notification settings. Select and provision the isolated Render environment before test interception.
 - [ ] **Authorization lifecycle:** settle the dogfood authorization strategy; distinguish natural token expiry, revocation and refresh-token rotation. Inventory additional scopes before any mutation work.
 - [ ] **0.2 — Interception matrix:** prove primary address, aliases, forwarding, Bcc, lists, existing threads, unusual mail and filter conflicts; document unsupported cases.
 - [ ] **0.3 — Notification/badge matrix:** observe held arrival, bypass and release on actual devices; choose and prove the app alert behavior.

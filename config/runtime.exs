@@ -16,11 +16,17 @@ import Config
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
+restore_setting = System.get_env("RESTORE_MODE", "false")
+if restore_setting not in ["true", "false"], do: raise("RESTORE_MODE must be true or false")
+restore_mode = restore_setting == "true"
+config :email_sucks, :restore_mode, restore_mode
+
 role = System.get_env("APP_ROLE", "web")
 if role not in ["web", "worker"], do: raise("APP_ROLE must be web or worker")
 
 if config_env() != :test do
-  config :email_sucks, Oban, queues: if(role == "worker", do: [phase_zero: 5], else: false)
+  config :email_sucks, Oban,
+    queues: if(role == "worker" and not restore_mode, do: [phase_zero: 5], else: false)
 end
 
 if role == "web" and System.get_env("PHX_SERVER") in ["true", "1"] do
@@ -75,7 +81,11 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  host = System.get_env("PHX_HOST") || "example.com"
+  if byte_size(secret_key_base) < 64 do
+    raise "SECRET_KEY_BASE must contain at least 64 bytes of random secret material"
+  end
+
+  host = System.get_env("PHX_HOST") || System.get_env("RENDER_EXTERNAL_HOSTNAME") || "example.com"
 
   config :email_sucks, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
@@ -124,7 +134,7 @@ if config_env() == :prod do
 end
 
 # Explicit opt-in: ordinary development and all automated tests run without real credentials.
-if config_env() != :test && System.get_env("GMAIL_OAUTH_FILE") do
+if config_env() != :test && not restore_mode && System.get_env("GMAIL_OAUTH_FILE") do
   load_private_json = fn path ->
     case path && File.read(path) do
       {:ok, body} ->

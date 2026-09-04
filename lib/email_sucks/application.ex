@@ -10,7 +10,6 @@ defmodule EmailSucks.Application do
     children = [
       EmailSucksWeb.Telemetry,
       EmailSucks.Repo,
-      {Oban, Application.fetch_env!(:email_sucks, Oban)},
       {DNSCluster, query: Application.get_env(:email_sucks, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: EmailSucks.PubSub},
       # Start a worker by calling: EmailSucks.Worker.start_link(arg)
@@ -18,6 +17,13 @@ defmodule EmailSucks.Application do
       # Start to serve requests, typically the last entry
       EmailSucksWeb.Endpoint
     ]
+
+    children =
+      if Application.get_env(:email_sucks, :restore_mode, false) do
+        children
+      else
+        List.insert_at(children, 2, {Oban, Application.fetch_env!(:email_sucks, Oban)})
+      end
 
     # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options

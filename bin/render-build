@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export MIX_ENV=prod
+mix local.hex --force
+mix local.rebar --force
+mix deps.get --only prod --check-locked
+mix compile --warnings-as-errors
+npm --prefix assets ci
+npm --prefix assets run typecheck
+npm --prefix assets run build
+mix release --overwrite

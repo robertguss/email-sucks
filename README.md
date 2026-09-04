@@ -82,4 +82,4 @@ The browser test builds assets and starts its own Phoenix process at port 4010; 
 - [Architecture decision](docs/decisions/0001-application-architecture.md)
 - [Phase 0 plan and exit gates](docs/phase-0-gmail-reliability-proof.md)
 
-Hosted environments will use Render. Deployment, Sentry, Better Stack, R2 backups, and real Gmail/device/recovery experiments are not completed. The authenticated connection shell is available; the full mail client is not implemented.
+A [Render test Blueprint and setup guide](docs/render-phase-0-setup.md) are prepared. `RESTORE_MODE=true` disables Oban startup and Google credential loading for isolated restore checks. Hosted deployment, Sentry, Better Stack, R2 backups, and real Gmail/device/recovery experiments are not completed. The authenticated connection shell is available; the full mail client is not implemented.
