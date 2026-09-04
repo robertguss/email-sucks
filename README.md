@@ -1,5 +1,7 @@
 # Deliberate email
 
+**Start here:** [Project progress and next action](PROGRESS.md) — current status, verified results, remaining work, and decisions to discuss. Update it when completing each implementation slice.
+
 A personal Gmail client in Phase 0: prove delivery and recovery before building the full Room. This repository currently has a Phoenix/Ash/PostgreSQL/Oban foundation with a React/TypeScript/Inertia browser shell. It supports a restricted, read-only Google connection, a profile check, and a five-message Inbox preview. No mail can be intercepted or sent.
 
 ## Requirements

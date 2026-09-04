@@ -2,6 +2,8 @@
 
 Date: 2026-09-04
 
+For the current work queue and next recommended action, see [Project progress](../PROGRESS.md). This document defines the detailed proof requirements.
+
 Status: In progress. The [local foundation and synthetic persistence probe](evidence/phase-0/2026-09-04-foundation.md) have passed their checks. The [read-only Google connection](evidence/phase-0/2026-09-04-google-connection.md) passes local automated checks, owner consent, a live profile check, and automatic refresh after simulated local expiry. Gmail interception/recovery, device, external-alert, and restore experiments remain unproven.
 
 This expands Phase 0 of the [product specification](email-client-product-implementation-spec.md) using [ADR-0001](decisions/0001-application-architecture.md). It authorizes a small feasibility implementation when implementation begins, not the full Room. The owner has explicitly authorized a read-only connection for the selected Gmail account. This does not authorize interception, sending, or full personal-mail dogfooding; later security and operational gates still apply.
