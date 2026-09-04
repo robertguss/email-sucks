@@ -10,11 +10,11 @@ This is the current status and next-action tracker. The [product specification](
 
 **Active implementation:** local Phase 0 reliability probes. The owner deferred hosted deployment while away from the computer; continue local work without requesting Render login.
 
-**Latest completed slice:** durable synthetic account recovery fence. All 67 backend tests pass, including a release blocked behind an uncommitted recovery on a separate PostgreSQL connection. [Evidence](docs/evidence/phase-0/2026-09-04-recovery-fence.md). No live restoration or filter changes.
+**Latest completed slice:** durable finite batch-review ledger. All 72 backend tests pass, including later deliveries of the same conversation, partial-release acknowledgment guards and replay-safe review. [Evidence](docs/evidence/phase-0/2026-09-04-batch-review.md).
 
 ## Next action
 
-**Implement finite per-batch review state and Caught Up checks locally; scheduling remains next.**
+**Implement and test local delivery occurrence resolution, including DST gaps and repeated times.**
 
 Render deployment is deferred by the owner, not a blocker for local development. Continue autonomously, commit verified slices and push regularly. Live account/device operations remain deferred until the owner can participate. The current app remains read-only.
 
@@ -37,6 +37,7 @@ Render deployment is deferred by the owner, not a blocker for local development.
 | Per-message release journal | Verified with synthetic outcomes | [Evidence](docs/evidence/phase-0/2026-09-04-release-journal.md); live provider integration remains open. |
 | Executable work-item contract | Verified locally | [Evidence](docs/evidence/phase-0/2026-09-04-workflow-contract.md); calendar dates, Waiting visibility and confirmed-send guards. Not a persisted workflow engine. |
 | Account recovery fence | Verified with synthetic accounts | [Evidence](docs/evidence/phase-0/2026-09-04-recovery-fence.md); database serialization and in-flight accounting, not actual mailbox restoration. |
+| Finite batch review | Verified with synthetic outcomes | [Evidence](docs/evidence/phase-0/2026-09-04-batch-review.md); separate per-batch review and pending-delivery status, no UI integration. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
