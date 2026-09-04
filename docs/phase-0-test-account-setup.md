@@ -1,6 +1,6 @@
 # Phase 0 Google connection setup
 
-Status: Read-only OAuth is implemented and locally tested. The selected account's client has been configured, and the local app can offer **Connect Gmail**. Owner consent and a live **Check connection** result are still pending. Interception and sending are unavailable.
+Status: Read-only OAuth is implemented and locally tested. The owner completed consent and a live **Check connection**. Automatic refresh after simulated local expiry also passed against Google; see the [live evidence](evidence/phase-0/2026-09-04-google-connection.md). Interception and sending are unavailable.
 
 ## Google project
 

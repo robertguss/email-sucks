@@ -2,7 +2,7 @@
 
 Date: 2026-09-04
 
-Status: Local implementation and automated checks pass. The owner's private configuration is loaded and the page offers **Connect Gmail**. No real Google consent, token exchange, or Gmail profile check has been completed by this evidence run. No Gmail mutation occurred. Phase 0 exit gates remain open.
+Status: Local automated checks pass. The owner completed real Google consent and a live Gmail profile check. The authorized live automatic-refresh experiment below also passed. No messages were downloaded or changed. Phase 0 exit gates remain open.
 
 ## Implemented boundary
 
@@ -27,9 +27,23 @@ Status: Local implementation and automated checks pass. The owner's private conf
 - `mix hex.audit`: no retired or security-advisory packages. `npm audit`: zero vulnerabilities reported.
 - The development migration applied successfully. Private OAuth/key files are outside the repository with owner-only permissions; their contents are not recorded here.
 
+## Live automatic-refresh experiment
+
+Completed 2026-09-04 at **21:06:36 UTC** against the owner's authorized account.
+
+1. Confirmed the existing account was connected and its browser session remained valid.
+2. Changed only the expiry timestamp inside the encrypted credential payload to a time in the past, advancing the record revision. The actual Google access/refresh tokens and browser session were preserved. This simulates local expiry; it does not revoke access at Google.
+3. Clicked **Check connection** in the owner's existing signed-in browser. The production code path claimed the refresh lease, refreshed access with Google, saved encrypted credentials, and read the Gmail profile.
+4. Verified the refresh revision advanced exactly once, expiry was again in the future (3,569 seconds remaining at verification), the successful profile-check timestamp advanced, connection status remained connected, and the refresh lease was released.
+5. Verified the browser session digest was unchanged. Google did not rotate the refresh token in this exchange; the existing token was retained. No sign-in or consent screen appeared.
+
+The browser displayed **“Gmail connection verified. No messages were downloaded or changed.”** Only status, timing, and boolean comparisons were recorded; no token or account identifier is included in this evidence. The temporary encrypted baseline was removed after successful verification. The application was left with valid refreshed credentials.
+
+This proves automatic refresh triggered by simulated local expiry against the real Google service. It does not prove natural token expiry, provider revocation, refresh-token rotation, or recovery from an actual Google outage.
+
 ## Remaining live evidence
 
-The owner must complete Google consent, then run **Check connection**. Actual refresh/revocation/reconnect behavior, Render deployment, operational access controls, alerting, encrypted backups and restore, interception/recovery, and device notification behavior still need real experiments. This local implementation does not pass those gates by inference from mocks.
+Real revocation/reconnect behavior, natural expiry and refresh-token rotation, Render deployment, operational access controls, alerting, encrypted backups and restore, interception/recovery, and device notification behavior still need real experiments. This local implementation does not pass those gates by inference from mocks.
 
 The native loopback database is a trusted single-user development environment, not proof of hosted database security. Sign-out retains the provider grant; safe disconnect/revocation remains future work. Only one account and one active app session are supported in this proof.
 
