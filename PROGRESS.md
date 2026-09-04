@@ -8,23 +8,19 @@ This is the current status and next-action tracker. The [product specification](
 
 **Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. Nothing is deployed to Render yet.
 
-**Active implementation:** none. The approved Desk-inspired preview slice is complete and ready for owner review.
+**Active implementation:** autonomous Phase 0 work. The written state contract is complete; preparing the isolated hosted test environment and recovery materials next.
 
 **Latest completed slice:** Desk-inspired styling for the read-only preview, using the design skill. Recorded checks: 47 backend tests, seven Chromium tests, TypeScript checking, formatting, and desktop/mobile light/dark visual review. See [design evidence](docs/evidence/phase-0/2026-09-04-desk-preview-design.md). These are results from that slice, not a continuously running health guarantee.
 
-## Recommended next action
+## Next action
 
-**Review the updated preview, then settle the Phase 0 state/transition contract.**
+**Prepare the isolated Render test deployment and offline recovery materials, then execute the feasible local safety checks.**
 
-Status: **Proposed — awaiting the owner's review and discussion.**
+The owner has authorized autonomous work through this tracker, with verified commits and regular pushes. Routine implementation choices proceed using documented defaults. Pause only for genuinely required credentials, account actions, answers or explicit live-mail activation.
 
-First decision: how to handle mail already in the Inbox at onboarding. Recommended starting policy: leave existing Inbox messages untouched and apply future delivery controls only to new arrivals after explicit activation. An optional historical import would be a separate decision, not an implied permission to move existing mail.
+The [state contract](docs/phase-0-state-contract.md) defines primary transitions, illegal states, Waiting visibility, existing Inbox boundaries, calendar behavior and external edits. Its choices are recorded as engineering defaults under this delegation; live provider/device behavior remains unproven.
 
-Scope: work through the open semantic questions one at a time, then write the transition table and illegal-state rules. Do not enable interception or build the full Room as part of this discussion.
-
-Done when: every primary action has a before-state, guard, after-state and Gmail effect; the owner has approved the remaining state semantics; contract tests and the tracker reflect those decisions.
-
-**After that:** prepare the isolated hosted test environment and the interception/recovery experiment plan, with an offline recovery card before any activation.
+Next external gate: establish the hosted test environment and test-only authorization before interception experiments. Prepare concrete configuration and instructions before asking the owner to act.
 
 ## Completed work and evidence
 
@@ -39,13 +35,14 @@ Done when: every primary action has a before-state, guard, after-state and Gmail
 | Revocation detection and reconnection | Owner-reported live pass | Owner removed the Google grant, observed the reconnect message, reauthorized, and reported “connection verified.” This did not exercise held-mail recovery. |
 | Five-message Inbox metadata preview | Implemented and verified live | [Listing evidence](docs/evidence/phase-0/2026-09-04-read-only-message-list.md). No bodies/attachments, database persistence of email metadata, or Gmail mutations. |
 | Desk-inspired preview design | Implemented and visually verified | [Design evidence](docs/evidence/phase-0/2026-09-04-desk-preview-design.md): local Newsreader, responsive whitespace-led layout, light/dark themes, connection disclosure and interaction states. Full Room design implementation remains later work. |
+| Written state contract | Complete as documentation | [Contract](docs/phase-0-state-contract.md); runtime and live-provider proof remain separate. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
 
 Checked items require their stated evidence; implementation alone does not pass a proof gate.
 
-- [ ] **0.1 — State and workflow contract:** finish the transition table, illegal states, and remaining decisions below. The static contract page is only a starting point.
+- [x] **0.1 — Written state and workflow contract:** [transition table and decisions](docs/phase-0-state-contract.md), with illegal states, calendar semantics and acceptance examples. Runtime implementation and provider experiments are separate gates; the static app page is not the full contract.
 - [ ] **Test environment:** document test identities, controlled fixtures, existing Gmail filters, devices and notification settings. Select and provision the isolated Render environment before test interception.
 - [ ] **Authorization lifecycle:** settle the dogfood authorization strategy; distinguish natural token expiry, revocation and refresh-token rotation. Inventory additional scopes before any mutation work.
 - [ ] **0.2 — Interception matrix:** prove primary address, aliases, forwarding, Bcc, lists, existing threads, unusual mail and filter conflicts; document unsupported cases.
@@ -57,21 +54,16 @@ Checked items require their stated evidence; implementation alone does not pass 
 - [ ] **Backups and restore:** configure managed Render recovery and encrypted R2 exports; restore both into isolated environments with Gmail writes/jobs disabled and verify reconciliation and measured losses/recovery time.
 - [ ] **Exit review:** review the recorded evidence and explicitly accept provider/device limitations and state semantics. Only then move to full product implementation.
 
-### Decisions still needed
+### Remaining external decisions and proof
 
 | Decision | Needed before |
 |---|---|
-| Waiting reply visibility and bypass/emergency-peek behavior | State contract and reactivation implementation |
-| Existing Inbox onboarding/import policy | Onboarding and initial synchronization |
-| Historical sent-address coverage and alias/self exclusions | Routing heuristics |
-| Conversation bypass feasibility and supported promises | Bypass implementation |
-| External Gmail edits, deletions and manual moves | Synchronization/reconciliation |
-| DST, timezone changes, overdue windows and schedule edits | Delivery scheduling |
-| Partial-batch notification and recovery status presentation | Release and alert implementation |
+| Arrival-time bypass support, including conversation rules | Live interception experiment; no unsupported promise may be activated |
+| Native read/unread and device notifications | Actual device matrix before policy changes |
 | Render region, service/database plans, budget and independent alert destination | Hosted provisioning |
 | Retention, recovery-key custody and acceptable measured recovery loss/time | Backup/restore acceptance and dogfood |
 
-The detailed options live in the Phase 0 plan and ADR; proposals there are not silently treated as approved decisions.
+The state contract resolves implementation semantics under the autonomous-work instruction. Live-provider limitations and operational acceptance still require evidence; older recommendations in the proof plan are superseded only by the explicitly recorded contract defaults.
 
 ## Full product roadmap
 
@@ -88,12 +80,13 @@ The detailed options live in the Phase 0 plan and ADR; proposals there are not s
 
 ## How we maintain this tracker
 
-1. Read this tracker at the start of a work session and check it against the current code and evidence.
-2. When a slice begins, name it under Current position; distinguish approved work from proposals. Do not mark something blocked merely because it has not started.
-3. At completion, update status, verification results, evidence links, remaining limitations and the next recommended action. Mark user-reported observations separately from independently verified results.
-4. End the user-facing completion message with one concrete next action and any decision the owner needs to make. Walk human setup steps one at a time.
-5. Use the mockups and `design` skill for UI work. Verify current compatible versions from official sources whenever adding or upgrading dependencies.
-6. Keep sensitive account information, messages, credentials and tokens out of this tracker. Do not use a percentage complete: implementation and real-world proof have different requirements.
+1. Continue autonomously through feasible work; commit verified slices and push regularly. Pause only for genuinely required owner answers/actions. Do not treat routine next steps as awaiting approval.
+2. Read this tracker at the start of a work session and check it against the current code and evidence.
+3. When a slice begins, name it under Current position; distinguish approved work from proposals. Do not mark something blocked merely because it has not started.
+4. At completion, update status, verification results, evidence links, remaining limitations and the next recommended action. Mark user-reported observations separately from independently verified results.
+5. End the user-facing completion message with one concrete next action and any decision the owner needs to make. Walk human setup steps one at a time.
+6. Use the mockups and `design` skill for UI work. Verify current compatible versions from official sources whenever adding or upgrading dependencies.
+7. Keep sensitive account information, messages, credentials and tokens out of this tracker. Do not use a percentage complete: implementation and real-world proof have different requirements.
 
 ## Recent completions
 

@@ -235,6 +235,8 @@ When an excluded capability is necessary, the user must have a clear **Open in G
 
 # 7. Product State Model
 
+The [Phase 0 state contract](phase-0-state-contract.md) supplements sections 6–13 with transition guards, failure/undo behavior and selected defaults for timing and external edits. It does not establish live Gmail feasibility.
+
 The implementation must not treat one label or one status field as the entire workflow. These dimensions are independent.
 
 ## 7.1 Delivery policy

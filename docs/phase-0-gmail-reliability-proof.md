@@ -25,6 +25,8 @@ No deployment, account provisioning, or Gmail mutation is performed by creating 
 
 ## 1. Freeze the behavioral contract
 
+The [written state contract](phase-0-state-contract.md) now supplies the transition table, decisions and acceptance examples under the owner's autonomous-work delegation. The recommendations below are historical starting points; the contract records the selected defaults. Live proof gates remain unchanged.
+
 Produce a transition table or executable domain tests covering every primary journey in specification sections 7–11. Each row needs action, before-state, guard, after-state, Gmail effect, notification effect, and failure/undo behavior. Include forbidden combinations and account-level concurrency rules.
 
 Carry forward these settled invariants:
