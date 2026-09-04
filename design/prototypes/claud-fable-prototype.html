@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mail</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #000000;
+    --ink-2: #8a8a8a;
+    --ink-3: #bdbdbd;
+    --rule: #dcdcdc;
+    --accent: #1c6b66;
+    --measure: 34em;
+  }
+  html.dark {
+    --bg: #0e0e0e;
+    --ink: #e8e8e8;
+    --ink-2: #8f8f8f;
+    --ink-3: #5a5a5a;
+    --rule: #2a2a2a;
+    --accent: #3fa39c;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Charter", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 19px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    transition: background .15s ease, color .15s ease;
+  }
+  ::selection { background: var(--ink); color: var(--bg); }
+
+  .screen {
+    display: none;
+    min-height: 100vh;
+    padding: 0 1.5rem 5rem;
+  }
+  .screen.on { display: block; }
+  .col { max-width: var(--measure); margin: 0 auto; }
+
+  .centered {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 6rem;
+  }
+  .lead { font-size: 1.25em; line-height: 1.5; margin: 0; }
+  .lead + .lead { margin-top: .1em; }
+  .quiet { color: var(--ink-2); }
+  .quieter { color: var(--ink-3); }
+  .small { font-size: .78em; }
+  .links { margin-top: 2.5rem; display: flex; gap: 3rem; }
+  .links a, a.plain { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--ink-3); cursor: pointer; }
+  .links a:hover, a.plain:hover { border-bottom-color: var(--ink); }
+
+  /* day line */
+  .day { width: 50vw; max-width: 28em; margin: 3rem auto 0; position: relative; height: 3.2em; }
+  .day .line { position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--ink-3); }
+  .day .tick { position: absolute; top: -4px; width: 1px; height: 9px; background: var(--ink-2); }
+  .day .tick span { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); font-size: .7em; color: var(--ink-2); white-space: nowrap; }
+  .day .now { position: absolute; top: -3.5px; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); transform: translateX(-50%); }
+
+  /* table of contents on doorstep */
+  .toc { margin-top: 3rem; text-align: left; }
+  .toc p { margin: .2em 0; }
+
+  /* footer hints */
+  .hint {
+    position: fixed; left: 0; right: 0; bottom: 1.4rem;
+    text-align: center; font-size: .78em; color: var(--ink-2);
+    pointer-events: none;
+  }
+  .hint kbd { font-family: inherit; color: var(--ink); }
+  .corner { position: fixed; top: 1.4rem; right: 1.8rem; font-size: .78em; color: var(--ink-2); }
+
+  /* pile */
+  #pile .col { padding-top: 14vh; }
+  .meta { color: var(--ink-2); font-size: .82em; margin-bottom: 1.6em; }
+  .meta b { font-weight: normal; color: var(--ink); }
+  .body p { margin: 0 0 1.1em; }
+  .body h3 { font-size: 1em; font-weight: 600; margin: 1.6em 0 .6em; }
+  .original { margin-top: 2.4em; }
+  .card { transition: opacity .18s ease, transform .18s ease; }
+  .card.leave { opacity: 0; transform: translateX(14px); }
+  .card.leave-back { opacity: 0; transform: translateX(-14px); }
+
+  /* desk */
+  #desk .col { padding-top: 12vh; }
+  .section { margin-bottom: 3.2em; }
+  .label {
+    font-variant: small-caps;
+    letter-spacing: .06em;
+    color: var(--ink-2);
+    font-size: .95em;
+    margin: 0 0 .7em;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .label .sort { font-variant: normal; letter-spacing: 0; font-size: .82em; }
+  .label .sort a { color: var(--ink-2); margin-left: 1.2em; cursor: pointer; }
+  .label .sort a:hover { color: var(--ink); }
+  .item { position: relative; padding: .45em 0 .45em 1.1em; margin-left: -1.1em; color: var(--ink-2); }
+  .item .who { color: var(--ink); }
+  .item .snip { color: var(--ink-3); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item.focus .who { text-decoration: underline; text-decoration-color: var(--ink-3); text-underline-offset: .2em; }
+  .item.focus::after { content: ""; position: absolute; left: -1.4em; top: 1.05em; width: .35em; height: .35em; border-radius: 50%; background: var(--ink-3); }
+  .section.today .item::before {
+    content: ""; position: absolute; left: 0; top: .6em; bottom: .6em; width: 2px; background: var(--accent);
+  }
+  .item.gone { display: none; }
+
+  /* page */
+  #page .col { padding-top: 30vh; }
+  .to { color: var(--ink-2); font-size: .78em; margin-bottom: 2.2em; }
+  .fields { display: none; margin-bottom: 2.4em; padding-bottom: 1.4em; border-bottom: 1px solid var(--rule); }
+  .fields.show { display: block; }
+  .fields div { display: flex; gap: 1.5em; margin: .15em 0; }
+  .fields span { color: var(--ink-2); width: 4.5em; flex: none; font-size: .85em; padding-top: .15em; }
+  .fields i { font-style: normal; }
+  .draft { white-space: pre-wrap; outline: none; }
+  .cursor { display: inline-block; width: 1px; height: 1.05em; background: var(--ink); vertical-align: -0.15em; margin-left: 1px; animation: blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* drawer */
+  #drawer .col { padding-top: 12vh; }
+  .search { font-size: 1.35em; margin: 0 0 .4em; }
+  .search .cursor { height: 1em; }
+  .search-rule { height: 1px; background: var(--rule); margin-bottom: 2.4em; }
+  .month { color: var(--ink-2); font-size: .82em; margin: 2em 0 .6em; }
+  .result { color: var(--ink-2); margin: 0 0 .8em; }
+  .result .who { color: var(--ink); }
+  .result .snip { color: var(--ink-3); display: block; }
+
+  /* caught up */
+  .facts { margin-top: 1.4em; }
+
+  .arrive { animation: arrive .5s ease both; }
+  @keyframes arrive { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .card, .arrive { transition: none; animation: none; }
+    .cursor { animation: none; }
+  }
+  @media (max-width: 600px) {
+    body { font-size: 17px; }
+    .links { gap: 2rem; }
+    .day { width: 80vw; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 1. Doorstep -->
+<section id="doorstep" class="screen on">
+  <div class="centered">
+    <div id="door-quiet">
+      <p class="lead">Nothing needs you.</p>
+      <p class="lead">Next mail at 1:00.</p>
+    </div>
+    <div id="door-mail" style="display:none">
+      <div class="arrive">
+        <p class="lead">Mail’s here.</p>
+        <p class="lead"><span id="door-counts">3 need you, 14 to look over.</span></p>
+        <div class="links">
+          <a data-go="pile">Start session</a>
+          <a data-go="desk">Go to desk</a>
+        </div>
+      </div>
+    </div>
+    <div class="day" id="day-door"></div>
+    <div class="toc small" id="door-toc" style="display:none"></div>
+  </div>
+  <div class="hint"><kbd>1</kbd> doorstep · <kbd>2</kbd> pile · <kbd>3</kbd> desk · <kbd>4</kbd> page · <kbd>5</kbd> drawer &nbsp;&nbsp;&nbsp; <span class="quieter"><kbd>t</kbd> toggle delivery · <kbd>d</kbd> dark</span></div>
+</section>
+
+<!-- 2. Pile -->
+<section id="pile" class="screen">
+  <div class="corner" id="pile-count"></div>
+  <div class="col">
+    <div class="card" id="pile-card"></div>
+  </div>
+  <div class="hint"><kbd>space</kbd> next &nbsp;·&nbsp; <kbd>s</kbd> keep &nbsp;·&nbsp; <kbd>l</kbd> later &nbsp;&nbsp;&nbsp; <span class="quieter"><kbd>k</kbd> back</span></div>
+</section>
+
+<!-- 3. Desk -->
+<section id="desk" class="screen">
+  <div class="col" id="desk-col"></div>
+  <div class="hint"><kbd>r</kbd> reply · <kbd>e</kbd> done · <kbd>h</kbd> horizon &nbsp;&nbsp;&nbsp; <span class="quieter"><kbd>j</kbd>/<kbd>k</kbd> move</span></div>
+</section>
+
+<!-- 4. Page -->
+<section id="page" class="screen">
+  <div class="col">
+    <div class="to" id="page-to">To Sarah Chen — Re: Thursday’s proposal</div>
+    <div class="fields" id="page-fields">
+      <div><span>To</span><i id="f-to">Sarah Chen</i></div>
+      <div><span>Cc</span><i></i></div>
+      <div><span>Subject</span><i id="f-subj">Re: Thursday’s proposal</i></div>
+    </div>
+    <div class="draft" id="draft" contenteditable="true" spellcheck="false">Sarah,
+
+Thursday works. I read the proposal twice and the second section is the strongest part; I’d lead with it rather than bury it after the budget.
+
+Two small things before we send it on: the timeline slips a week if legal takes their usual ten days, and I’d rather say so now than explain it later.</div>
+  </div>
+  <div class="hint"><kbd>⌘↵</kbd> send · <kbd>esc</kbd> back &nbsp;&nbsp;&nbsp; <span class="quieter"><kbd>tab</kbd> recipients</span></div>
+</section>
+
+<!-- 5. Drawer -->
+<section id="drawer" class="screen">
+  <div class="col">
+    <div class="search" id="search-q">invoice acme<span class="cursor"></span></div>
+    <div class="search-rule"></div>
+    <div id="results"></div>
+  </div>
+  <div class="hint"><kbd>↵</kbd> open · <kbd>esc</kbd> back</div>
+</section>
+
+<!-- 6. Caught up -->
+<section id="caught" class="screen">
+  <div class="centered">
+    <p class="lead">You’re caught up.</p>
+    <p class="lead">Next mail at 5:00.</p>
+    <p class="facts quiet small" id="facts">3 replies · 14 read · 12 minutes</p>
+    <div class="day" id="day-caught"></div>
+  </div>
+</section>
+
+<script>
+/* ---------- placeholder data ---------- */
+const pileData = [
+  { who: "The Pragmatic Engineer", subj: "Why platform teams fail quietly", when: "2h ago", body: [
+    "Most platform teams don’t fail loudly. They fail by becoming a service desk. The original mandate was to make product teams faster; the daily reality is answering tickets about a build system nobody chose to love.",
+    "h:What went wrong",
+    "The drift is structural, not personal. When a team is measured by tickets closed, it optimizes for tickets closed. The only durable fix I’ve seen is giving the platform team a product manager and a roadmap, and letting them say no.",
+    "Three companies I spoke to for this piece did exactly that. All three saw the ticket volume fall within a quarter, not because the work disappeared, but because the platform stopped needing hand-holding."
+  ]},
+  { who: "Stripe", subj: "Your payout of $1,240.00 is on its way", when: "3h ago", body: ["A payout of $1,240.00 was sent to your bank account ending in 4417. It should arrive within two business days.", "You can view the full breakdown of transactions in your dashboard."] },
+  { who: "GitHub", subj: "[howtocode] 3 new issues this week", when: "4h ago", body: ["Three issues were opened in howtocode/curriculum this week. Two are labeled documentation and one is a question about lesson 14.", "No pull requests are waiting for your review."] },
+  { who: "Ben Thompson", subj: "Stratechery: The aggregator’s dilemma, revisited", when: "5h ago", body: ["I wrote about aggregation theory in 2015, and the piece has held up better than I expected. What I got wrong was the timing: the pressure on aggregators arrived from regulation, not from competition.", "h:What changed", "The interesting question now is whether models change the calculus. If the interface to the internet becomes a conversation, the aggregator is whoever owns the conversation."] },
+  { who: "Canvas", subj: "Weekly digest for Systematic Theology I", when: "6h ago", body: ["Twelve submissions were graded this week. Two students have not submitted the reading response due Friday.", "The discussion board has four new posts since your last visit."] },
+  { who: "Amazon", subj: "Your order has shipped", when: "7h ago", body: ["Your order of 2 items has shipped and is expected to arrive Tuesday. Track your package from your orders page."] },
+  { who: "Kieran Klaassen", subj: "Source Code: How I polish software that agents built", when: "8h ago", body: ["Agents write most of the code in our products now, and the interesting work has moved to the last ten percent: the part where software starts to feel like someone cared.", "h:The polish pass", "I keep a list of small tells. Focus rings that look default. Empty states that apologize. Copy that describes the system instead of the person. None of these are bugs, and all of them are the difference."] },
+  { who: "Populi", subj: "Registration opens Monday", when: "9h ago", body: ["Spring registration opens Monday at 9:00 AM. Advisors have until Friday to clear holds."] },
+  { who: "Circle", subj: "New posts in Ship with AI", when: "10h ago", body: ["Six new posts since yesterday. The most active thread is about deploying a Next.js app behind Cloudflare without a build step."] },
+  { who: "Help Scout", subj: "Weekly report: 41 conversations", when: "11h ago", body: ["41 conversations were handled this week with a median first response of 3 hours. Satisfaction was 96%."] },
+  { who: "Fastmail", subj: "Your invoice for September", when: "12h ago", body: ["Your subscription renewed for $5.00. No action is needed."] },
+  { who: "Anthropic", subj: "Claude Developer Platform: what’s new", when: "13h ago", body: ["Batch processing now supports larger jobs, and the files API is generally available. Details and migration notes are in the changelog."] },
+  { who: "Craig Mod", subj: "Roden: A walk to the sea", when: "14h ago", body: ["I walked from the station to the sea in about four hours, which is the right amount of time for a walk to stop being exercise and start being thought.", "There is a small shrine halfway that has a bench nobody sits on. I sat on it."] },
+  { who: "Substack", subj: "Your weekly stats", when: "15h ago", body: ["Refactoring AI gained 112 subscribers this week. Open rate held at 54%."] }
+];
+
+const deskData = {
+  unsure: [{ who: "Marcus Ellison", subj: "Quick question about the course", snip: "I finished lesson 9 and I’m stuck on the part where we deploy the worker…" }],
+  today: [{ who: "Sarah Chen", subj: "Re: Thursday’s proposal", snip: "Can you look at section two before I send it to the board? I’d rather hear it from you first." }],
+  week: [
+    { who: "David Okafor", subj: "Guest lecture in November", snip: "Would you be willing to speak to the M.Div. cohort about note-taking systems? Any week in November works." },
+    { who: "Priya Raman", subj: "Populi API access for the degree planner", snip: "Security approved the scope. I need you to confirm which endpoints you actually call so I can lock it down." },
+    { who: "Tom Whitfield", subj: "Session music for the recording", snip: "The string players are free the 18th. If you can send the parts by the 12th we’re set." }
+  ],
+  whenever: [{ who: "Elena Marsh", subj: "Book chapter feedback", snip: "No rush at all, but when you have a free afternoon I’d love your read on chapter four." }],
+  waiting: [
+    { who: "James Holloway", days: 4 },
+    { who: "Ruth Anand", days: 9 }
+  ]
+};
+
+const resultsData = [
+  { month: "September 2026", items: [
+    { who: "Acme Studio", subj: "Invoice #2041", snip: "Attached is the invoice for August development. Net 30." },
+    { who: "Acme Studio", subj: "Re: Invoice #2038 — paid", snip: "Confirming payment received on the 2nd. Thank you." }
+  ]},
+  { month: "August 2026", items: [
+    { who: "Acme Studio", subj: "Invoice #2038", snip: "Invoice for July MVP work, as agreed." },
+    { who: "Priya Raman", subj: "Fwd: Acme invoice question", snip: "Do we have a PO number for these? Finance is asking." },
+    { who: "Acme Studio", subj: "Invoice #2032 — revised", snip: "Revised with the corrected hours for the week of the 14th." },
+    { who: "QuickBooks", subj: "Acme Studio paid invoice #2032", snip: "$4,800.00 was deposited to your account." }
+  ]}
+];
+
+/* ---------- state ---------- */
+let screen = "doorstep";
+let history = [];
+let delivered = false;
+let pileIndex = 0;
+let deskFocus = 0;
+let replies = 0, read = 0;
+const horizons = ["today", "week", "whenever"];
+
+/* ---------- helpers ---------- */
+const $ = (s) => document.querySelector(s);
+const esc = (s) => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+
+function dayLine(el, nowFrac) {
+  el.innerHTML = '<div class="line"></div>';
+  const ticks = [["9:00", .2], ["1:00", .5], ["5:00", .8]];
+  for (const [t, f] of ticks) {
+    const d = document.createElement("div");
+    d.className = "tick"; d.style.left = (f*100)+"%";
+    d.innerHTML = `<span>${t}</span>`;
+    el.appendChild(d);
+  }
+  const n = document.createElement("div");
+  n.className = "now"; n.style.left = (nowFrac*100)+"%";
+  el.appendChild(n);
+}
+
+function show(name, push = true) {
+  if (push && screen !== name) history.push(screen);
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("on"));
+  $("#"+name).classList.add("on");
+  screen = name;
+  if (name === "pile") renderPile();
+  if (name === "desk") renderDesk();
+  if (name === "drawer") renderResults();
+  if (name === "page") { $("#draft").focus(); placeCaret(); }
+  else if (document.activeElement) document.activeElement.blur();
+  window.scrollTo(0, 0);
+}
+function back() { show(history.pop() || "doorstep", false); }
+
+/* ---------- doorstep ---------- */
+function renderDoor() {
+  $("#door-quiet").style.display = delivered ? "none" : "";
+  $("#door-mail").style.display = delivered ? "" : "none";
+  dayLine($("#day-door"), delivered ? .5 : .39);
+  const toc = $("#door-toc");
+  if (delivered) {
+    const need = [...deskData.today, ...deskData.week, ...deskData.whenever].slice(0,3);
+    $("#door-counts").textContent = `${countNeed()} need you, ${pileData.length - pileIndex} to look over.`;
+    toc.innerHTML = need.map(i => `<p><span class="who">${esc(i.who)}</span> <span class="quiet">${esc(i.subj)}</span></p>`).join("");
+    toc.style.display = "";
+  } else toc.style.display = "none";
+}
+function countNeed() { return deskData.today.length + deskData.week.length + deskData.whenever.length; }
+
+/* ---------- pile ---------- */
+function renderPile(dir) {
+  const card = $("#pile-card");
+  if (pileIndex >= pileData.length) { show("desk"); return; }
+  const m = pileData[pileIndex];
+  const body = m.body.map(p => p.startsWith("h:") ? `<h3>${esc(p.slice(2))}</h3>` : `<p>${esc(p)}</p>`).join("");
+  const draw = () => {
+    card.className = "card";
+    card.innerHTML = `
+      <div class="meta"><b>${esc(m.who)}</b> &nbsp; ${esc(m.subj)} &nbsp; ${m.when}</div>
+      <div class="body">${body}</div>
+      <div class="original quiet small">Show original</div>`;
+    $("#pile-count").textContent = `${pileIndex+1} of ${pileData.length}`;
+  };
+  if (dir) {
+    card.classList.add(dir === "fwd" ? "leave" : "leave-back");
+    setTimeout(draw, 160);
+  } else draw();
+}
+function pileNext() { read++; pileIndex++; if (pileIndex >= pileData.length) { show("desk"); return; } renderPile("fwd"); }
+function pileBack() { if (pileIndex === 0) return; pileIndex--; renderPile("back"); }
+
+/* ---------- desk ---------- */
+function deskItems() {
+  const out = [];
+  for (const h of ["unsure", ...horizons]) deskData[h].forEach((it, i) => out.push({ h, i, it }));
+  return out;
+}
+function renderDesk() {
+  const col = $("#desk-col");
+  const all = deskItems();
+  if (countNeed() === 0 && deskData.unsure.length === 0) { show("caught"); return; }
+  if (deskFocus >= all.length) deskFocus = Math.max(0, all.length - 1);
+  let n = 0;
+  const block = (key, title, sort) => {
+    const items = deskData[key];
+    if (!items.length) return "";
+    const rows = items.map(it => {
+      const f = (n++ === deskFocus) ? " focus" : "";
+      return `<div class="item${f}"><span class="who">${esc(it.who)}</span> ${esc(it.subj)}<span class="snip">${esc(it.snip)}</span></div>`;
+    }).join("");
+    const s = sort ? `<span class="sort"><a data-sort="need">Needs you</a><a data-sort="aware">Aware</a></span>` : "";
+    return `<div class="section ${key}"><div class="label"><span>${title}</span>${s}</div>${rows}</div>`;
+  };
+  const waiting = deskData.waiting.length ? `<div class="section waiting"><div class="label"><span>Waiting</span></div>${
+    deskData.waiting.map(w => `<div class="item"><span class="who">${esc(w.who)}</span> waiting ${w.days} days</div>`).join("")}</div>` : "";
+  col.innerHTML = block("unsure", "Unsure", true) + block("today", "Today") + block("week", "This week") + block("whenever", "Whenever") + waiting;
+}
+function focused() { return deskItems()[deskFocus]; }
+function deskDone() {
+  const f = focused(); if (!f) return;
+  deskData[f.h].splice(f.i, 1);
+  renderDesk();
+}
+function deskHorizon() {
+  const f = focused(); if (!f || f.h === "unsure") return;
+  const next = horizons[(horizons.indexOf(f.h) + 1) % horizons.length];
+  deskData[f.h].splice(f.i, 1);
+  deskData[next].push(f.it);
+  deskFocus = deskItems().findIndex(x => x.it === f.it);
+  renderDesk();
+}
+function deskSort(to) {
+  const f = deskData.unsure.shift(); if (!f) return;
+  if (to === "need") deskData.week.push(f);
+  renderDesk();
+}
+function deskReply() {
+  const f = focused(); if (!f) return;
+  $("#page-to").textContent = `To ${f.it.who} — ${f.it.subj.startsWith("Re:") ? f.it.subj : "Re: " + f.it.subj}`;
+  $("#f-to").textContent = f.it.who;
+  $("#f-subj").textContent = f.it.subj.startsWith("Re:") ? f.it.subj : "Re: " + f.it.subj;
+  show("page");
+}
+
+/* ---------- page ---------- */
+function placeCaret() {
+  const d = $("#draft"), r = document.createRange(), s = window.getSelection();
+  r.selectNodeContents(d); r.collapse(false); s.removeAllRanges(); s.addRange(r);
+}
+function send() {
+  replies++;
+  const f = focused();
+  if (f && f.h !== "unsure") deskData[f.h].splice(f.i, 1);
+  $("#page-fields").classList.remove("show");
+  $("#facts").textContent = `${replies} replies · ${read} read · 12 minutes`;
+  back();
+}
+
+/* ---------- drawer ---------- */
+function renderResults() {
+  $("#results").innerHTML = resultsData.map(g => `<div class="month">${g.month}</div>` +
+    g.items.map(r => `<div class="result"><span class="who">${esc(r.who)}</span> ${esc(r.subj)}<span class="snip">${esc(r.snip)}</span></div>`).join("")).join("");
+}
+
+/* ---------- keys ---------- */
+document.addEventListener("keydown", (e) => {
+  const inDraft = screen === "page";
+  if (e.metaKey && e.key === "Enter") { if (inDraft) { e.preventDefault(); send(); } return; }
+  if (e.key === "Escape") { e.preventDefault(); if (inDraft) $("#page-fields").classList.remove("show"); back(); return; }
+  if (inDraft) {
+    if (e.key === "Tab") { e.preventDefault(); $("#page-fields").classList.toggle("show"); placeCaret(); }
+    return;
+  }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key;
+  const goto = { "1": "doorstep", "2": "pile", "3": "desk", "4": "page", "5": "drawer" };
+  if (goto[k]) { e.preventDefault(); show(goto[k]); return; }
+  if (k === "d") { document.documentElement.classList.toggle("dark"); return; }
+  if (k === "t" && screen === "doorstep") { delivered = !delivered; renderDoor(); return; }
+
+  if (screen === "pile") {
+    if (k === " " || k === "j" || k === "n") { e.preventDefault(); pileNext(); }
+    else if (k === "k") pileBack();
+    else if (k === "s" || k === "l") pileNext();
+  }
+  if (screen === "desk") {
+    const n = deskItems().length;
+    if (k === "j" || k === "ArrowDown") { e.preventDefault(); deskFocus = Math.min(n - 1, deskFocus + 1); renderDesk(); }
+    else if (k === "k" || k === "ArrowUp") { e.preventDefault(); deskFocus = Math.max(0, deskFocus - 1); renderDesk(); }
+    else if (k === "e") deskDone();
+    else if (k === "h") deskHorizon();
+    else if (k === "r" || k === "Enter") deskReply();
+  }
+  if (screen === "drawer" && k === "Enter") { pileIndex = 1; show("pile"); }
+});
+
+document.addEventListener("click", (e) => {
+  const go = e.target.closest("[data-go]"); if (go) { show(go.dataset.go); return; }
+  const sort = e.target.closest("[data-sort]"); if (sort) { deskSort(sort.dataset.sort); return; }
+  if (screen === "pile" && e.target.closest("#pile-card")) pileNext();
+  if (screen === "desk") {
+    const items = [...document.querySelectorAll("#desk-col .item")];
+    const idx = items.indexOf(e.target.closest(".item"));
+    if (idx > -1 && idx < deskItems().length) { deskFocus = idx; renderDesk(); }
+  }
+});
+
+/* ---------- init ---------- */
+renderDoor();
+dayLine($("#day-caught"), .56);
+</script>
+</body>
+</html>
