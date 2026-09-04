@@ -15,6 +15,8 @@ defmodule EmailSucks.ReleaseJournalTest do
     assert {:ok, %{released: 1, unknown: 1, complete?: false}} = Journal.status(snapshot.id)
     assert {:error, :stale_claim} = Journal.record(snapshot.id, "late-arrival", second, :released)
     assert {:ok, :recorded} = Journal.record(snapshot.id, "b", second, :released)
+    assert {:ok, :recorded} = Journal.record(snapshot.id, "b", second, :released)
+    assert {:error, :stale_claim} = Journal.record(snapshot.id, "b", second, :pending)
     assert {:ok, :complete} = Journal.claim(snapshot.id, 101)
   end
 

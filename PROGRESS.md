@@ -10,11 +10,11 @@ This is the current status and next-action tracker. The [product specification](
 
 **Active implementation:** local Phase 0 reliability probes. The owner deferred hosted deployment while away from the computer; continue local work without requesting Render login.
 
-**Latest completed slice:** synthetic per-message release journal. All 57 backend tests passed, including distinct-connection claim contention, partial failure, stale claims and late-arrival rejection. [Evidence](docs/evidence/phase-0/2026-09-04-release-journal.md). This is not live Gmail release proof.
+**Latest completed slice:** executable horizon/Waiting/send-disposition contract and replay-safe journal outcomes. All 62 backend tests pass. [Workflow evidence](docs/evidence/phase-0/2026-09-04-workflow-contract.md), [journal evidence](docs/evidence/phase-0/2026-09-04-release-journal.md). These are local synthetic proofs, not live Gmail release proof.
 
 ## Next action
 
-**Add executable local horizon and Waiting contract examples.**
+**Continue local account-recovery coordination and release-race tests; then schedule-occurrence and per-batch review contracts.**
 
 Render deployment is deferred by the owner, not a blocker for local development. Continue autonomously, commit verified slices and push regularly. Live account/device operations remain deferred until the owner can participate. The current app remains read-only.
 
@@ -35,6 +35,7 @@ Render deployment is deferred by the owner, not a blocker for local development.
 | Render release and restore startup | Verified locally; not deployed | [Evidence](docs/evidence/phase-0/2026-09-04-render-preparation.md), [setup](docs/render-phase-0-setup.md). CLI login required for hosted checks. |
 | Recovery card and experiment inventory | Prepared, not rehearsed | [Card](docs/phase-0-offline-recovery-card.md), [scope/fixture inventory](docs/phase-0-experiment-inventory.md). Private account details and device results pending. |
 | Per-message release journal | Verified with synthetic outcomes | [Evidence](docs/evidence/phase-0/2026-09-04-release-journal.md); live provider integration remains open. |
+| Executable work-item contract | Verified locally | [Evidence](docs/evidence/phase-0/2026-09-04-workflow-contract.md); calendar dates, Waiting visibility and confirmed-send guards. Not a persisted workflow engine. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
@@ -46,7 +47,7 @@ Checked items require their stated evidence; implementation alone does not pass 
 - [ ] **Authorization lifecycle:** [method/scope inventory](docs/phase-0-experiment-inventory.md) prepared; settle the dogfood authorization strategy; distinguish natural token expiry, revocation and refresh-token rotation. Inventory additional scopes before any mutation work.
 - [ ] **0.2 — Interception matrix:** prove primary address, aliases, forwarding, Bcc, lists, existing threads, unusual mail and filter conflicts; document unsupported cases.
 - [ ] **0.3 — Notification/badge matrix:** observe held arrival, bypass and release on actual devices; choose and prove the app alert behavior.
-- [ ] **Real finite release:** implement per-message progress and prove fixed membership through retries, partial success, lost responses, worker crashes and concurrent arrivals. The synthetic snapshot probe is not sufficient.
+- [ ] **Real finite release:** implement per-message progress and prove fixed membership through retries, partial success, lost responses, worker crashes and concurrent arrivals. The [synthetic journal](docs/evidence/phase-0/2026-09-04-release-journal.md) now covers claims, partial outcomes and stale workers; live Gmail effects and account recovery races remain unproven.
 - [ ] **0.4 — Panic and direct Gmail recovery:** [offline recovery card](docs/phase-0-offline-recovery-card.md) prepared but not filled/rehearsed; disable interception before restoring held mail, and rehearse with the app unavailable.
 - [ ] **Safe disconnect:** restore and verify held mail before revocation, including interrupted recovery. Current app sign-out only ends the browser session.
 - [ ] **Independent monitoring:** configure Sentry and Better Stack with redaction; test meaningful failed-work and missed-heartbeat alerts, including total Render outage.
@@ -91,6 +92,7 @@ The state contract resolves implementation semantics under the autonomous-work i
 
 | Date | Result | Reference |
 |---|---|---|
+| 2026-09-04 | Synthetic journal and executable work-item contract | 62 backend tests; release-journal and workflow evidence above |
 | 2026-09-04 | Written contract, Render release/restore guard and recovery preparation | `e897234`, `36df39b`; 52 backend tests, local release smoke, Blueprint schema validation |
 | 2026-09-04 | Desk-inspired preview styling and visual checks | Design evidence; 47 backend and seven browser tests |
 | 2026-09-04 | Read-only five-message preview | `0618405`, listing evidence |

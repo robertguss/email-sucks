@@ -48,8 +48,13 @@ defmodule EmailSucks.PhaseZero.ReleaseJournal do
     with_journal(snapshot_id, fn entries ->
       case entries[message_id] do
         %{"state" => "unknown", "token" => ^token} ->
-          next = %{"state" => Atom.to_string(outcome), "token" => nil, "lease_until" => 0}
+          next = %{"state" => Atom.to_string(outcome), "token" => token, "lease_until" => 0}
           {:recorded, Map.put(entries, message_id, next)}
+
+        %{"state" => state, "token" => ^token} ->
+          if state == Atom.to_string(outcome),
+            do: {:recorded, entries},
+            else: Repo.rollback(:stale_claim)
 
         _ ->
           Repo.rollback(:stale_claim)
