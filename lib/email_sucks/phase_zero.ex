@@ -7,7 +7,7 @@ defmodule EmailSucks.PhaseZero do
   require Ash.Query
 
   alias EmailSucks.Repo
-  alias EmailSucks.PhaseZero.{Snapshot, VerifySnapshot}
+  alias EmailSucks.PhaseZero.{Recovery, Snapshot, VerifySnapshot}
 
   resources do
     resource Snapshot
@@ -19,9 +19,8 @@ defmodule EmailSucks.PhaseZero do
       Repo.transaction(fn ->
         # PostgreSQL owns serialization, including across BEAM instances.
         # Hash collisions only serialize unrelated fixtures; they cannot mix data.
-        Ecto.Adapters.SQL.query!(Repo, "SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [
-          account_key
-        ])
+        Recovery.lock!(account_key)
+        Recovery.ensure_normal!(account_key)
 
         case Snapshot
              |> Ash.Query.filter(account_key == ^account_key and status == :pending)

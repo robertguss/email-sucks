@@ -111,4 +111,79 @@ defmodule EmailSucks.PhaseZeroConcurrencyTest do
     assert Enum.count(results, &match?({:ok, {:ok, %{message_id: "a"}}}, &1)) == 1
     assert Enum.count(results, &match?({:ok, {:ok, :busy}}, &1)) == 1
   end
+
+  test "a release waits for uncommitted recovery and cannot slip through its account fence" do
+    alias EmailSucks.PhaseZero.{Recovery, ReleaseJournal}
+    account = Ecto.UUID.generate()
+    parent = self()
+    {:ok, snapshot} = Sandbox.unboxed_run(Repo, fn -> PhaseZero.freeze(account, ["a"]) end)
+
+    on_exit(fn ->
+      Sandbox.unboxed_run(Repo, fn ->
+        Repo.query!("DELETE FROM oban_jobs WHERE args->>'snapshot_id' = $1", [snapshot.id])
+        Repo.query!("DELETE FROM phase_zero_snapshots WHERE id = $1::text::uuid", [snapshot.id])
+
+        Repo.query!("DELETE FROM phase_zero_recoveries WHERE account_key = $1::text::uuid", [
+          account
+        ])
+      end)
+    end)
+
+    recovery =
+      Task.async(fn ->
+        Sandbox.unboxed_run(Repo, fn ->
+          Repo.transaction(fn ->
+            {:ok, :stopping} = Recovery.begin(account)
+            send(parent, :recovery_uncommitted)
+
+            receive do
+              :commit -> :ok
+            after
+              5_000 -> raise "recovery barrier timed out"
+            end
+          end)
+        end)
+      end)
+
+    assert_receive :recovery_uncommitted, 5_000
+
+    claimant =
+      Task.async(fn ->
+        Sandbox.unboxed_run(Repo, fn ->
+          Repo.transaction(fn ->
+            %{rows: [[pid]]} = Repo.query!("SELECT pg_backend_pid()")
+            send(parent, {:release_connection, pid})
+            result = ReleaseJournal.claim(snapshot.id, 100)
+            send(parent, {:claim_result, result})
+            result
+          end)
+        end)
+      end)
+
+    assert_receive {:release_connection, pid}, 5_000
+
+    waiting =
+      Enum.reduce_while(1..100, false, fn _, _ ->
+        locked =
+          Sandbox.unboxed_run(Repo, fn ->
+            Repo.query!("SELECT wait_event_type = 'Lock' FROM pg_stat_activity WHERE pid = $1", [
+              pid
+            ]).rows == [[true]]
+          end)
+
+        if locked do
+          {:halt, true}
+        else
+          Process.sleep(10)
+          {:cont, false}
+        end
+      end)
+
+    assert waiting
+    send(recovery.pid, :commit)
+    assert {:ok, :ok} = Task.await(recovery, 5_000)
+    assert_receive {:claim_result, {:error, :recovery_active}}, 5_000
+    assert {:error, :rollback} = Task.await(claimant, 5_000)
+    assert {:ok, %{unknown: 0}} = Sandbox.unboxed_run(Repo, fn -> Recovery.status(account) end)
+  end
 end

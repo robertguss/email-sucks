@@ -7,39 +7,50 @@ defmodule EmailSucks.PhaseZero.ReleaseJournal do
   database outcomes only; they cannot cancel a provider request already in flight.
   """
   alias EmailSucks.Repo
+  alias EmailSucks.PhaseZero.Recovery
 
   @lease_seconds 30
 
   def claim(snapshot_id, now \\ System.system_time(:second)) do
-    with_journal(snapshot_id, fn entries ->
-      candidate =
-        entries
-        |> Enum.sort_by(&elem(&1, 0))
-        |> Enum.find(fn {_id, entry} ->
-          entry["state"] == "pending" or
-            (entry["state"] == "unknown" and entry["lease_until"] <= now)
-        end)
+    with_journal(
+      snapshot_id,
+      fn entries ->
+        candidate =
+          entries
+          |> Enum.sort_by(&elem(&1, 0))
+          |> Enum.find(fn {_id, entry} ->
+            entry["state"] == "pending" or
+              (entry["state"] == "unknown" and entry["lease_until"] <= now)
+          end)
 
-      case candidate do
-        {id, entry} ->
-          token = Ecto.UUID.generate()
-          action = if entry["state"] == "unknown", do: :reconcile, else: :apply
-          next = %{"state" => "unknown", "token" => token, "lease_until" => now + @lease_seconds}
-          {%{message_id: id, token: token, action: action}, Map.put(entries, id, next)}
+        case candidate do
+          {id, entry} ->
+            token = Ecto.UUID.generate()
+            action = if entry["state"] == "unknown", do: :reconcile, else: :apply
 
-        nil ->
-          counts = counts(entries)
+            next = %{
+              "state" => "unknown",
+              "token" => token,
+              "lease_until" => now + @lease_seconds
+            }
 
-          result =
-            cond do
-              counts.complete? -> :complete
-              counts.unknown > 0 -> :busy
-              true -> :blocked
-            end
+            {%{message_id: id, token: token, action: action}, Map.put(entries, id, next)}
 
-          {result, entries}
-      end
-    end)
+          nil ->
+            counts = counts(entries)
+
+            result =
+              cond do
+                counts.complete? -> :complete
+                counts.unknown > 0 -> :busy
+                true -> :blocked
+              end
+
+            {result, entries}
+        end
+      end,
+      true
+    )
   end
 
   @doc "Record observed provider state. Pending means confirmed still held, not an HTTP timeout."
@@ -78,8 +89,21 @@ defmodule EmailSucks.PhaseZero.ReleaseJournal do
     }
   end
 
-  defp with_journal(snapshot_id, fun) do
+  defp with_journal(snapshot_id, fun, normal_only? \\ false) do
     Repo.transaction(fn ->
+      account_key =
+        case Repo.query!(
+               "SELECT account_key::text FROM phase_zero_snapshots WHERE id = $1::text::uuid",
+               [snapshot_id]
+             ).rows do
+          [[key]] -> key
+          [] -> Repo.rollback(:snapshot_not_found)
+        end
+
+      # Always account then snapshot: recovery and claims share one lock order.
+      Recovery.lock!(account_key)
+      if normal_only?, do: Recovery.ensure_normal!(account_key)
+
       # Lock the immutable parent before initialization, including across processes.
       case Repo.query!(
              "SELECT message_ids FROM phase_zero_snapshots WHERE id = $1::text::uuid FOR UPDATE",

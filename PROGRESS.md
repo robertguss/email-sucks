@@ -10,11 +10,11 @@ This is the current status and next-action tracker. The [product specification](
 
 **Active implementation:** local Phase 0 reliability probes. The owner deferred hosted deployment while away from the computer; continue local work without requesting Render login.
 
-**Latest completed slice:** executable horizon/Waiting/send-disposition contract and replay-safe journal outcomes. All 62 backend tests pass. [Workflow evidence](docs/evidence/phase-0/2026-09-04-workflow-contract.md), [journal evidence](docs/evidence/phase-0/2026-09-04-release-journal.md). These are local synthetic proofs, not live Gmail release proof.
+**Latest completed slice:** durable synthetic account recovery fence. All 67 backend tests pass, including a release blocked behind an uncommitted recovery on a separate PostgreSQL connection. [Evidence](docs/evidence/phase-0/2026-09-04-recovery-fence.md). No live restoration or filter changes.
 
 ## Next action
 
-**Continue local account-recovery coordination and release-race tests; then schedule-occurrence and per-batch review contracts.**
+**Implement finite per-batch review state and Caught Up checks locally; scheduling remains next.**
 
 Render deployment is deferred by the owner, not a blocker for local development. Continue autonomously, commit verified slices and push regularly. Live account/device operations remain deferred until the owner can participate. The current app remains read-only.
 
@@ -36,6 +36,7 @@ Render deployment is deferred by the owner, not a blocker for local development.
 | Recovery card and experiment inventory | Prepared, not rehearsed | [Card](docs/phase-0-offline-recovery-card.md), [scope/fixture inventory](docs/phase-0-experiment-inventory.md). Private account details and device results pending. |
 | Per-message release journal | Verified with synthetic outcomes | [Evidence](docs/evidence/phase-0/2026-09-04-release-journal.md); live provider integration remains open. |
 | Executable work-item contract | Verified locally | [Evidence](docs/evidence/phase-0/2026-09-04-workflow-contract.md); calendar dates, Waiting visibility and confirmed-send guards. Not a persisted workflow engine. |
+| Account recovery fence | Verified with synthetic accounts | [Evidence](docs/evidence/phase-0/2026-09-04-recovery-fence.md); database serialization and in-flight accounting, not actual mailbox restoration. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
