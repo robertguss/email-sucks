@@ -22,6 +22,7 @@ defmodule EmailSucksWeb.Router do
     get "/auth/google/callback", GoogleController, :callback, log: false
     post "/auth/logout", GoogleController, :logout, log: false
     post "/gmail/check", GoogleController, :check, log: false
+    get "/gmail/messages", GoogleController, :messages, log: false
     get "/", PageController, :home
     get "/phase-0/contract", PageController, :contract
   end

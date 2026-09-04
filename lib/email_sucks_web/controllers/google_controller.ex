@@ -44,6 +44,21 @@ defmodule EmailSucksWeb.GoogleController do
     end
   end
 
+  def messages(conn, _params) do
+    case Gmail.recent_messages(get_session(conn, :gmail_session)) do
+      {:ok, messages} ->
+        json(conn, %{messages: messages})
+
+      {:error, reason} ->
+        status =
+          if reason in [:unauthorized, :reconnect_required, :missing_scope], do: 401, else: 503
+
+        conn
+        |> put_status(status)
+        |> json(%{error: if(status == 401, do: "reconnect_required", else: "unavailable")})
+    end
+  end
+
   def logout(conn, _params) do
     Gmail.logout(get_session(conn, :gmail_session))
     conn |> clear_session() |> configure_session(drop: true) |> redirect(to: ~p"/")

@@ -43,7 +43,7 @@ This proves automatic refresh triggered by simulated local expiry against the re
 
 ## Remaining live evidence
 
-Real revocation/reconnect behavior, natural expiry and refresh-token rotation, Render deployment, operational access controls, alerting, encrypted backups and restore, interception/recovery, and device notification behavior still need real experiments. This local implementation does not pass those gates by inference from mocks.
+The owner subsequently reported that removing Google access produced the expected reconnect prompt and that reauthorization restored a successful profile check. A [read-only message listing](2026-09-04-read-only-message-list.md) was then verified live. Natural expiry and refresh-token rotation, Render deployment, operational access controls, alerting, encrypted backups and restore, interception/recovery, and device notification behavior still need real experiments. This local implementation does not pass those gates by inference from mocks.
 
 The native loopback database is a trusted single-user development environment, not proof of hosted database security. Sign-out retains the provider grant; safe disconnect/revocation remains future work. Only one account and one active app session are supported in this proof.
 

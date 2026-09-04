@@ -83,6 +83,90 @@ defmodule EmailSucks.Gmail.Google do
     end
   end
 
+  def recent_messages(config, access_token) do
+    with {:ok, body} <-
+           mail_get(config, access_token, "",
+             maxResults: 5,
+             labelIds: "INBOX",
+             includeSpamTrash: false
+           ),
+         messages when is_list(messages) <- Map.get(body, "messages", []) do
+      messages
+      |> Enum.take(5)
+      |> Enum.reduce_while({:ok, []}, fn message, {:ok, acc} ->
+        case message_metadata(config, access_token, message) do
+          {:ok, item} -> {:cont, {:ok, [item | acc]}}
+          {:error, :not_found} -> {:cont, {:ok, acc}}
+          error -> {:halt, error}
+        end
+      end)
+      |> case do
+        {:ok, items} -> {:ok, Enum.reverse(items)}
+        error -> error
+      end
+    else
+      {:error, _} = error -> error
+      _ -> {:error, :provider_unavailable}
+    end
+  end
+
+  defp message_metadata(config, token, %{"id" => id}) when is_binary(id) do
+    if Regex.match?(~r/\A[a-zA-Z0-9_-]+\z/, id) do
+      with {:ok, body} <-
+             mail_get(config, token, "/" <> id,
+               format: "metadata",
+               metadataHeaders: "From",
+               metadataHeaders: "Subject",
+               fields: "id,internalDate,labelIds,payload/headers"
+             ),
+           %{"internalDate" => date, "payload" => %{"headers" => headers}} <- body,
+           true <- is_binary(date) and is_list(headers),
+           {milliseconds, ""} <- Integer.parse(date),
+           {:ok, received} <- DateTime.from_unix(milliseconds, :millisecond) do
+        header = fn name, fallback ->
+          Enum.find_value(headers, fallback, fn
+            %{"name" => key, "value" => value} when is_binary(key) and is_binary(value) ->
+              if String.downcase(key) == name and String.trim(value) != "",
+                do: String.slice(value, 0, 1000)
+
+            _ ->
+              nil
+          end)
+        end
+
+        {:ok,
+         %{
+           id: id,
+           sender: header.("from", "Unknown sender"),
+           subject: header.("subject", "(No subject)"),
+           received_at: DateTime.to_iso8601(received),
+           unread: "UNREAD" in Map.get(body, "labelIds", [])
+         }}
+      else
+        {:error, _} = error -> error
+        _ -> {:error, :provider_unavailable}
+      end
+    else
+      {:error, :provider_unavailable}
+    end
+  end
+
+  defp message_metadata(_, _, _), do: {:error, :provider_unavailable}
+
+  defp mail_get(config, token, path, params) do
+    url =
+      "https://gmail.googleapis.com/gmail/v1/users/me/messages" <>
+        path <> "?" <> URI.encode_query(params)
+
+    case request(config, method: :get, url: url, headers: [{"authorization", "Bearer " <> token}]) do
+      {:ok, %{status: 200, body: body}} when is_map(body) -> {:ok, body}
+      {:ok, %{status: 401}} -> {:error, :reconnect_required}
+      {:ok, %{status: 403}} -> {:error, :missing_scope}
+      {:ok, %{status: 404}} -> {:error, :not_found}
+      _ -> {:error, :provider_unavailable}
+    end
+  end
+
   def random, do: :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
 
   defp strategy(config) do

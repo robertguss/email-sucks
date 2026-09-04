@@ -151,12 +151,27 @@ defmodule EmailSucks.Gmail do
     :ok
   end
 
-  def check(session) do
+  def check(session), do: with_access(session, &check_profile/2)
+
+  def recent_messages(session) do
+    with_access(session, fn account, tokens ->
+      case Google.recent_messages(config(), tokens["access_token"]) do
+        {:error, reason} = error when reason in [:reconnect_required, :missing_scope] ->
+          update_current(account, status: "reconnect_required")
+          error
+
+        result ->
+          result
+      end
+    end)
+  end
+
+  defp with_access(session, operation) do
     case account(session) do
       %Account{status: "connected"} = account ->
         with {:ok, tokens} <- Vault.open(account.credentials, "gmail-tokens"),
              {:ok, account, tokens} <- access(account, tokens) do
-          check_profile(account, tokens)
+          operation.(account, tokens)
         else
           {:error, :invalid_ciphertext} ->
             update_current(account, status: "reconnect_required")

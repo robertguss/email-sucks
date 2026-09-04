@@ -155,5 +155,31 @@ defmodule EmailSucksWeb.GoogleControllerTest do
         do: refute(log =~ value)
   end
 
+  test "message listing requires a current browser session and never caches results", %{
+    conn: conn
+  } do
+    denied = get(conn, "/gmail/messages")
+    assert json_response(denied, 401) == %{"error" => "reconnect_required"}
+
+    {:ok, session} =
+      Gmail.connect(%{subject: "subject", email: "owner@gmail.com"}, %{
+        "access_token" => "private-access",
+        "refresh_token" => "private-refresh",
+        "expires_at" => System.system_time(:second) + 3600
+      })
+
+    Req.Test.stub(__MODULE__, fn conn -> Req.Test.json(conn, %{"messages" => []}) end)
+    listed = conn |> Plug.Test.init_test_session(gmail_session: session) |> get("/gmail/messages")
+    assert json_response(listed, 200) == %{"messages" => []}
+    assert get_resp_header(listed, "cache-control") == ["no-store"]
+    Req.Test.stub(__MODULE__, fn conn -> Plug.Conn.send_resp(conn, 401, "private error") end)
+
+    revoked =
+      conn |> Plug.Test.init_test_session(gmail_session: session) |> get("/gmail/messages")
+
+    assert json_response(revoked, 401) == %{"error" => "reconnect_required"}
+    assert Gmail.account(session).status == "reconnect_required"
+  end
+
   defp bypass_csrf(conn), do: Plug.Conn.put_private(conn, :plug_skip_csrf_protection, true)
 end

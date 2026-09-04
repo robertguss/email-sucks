@@ -1,6 +1,6 @@
 # Deliberate email
 
-A personal Gmail client in Phase 0: prove delivery and recovery before building the full Room. This repository currently has a Phoenix/Ash/PostgreSQL/Oban foundation with a React/TypeScript/Inertia browser shell. It supports a restricted, read-only Google connection and a profile check. No mail can be intercepted or sent.
+A personal Gmail client in Phase 0: prove delivery and recovery before building the full Room. This repository currently has a Phoenix/Ash/PostgreSQL/Oban foundation with a React/TypeScript/Inertia browser shell. It supports a restricted, read-only Google connection, a profile check, and a five-message Inbox preview. No mail can be intercepted or sent.
 
 ## Requirements
 
@@ -42,7 +42,7 @@ The local callback is `http://localhost:4000/auth/google/callback`. After prepar
 bin/dev-gmail
 ```
 
-Open [localhost:4000](http://localhost:4000), connect the configured Google account, and then use **Check connection**. The check reads the Gmail account profile; it does not download or modify messages. Google consent must be completed by the account owner. **Sign out of this app** invalidates the browser session but retains the saved Google grant.
+Open [localhost:4000](http://localhost:4000), connect the configured Google account, and then use **Check connection**. The check reads the Gmail account profile; it does not download or modify messages. Use **Load recent messages** for a read-only preview of up to five Inbox messages; only sender, subject, received time and unread status are retrieved. Message bodies are not fetched. Google consent must be completed by the account owner. **Sign out of this app** invalidates the browser session but retains the saved Google grant.
 
 Ordinary `mix phx.server` runs without OAuth unless `GMAIL_OAUTH_FILE` is explicitly set. ExUnit ignores these credential files; browser tests remove the credential-file environment variables from their server process. Keep the private encryption key stable across restarts. See [connection evidence](docs/evidence/phase-0/2026-09-04-google-connection.md) for tests and remaining proof gates.
 

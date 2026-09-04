@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import RecentMessages from '../components/RecentMessages';
 
 type Props = {
   gmail_configured: boolean;
@@ -45,6 +46,7 @@ export default function PhaseZero({ gmail_configured, gmail_connected, gmail_ema
         )}
         {!gmail_configured && <p>Google connection setup is not configured on this server.</p>}
       </section>
+      {gmail_connected && <RecentMessages />}
       <ol>
         <li><strong>Define the contract.</strong> Keep each delivery finite and every unresolved message visible.</li>
         <li><strong>Test the failures.</strong> Interrupt jobs, retry work, and verify the recorded outcome.</li>
