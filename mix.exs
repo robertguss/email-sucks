@@ -58,7 +58,8 @@ defmodule EmailSucks.MixProject do
       {:oban, "~> 2.24.1"},
       {:inertia, "~> 2.6.2"},
       {:assent, "~> 0.3.1"},
-      {:req, "~> 0.7.4"}
+      {:req, "~> 0.7.4"},
+      {:tz, "~> 0.28.2"}
     ]
   end
 

@@ -10,11 +10,11 @@ This is the current status and next-action tracker. The [product specification](
 
 **Active implementation:** local Phase 0 reliability probes. The owner deferred hosted deployment while away from the computer; continue local work without requesting Render login.
 
-**Latest completed slice:** durable finite batch-review ledger. All 72 backend tests pass, including later deliveries of the same conversation, partial-release acknowledgment guards and replay-safe review. [Evidence](docs/evidence/phase-0/2026-09-04-batch-review.md).
+**Latest completed slice:** DST-aware local occurrence resolution with registry-verified `tz` 0.28.2 / IANA 2026b. All 78 backend tests pass; production build and packaged timezone-data check pass. [Evidence](docs/evidence/phase-0/2026-09-04-delivery-occurrences.md).
 
 ## Next action
 
-**Implement and test local delivery occurrence resolution, including DST gaps and repeated times.**
+**Persist delivery occurrences and test schedule edits, missed-window catch-up and scheduled/manual claim races locally.**
 
 Render deployment is deferred by the owner, not a blocker for local development. Continue autonomously, commit verified slices and push regularly. Live account/device operations remain deferred until the owner can participate. The current app remains read-only.
 
@@ -38,6 +38,7 @@ Render deployment is deferred by the owner, not a blocker for local development.
 | Executable work-item contract | Verified locally | [Evidence](docs/evidence/phase-0/2026-09-04-workflow-contract.md); calendar dates, Waiting visibility and confirmed-send guards. Not a persisted workflow engine. |
 | Account recovery fence | Verified with synthetic accounts | [Evidence](docs/evidence/phase-0/2026-09-04-recovery-fence.md); database serialization and in-flight accounting, not actual mailbox restoration. |
 | Finite batch review | Verified with synthetic outcomes | [Evidence](docs/evidence/phase-0/2026-09-04-batch-review.md); separate per-batch review and pending-delivery status, no UI integration. |
+| Local occurrence resolution | Verified with IANA data | [Evidence](docs/evidence/phase-0/2026-09-04-delivery-occurrences.md); DST gaps/overlaps, stable identity and explicit date exceptions. Durable scheduler remains unimplemented. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
@@ -94,6 +95,7 @@ The state contract resolves implementation semantics under the autonomous-work i
 
 | Date | Result | Reference |
 |---|---|---|
+| 2026-09-04 | Recovery fence, finite batch review and DST occurrence resolution | 78 backend tests; local evidence above |
 | 2026-09-04 | Synthetic journal and executable work-item contract | 62 backend tests; release-journal and workflow evidence above |
 | 2026-09-04 | Written contract, Render release/restore guard and recovery preparation | `e897234`, `36df39b`; 52 backend tests, local release smoke, Blueprint schema validation |
 | 2026-09-04 | Desk-inspired preview styling and visual checks | Design evidence; 47 backend and seven browser tests |

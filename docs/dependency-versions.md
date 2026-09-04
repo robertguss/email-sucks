@@ -15,6 +15,7 @@ Checked 2026-09-04 against live official release feeds, Hex, and npm, then resol
 | Postgrex | 0.22.4 | [Hex metadata](https://hex.pm/api/packages/postgrex) |
 | Oban | 2.24.1 | [Release requirements](https://hex.pm/api/packages/oban/releases/2.24.1); [migration version 14](https://hexdocs.pm/oban/Oban.Migration.html) |
 | Assent | 0.3.1 | [Hex release metadata](https://hex.pm/api/packages/assent/releases/0.3.1); Google OIDC validation, PKCE and nonce; native JWT adapter |
+| IANA timezone support | tz 0.28.2 / IANA 2026b | [Live Hex metadata](https://hex.pm/api/packages/tz/releases/0.28.2), [official docs](https://tz.hexdocs.pm/readme.html); verified 2026-09-04, Elixir `~> 1.9`; bundled data, no runtime updater |
 | Req | 0.7.4 | [Hex release metadata](https://hex.pm/api/packages/req/releases/0.7.4); supported by Assent’s optional Req dependency; bounded requests and Req.Test fixtures |
 | Bandit | 1.12.5 | [Hex metadata](https://hex.pm/api/packages/bandit) |
 | Phoenix Inertia adapter | 2.6.2 | [Hex metadata](https://hex.pm/api/packages/inertia); latest stable; 3.0.0-rc5 is a prerelease |
@@ -41,3 +42,5 @@ Fresh dependency compilation emits upstream warnings in packages including Ash, 
 Sentry and backup tooling will be verified again when their implementation slice begins. They are architecture selections, not installed integrations in this slice.
 
 The OAuth slice uses Phoenix.Token authenticated encryption with an independent storage key; no extra encryption library was added. Assent and Req were selected from live Hex metadata on 2026-09-04 and verified with signed OIDC fixtures and a full local compile/test run. `mix hex.audit` reported no retired or security-advisory packages.
+
+Timezone addition: `tz` emits three upstream unused-require warnings on fresh Elixir 1.20 compilation. Application compilation and the production release pass; see [occurrence evidence](evidence/phase-0/2026-09-04-delivery-occurrences.md).
