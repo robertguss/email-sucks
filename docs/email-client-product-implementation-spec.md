@@ -12,6 +12,8 @@
 
 > This document intentionally does **not** select a programming language, framework, database, hosting provider, job system, notification provider, deployment model, or system architecture. Those decisions belong in a separate technology and architecture document.
 
+Companion documents: [Accepted application architecture](decisions/0001-application-architecture.md) and [Phase 0 Gmail reliability proof plan](phase-0-gmail-reliability-proof.md). The proof plan records required experiments; it is not evidence that the exit gates have passed.
+
 ---
 
 # 1. Purpose
@@ -819,10 +821,10 @@ The choice must be based on actual device testing. The app’s review state neve
 The product must make these instructions available outside normal workflow:
 
 1. Open Gmail.
-2. Open the `Postman/Held` label.
-3. Select all held mail.
-4. Move it to Inbox.
-5. Disable or delete the app-owned interception filter.
+2. Disable or delete the app-owned interception filter(s) first so future mail is no longer intercepted.
+3. Open the `Postman/Held` label.
+4. Select all held mail, including messages beyond the current page, and move it to Inbox.
+5. Verify that no mail remains unintentionally held and that new mail follows ordinary Gmail delivery.
 6. Return to the app only after ordinary delivery is restored.
 
 The exact Gmail steps must be verified against the user’s actual Gmail interface before dogfood begins.
