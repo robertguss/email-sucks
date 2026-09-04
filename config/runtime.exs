@@ -16,7 +16,14 @@ import Config
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
-if System.get_env("PHX_SERVER") do
+role = System.get_env("APP_ROLE", "web")
+if role not in ["web", "worker"], do: raise("APP_ROLE must be web or worker")
+
+if config_env() != :test do
+  config :email_sucks, Oban, queues: if(role == "worker", do: [phase_zero: 5], else: false)
+end
+
+if role == "web" and System.get_env("PHX_SERVER") in ["true", "1"] do
   config :email_sucks, EmailSucksWeb.Endpoint, server: true
 end
 

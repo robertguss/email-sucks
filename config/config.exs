@@ -9,6 +9,7 @@ import Config
 
 config :email_sucks,
   ecto_repos: [EmailSucks.Repo],
+  ash_domains: [EmailSucks.PhaseZero],
   generators: [timestamp_type: :utc_datetime]
 
 config :email_sucks, Oban, repo: EmailSucks.Repo, queues: false, plugins: false

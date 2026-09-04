@@ -34,6 +34,18 @@ mise exec -- mix phx.server
 
 Open [localhost:4000](http://localhost:4000). During frontend work, run `mise exec -- npm run watch` from `assets/` in another terminal.
 
+## Synthetic snapshot probe
+
+The internal `EmailSucks.PhaseZero.freeze/2` function takes an opaque fixture UUID and synthetic message IDs. It atomically persists immutable membership and an Oban verification job. It is not exposed over HTTP and does not call Gmail.
+
+To run the separate development worker:
+
+```sh
+APP_ROLE=worker mise exec -- mix run --no-halt
+```
+
+The default web role executes no queues. The worker role executes only the synthetic `phase_zero` queue. Real delivery queues do not exist yet. Tests use Oban manual mode. See [local evidence](docs/evidence/phase-0/2026-09-04-foundation.md) and [test-account preparation](docs/phase-0-test-account-setup.md).
+
 ## Verification
 
 ```sh
