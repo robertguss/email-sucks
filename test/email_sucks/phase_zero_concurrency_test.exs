@@ -186,4 +186,75 @@ defmodule EmailSucks.PhaseZeroConcurrencyTest do
     assert {:error, :rollback} = Task.await(claimant, 5_000)
     assert {:ok, %{unknown: 0}} = Sandbox.unboxed_run(Repo, fn -> Recovery.status(account) end)
   end
+
+  test "scheduled and manual claims on separate connections share one active delivery" do
+    alias EmailSucks.PhaseZero.Scheduling
+    account = Ecto.UUID.generate()
+    parent = self()
+
+    Sandbox.unboxed_run(Repo, fn ->
+      {:ok, _} = Scheduling.plan(account, 1, ~D[2026-09-04], ~T[09:00:00], "Etc/UTC")
+    end)
+
+    on_exit(fn ->
+      Sandbox.unboxed_run(Repo, fn ->
+        for table <- [
+              "phase_zero_manual_receipts",
+              "phase_zero_occurrences",
+              "phase_zero_delivery_runs",
+              "phase_zero_schedules"
+            ] do
+          Repo.query!("DELETE FROM " <> table <> " WHERE account_key = $1::text::uuid", [account])
+        end
+
+        Repo.query!(
+          "DELETE FROM oban_jobs WHERE args->>'snapshot_id' IN (SELECT id::text FROM phase_zero_snapshots WHERE account_key = $1::text::uuid)",
+          [account]
+        )
+
+        Repo.query!("DELETE FROM phase_zero_snapshots WHERE account_key = $1::text::uuid", [
+          account
+        ])
+      end)
+    end)
+
+    tasks =
+      for mode <- [:scheduled, :manual] do
+        Task.async(fn ->
+          Sandbox.unboxed_run(Repo, fn ->
+            Repo.transaction(fn ->
+              %{rows: [[pid]]} = Repo.query!("SELECT pg_backend_pid()")
+              send(parent, {:scheduler_ready, self(), pid})
+
+              receive do
+                :go ->
+                  if mode == :scheduled,
+                    do: Scheduling.claim_due(account, 2_000_000_000, ["a"]),
+                    else: Scheduling.check_now(account, "click", ["b"])
+              after
+                5_000 -> raise "scheduling barrier timed out"
+              end
+            end)
+          end)
+        end)
+      end
+
+    connections =
+      for _ <- tasks do
+        assert_receive {:scheduler_ready, process, pid}, 5_000
+        {process, pid}
+      end
+
+    assert connections |> Enum.map(&elem(&1, 1)) |> Enum.uniq() |> length() == 2
+    Enum.each(connections, fn {process, _} -> send(process, :go) end)
+
+    runs =
+      Enum.map(tasks, fn task ->
+        assert {:ok, {:ok, run}} = Task.await(task, 5_000)
+        run
+      end)
+
+    assert runs |> Enum.map(& &1.id) |> Enum.uniq() |> length() == 1
+    assert runs |> Enum.map(& &1.snapshot_id) |> Enum.uniq() |> length() == 1
+  end
 end

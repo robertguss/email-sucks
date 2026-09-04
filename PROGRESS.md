@@ -10,11 +10,11 @@ This is the current status and next-action tracker. The [product specification](
 
 **Active implementation:** local Phase 0 reliability probes. The owner deferred hosted deployment while away from the computer; continue local work without requesting Render login.
 
-**Latest completed slice:** DST-aware local occurrence resolution with registry-verified `tz` 0.28.2 / IANA 2026b. All 78 backend tests pass; production build and packaged timezone-data check pass. [Evidence](docs/evidence/phase-0/2026-09-04-delivery-occurrences.md).
+**Latest completed slice:** durable synthetic scheduling and Check Now receipts. All 85 backend tests pass, including scheduled/manual contention on separate database connections. [Evidence](docs/evidence/phase-0/2026-09-04-durable-scheduling.md).
 
 ## Next action
 
-**Persist delivery occurrences and test schedule edits, missed-window catch-up and scheduled/manual claim races locally.**
+**Exercise release claims and reconciliation through a fault-injected synthetic provider runner. Then continue local recovery, notification and restore checks.**
 
 Render deployment is deferred by the owner, not a blocker for local development. Continue autonomously, commit verified slices and push regularly. Live account/device operations remain deferred until the owner can participate. The current app remains read-only.
 
@@ -39,6 +39,7 @@ Render deployment is deferred by the owner, not a blocker for local development.
 | Account recovery fence | Verified with synthetic accounts | [Evidence](docs/evidence/phase-0/2026-09-04-recovery-fence.md); database serialization and in-flight accounting, not actual mailbox restoration. |
 | Finite batch review | Verified with synthetic outcomes | [Evidence](docs/evidence/phase-0/2026-09-04-batch-review.md); separate per-batch review and pending-delivery status, no UI integration. |
 | Local occurrence resolution | Verified with IANA data | [Evidence](docs/evidence/phase-0/2026-09-04-delivery-occurrences.md); DST gaps/overlaps, stable identity and explicit date exceptions. Durable scheduler remains unimplemented. |
+| Durable scheduling probe | Verified locally | [Evidence](docs/evidence/phase-0/2026-09-04-durable-scheduling.md); saved occurrences, coalescing, revision edits, manual receipts and account serialization. No timer/Gmail integration. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining

@@ -28,16 +28,27 @@ defmodule EmailSucks.PhaseZero.Occurrence do
     end
   end
 
+  @doc false
+  def identity(account_key, revision, date, time, zone) do
+    canonical =
+      Jason.encode!([
+        account_key,
+        revision,
+        Date.to_iso8601(date),
+        Time.to_iso8601(Time.truncate(time, :second)),
+        zone
+      ])
+
+    :crypto.hash(:sha256, canonical) |> Base.encode16(case: :lower)
+  end
+
   defp resolved(account_key, revision, date, time, zone, local, adjustment) do
     if DateTime.to_date(local) != date do
       {:error, :skipped_local_date}
     else
-      identity =
-        Jason.encode!([account_key, revision, Date.to_iso8601(date), Time.to_iso8601(time), zone])
-
       {:ok,
        %{
-         id: :crypto.hash(:sha256, identity) |> Base.encode16(case: :lower),
+         id: identity(account_key, revision, date, time, zone),
          requested_date: date,
          requested_time: time,
          time_zone: zone,
