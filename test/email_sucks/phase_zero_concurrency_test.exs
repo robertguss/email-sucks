@@ -66,4 +66,49 @@ defmodule EmailSucks.PhaseZeroConcurrencyTest do
       assert count == 1
     end)
   end
+
+  test "independent claimants cannot both own the same message" do
+    alias EmailSucks.PhaseZero.ReleaseJournal
+    parent = self()
+
+    {:ok, snapshot} =
+      Sandbox.unboxed_run(Repo, fn -> PhaseZero.freeze(Ecto.UUID.generate(), ["a"]) end)
+
+    on_exit(fn ->
+      Sandbox.unboxed_run(Repo, fn ->
+        Repo.query!("DELETE FROM oban_jobs WHERE args->>'snapshot_id' = $1", [snapshot.id])
+        Repo.query!("DELETE FROM phase_zero_snapshots WHERE id = $1::text::uuid", [snapshot.id])
+      end)
+    end)
+
+    tasks =
+      for _ <- 1..2 do
+        Task.async(fn ->
+          Sandbox.unboxed_run(Repo, fn ->
+            Repo.transaction(fn ->
+              %{rows: [[pid]]} = Repo.query!("SELECT pg_backend_pid()")
+              send(parent, {:claim_ready, self(), pid})
+
+              receive do
+                :go -> ReleaseJournal.claim(snapshot.id, 100)
+              after
+                5_000 -> raise "claim barrier timed out"
+              end
+            end)
+          end)
+        end)
+      end
+
+    connections =
+      for _ <- tasks do
+        assert_receive {:claim_ready, process, pid}, 5_000
+        {process, pid}
+      end
+
+    assert connections |> Enum.map(&elem(&1, 1)) |> Enum.uniq() |> length() == 2
+    Enum.each(connections, fn {process, _} -> send(process, :go) end)
+    results = Enum.map(tasks, &Task.await(&1, 10_000))
+    assert Enum.count(results, &match?({:ok, {:ok, %{message_id: "a"}}}, &1)) == 1
+    assert Enum.count(results, &match?({:ok, {:ok, :busy}}, &1)) == 1
+  end
 end

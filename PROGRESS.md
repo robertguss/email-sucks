@@ -8,19 +8,15 @@ This is the current status and next-action tracker. The [product specification](
 
 **Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. Nothing is deployed to Render yet.
 
-**Active implementation:** autonomous Phase 0 work. Local deployment preparation is complete. Hosted validation/provisioning awaits the owner completing `render login`; the recovery card and fixture/scope inventory are prepared for the next experiment steps.
+**Active implementation:** local Phase 0 reliability probes. The owner deferred hosted deployment while away from the computer; continue local work without requesting Render login.
 
-**Latest completed slice:** Render deployment preparation and restore startup guard. Local release build, disposable-database migration/startup/worker checks, published Blueprint schema validation and 52 backend tests passed. Hosted validation/provisioning is blocked on Render login. See [evidence](docs/evidence/phase-0/2026-09-04-render-preparation.md).
+**Latest completed slice:** synthetic per-message release journal. All 57 backend tests passed, including distinct-connection claim contention, partial failure, stale claims and late-arrival rejection. [Evidence](docs/evidence/phase-0/2026-09-04-release-journal.md). This is not live Gmail release proof.
 
 ## Next action
 
-**Owner action: complete `render login`. Then validate the prepared Blueprint in the intended workspace and proceed with hosted setup.**
+**Add executable local horizon and Waiting contract examples.**
 
-The owner has authorized autonomous work through this tracker, with verified commits and regular pushes. Routine implementation choices proceed using documented defaults. Pause only for genuinely required credentials, account actions, answers or explicit live-mail activation.
-
-The [state contract](docs/phase-0-state-contract.md) defines primary transitions, illegal states, Waiting visibility, existing Inbox boundaries, calendar behavior and external edits. Its choices are recorded as engineering defaults under this delegation; live provider/device behavior remains unproven.
-
-The CLI account check and authenticated Blueprint validation returned unauthorized. [Deployment setup](docs/render-phase-0-setup.md), [offline recovery card](docs/phase-0-offline-recovery-card.md), and [fixture/scope inventory](docs/phase-0-experiment-inventory.md) are ready. Hosted provisioning, filled private recovery details, additional consent and device experiments remain outstanding.
+Render deployment is deferred by the owner, not a blocker for local development. Continue autonomously, commit verified slices and push regularly. Live account/device operations remain deferred until the owner can participate. The current app remains read-only.
 
 ## Completed work and evidence
 
@@ -38,6 +34,7 @@ The CLI account check and authenticated Blueprint validation returned unauthoriz
 | Written state contract | Complete as documentation | [Contract](docs/phase-0-state-contract.md); runtime and live-provider proof remain separate. |
 | Render release and restore startup | Verified locally; not deployed | [Evidence](docs/evidence/phase-0/2026-09-04-render-preparation.md), [setup](docs/render-phase-0-setup.md). CLI login required for hosted checks. |
 | Recovery card and experiment inventory | Prepared, not rehearsed | [Card](docs/phase-0-offline-recovery-card.md), [scope/fixture inventory](docs/phase-0-experiment-inventory.md). Private account details and device results pending. |
+| Per-message release journal | Verified with synthetic outcomes | [Evidence](docs/evidence/phase-0/2026-09-04-release-journal.md); live provider integration remains open. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
