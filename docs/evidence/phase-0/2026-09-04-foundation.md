@@ -25,7 +25,7 @@ Final backend suite at this slice: **15 passing tests**. Browser suite: **1 pass
 
 ## Test-driven observations
 
-The initial route tests failed on the missing Phase 0/readiness routes and welcome page; they passed after implementation. Snapshot tests initially failed because the domain did not exist. The direct-SQL immutability test then failed because membership could be changed; it passed after adding the PostgreSQL trigger. Browser inspection caught incorrectly located bundled assets (404), and the corrected build output passed the navigation test.
+The initial route tests failed on the missing Phase 0/readiness routes and welcome page; they passed after implementation. Snapshot tests initially failed because the domain did not exist. The direct-SQL immutability test then failed because membership could be changed; it passed after adding the PostgreSQL trigger. Browser inspection caught incorrectly located bundled assets (404), and the corrected build output passed the navigation test. A later rerun detected a stale development server after configuration changes; the browser suite now builds assets and owns its server lifecycle on port 4010.
 
 ## What is deliberately not proven
 

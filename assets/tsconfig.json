@@ -16,6 +16,8 @@
   },
   "include": [
     "js/**/*.ts",
-    "js/**/*.tsx"
+    "js/**/*.tsx",
+    "tests/**/*.ts",
+    "playwright.config.ts"
   ]
 }

@@ -6,7 +6,7 @@ test('Phase 0 loads and navigates through Inertia without browser errors', async
   page.on('console', message => {
     if (message.type() === 'error' || message.type() === 'warning') errors.push(message.text());
   });
-  await page.goto('http://127.0.0.1:4000');
+  await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Prove the postman.' })).toBeVisible();
   await expect(page.getByText('No Gmail account connected')).toBeVisible();
   const response = page.waitForResponse(response => response.url().endsWith('/phase-0/contract'));
