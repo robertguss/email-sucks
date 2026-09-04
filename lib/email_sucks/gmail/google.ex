@@ -110,6 +110,91 @@ defmodule EmailSucks.Gmail.Google do
     end
   end
 
+  @doc "Read-only preflight summary. Filter candidates are not proof of app ownership or receiving coverage."
+  def inventory(config, access_token) do
+    with {:ok, aliases} <-
+           api_get(config, access_token, "settings/sendAs",
+             fields: "sendAs(sendAsEmail,isPrimary,isDefault,verificationStatus)"
+           ),
+         {:ok, identities} <- identities(aliases, config),
+         {:ok, label_body} <- api_get(config, access_token, "labels", fields: "labels(id,name)"),
+         {:ok, labels} <-
+           items(label_body, "labels", fn row ->
+             is_binary(row["id"]) and is_binary(row["name"])
+           end),
+         {:ok, filter_body} <-
+           api_get(config, access_token, "settings/filters",
+             fields: "filter(id,action(addLabelIds,removeLabelIds))"
+           ),
+         {:ok, filters} <- items(filter_body, "filter", &valid_filter?/1) do
+      held_ids = for label <- labels, label["name"] == "Postman/Held", do: label["id"]
+
+      candidates =
+        for filter <- filters,
+            Enum.any?(get_in(filter, ["action", "addLabelIds"]) || [], &(&1 in held_ids)) do
+          %{
+            id: filter["id"],
+            removes_inbox?: "INBOX" in (get_in(filter, ["action", "removeLabelIds"]) || [])
+          }
+        end
+
+      {:ok,
+       %{
+         identities: identities,
+         label_count: length(labels),
+         filter_count: length(filters),
+         held_filter_candidates: candidates
+       }}
+    end
+  end
+
+  defp identities(body, config) do
+    with {:ok, rows} <-
+           items(body, "sendAs", fn row ->
+             is_binary(row["sendAsEmail"]) and String.contains?(row["sendAsEmail"], "@")
+           end) do
+      primary = Enum.filter(rows, &(&1["isPrimary"] == true))
+
+      case primary do
+        [%{"sendAsEmail" => email}] ->
+          if String.downcase(email) == config[:allowed_email] do
+            {:ok,
+             Enum.map(rows, fn row ->
+               %{
+                 email: String.downcase(row["sendAsEmail"]),
+                 primary?: row["isPrimary"] == true,
+                 default?: row["isDefault"] == true,
+                 verified?: row["verificationStatus"] == "accepted"
+               }
+             end)}
+          else
+            {:error, :wrong_account}
+          end
+
+        _ ->
+          {:error, :provider_unavailable}
+      end
+    end
+  end
+
+  defp valid_filter?(row) do
+    action = Map.get(row, "action", %{})
+
+    is_binary(row["id"]) and is_map(action) and
+      Enum.all?(["addLabelIds", "removeLabelIds"], fn key ->
+        values = Map.get(action, key, [])
+        is_list(values) and Enum.all?(values, &is_binary/1)
+      end)
+  end
+
+  defp items(body, key, valid?) do
+    rows = Map.get(body, key, [])
+
+    if is_list(rows) and Enum.all?(rows, &(is_map(&1) and valid?.(&1))),
+      do: {:ok, rows},
+      else: {:error, :provider_unavailable}
+  end
+
   defp message_metadata(config, token, %{"id" => id}) when is_binary(id) do
     if Regex.match?(~r/\A[a-zA-Z0-9_-]+\z/, id) do
       with {:ok, body} <-
@@ -153,10 +238,12 @@ defmodule EmailSucks.Gmail.Google do
 
   defp message_metadata(_, _, _), do: {:error, :provider_unavailable}
 
-  defp mail_get(config, token, path, params) do
+  defp mail_get(config, token, path, params),
+    do: api_get(config, token, "messages" <> path, params)
+
+  defp api_get(config, token, path, params) do
     url =
-      "https://gmail.googleapis.com/gmail/v1/users/me/messages" <>
-        path <> "?" <> URI.encode_query(params)
+      "https://gmail.googleapis.com/gmail/v1/users/me/" <> path <> "?" <> URI.encode_query(params)
 
     case request(config, method: :get, url: url, headers: [{"authorization", "Bearer " <> token}]) do
       {:ok, %{status: 200, body: body}} when is_map(body) -> {:ok, body}

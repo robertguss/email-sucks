@@ -166,6 +166,20 @@ defmodule EmailSucks.Gmail do
     end)
   end
 
+  def inventory(session) do
+    with_access(session, fn account, tokens ->
+      case Google.inventory(config(), tokens["access_token"]) do
+        {:error, reason} = error
+        when reason in [:reconnect_required, :missing_scope, :wrong_account] ->
+          update_current(account, status: "reconnect_required")
+          error
+
+        result ->
+          result
+      end
+    end)
+  end
+
   defp with_access(session, operation) do
     case account(session) do
       %Account{status: "connected"} = account ->

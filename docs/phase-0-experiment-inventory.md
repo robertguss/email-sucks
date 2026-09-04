@@ -21,7 +21,8 @@ Verified against Google's current [Gmail scope reference](https://developers.goo
 |---|---|---|
 | OIDC identity + verified email | `openid`, `email` | Implemented |
 | Profile, messages list/get | `gmail.readonly` | Implemented; live proof exists |
-| History list, filters list, send-as list, labels list | `gmail.readonly` | Permitted by current scope; inventory/sync implementation pending |
+| Filters list, send-as list, labels list | `gmail.readonly` | Internal read-only inventory implemented and fixture-tested; live discovery pending |
+| History list | `gmail.readonly` | Sync implementation pending |
 | Labels create | `gmail.modify` (also supports narrower `gmail.labels`) | Planned alongside message release |
 | Exact message label modification / restore | `gmail.modify` | Not requested or implemented |
 | Filters create/delete | `gmail.settings.basic` | Not requested or implemented; `gmail.modify` alone cannot disable interception filters |

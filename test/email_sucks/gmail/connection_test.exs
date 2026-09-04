@@ -24,6 +24,19 @@ defmodule EmailSucks.Gmail.ConnectionTest do
     :ok
   end
 
+  test "inventory requires a valid session and marks revoked or insufficient access for reconnect" do
+    Req.Test.stub(__MODULE__, fn _ -> flunk("unauthorized inventory request") end)
+    assert {:error, :unauthorized} = Gmail.inventory("invalid-session")
+    {:ok, session} = Gmail.connect(identity(), token())
+
+    Req.Test.stub(__MODULE__, fn conn ->
+      Plug.Conn.send_resp(conn, 403, "private-provider-error")
+    end)
+
+    assert {:error, :missing_scope} = Gmail.inventory(session)
+    assert Repo.one!(Account).status == "reconnect_required"
+  end
+
   test "flow is encrypted, browser-bound, one-use and expires" do
     {:ok, browser, _url} = Gmail.begin_connection()
     flow = Repo.one!(Flow)

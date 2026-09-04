@@ -8,15 +8,19 @@ This is the current status and next-action tracker. The [product specification](
 
 **Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. Nothing is deployed to Render yet.
 
-**Active implementation:** local Phase 0 reliability probes. The owner deferred hosted deployment while away from the computer; continue local work without requesting Render login.
+**Active implementation:** local groundwork is verified through durable scheduling, release/notification probes, encrypted restore rehearsal and read-only identity/filter discovery. The next critical-path proof needs owner participation in a controlled live Gmail experiment. Render deployment remains deferred by the owner.
 
-**Latest completed slice:** durable synthetic batch notification receipts. All 93 backend tests pass; unknown transport outcomes cannot trigger blind retries. [Evidence](docs/evidence/phase-0/2026-09-04-batch-notification.md). No real notification transport connected.
+**Latest completed slice:** read-only Gmail inventory boundary. All 98 backend and seven browser tests pass; current production build and encrypted local restore rehearsal pass. [Evidence](docs/evidence/phase-0/2026-09-04-read-only-inventory.md).
 
 ## Next action
 
-**Prepare read-only Gmail identity/filter discovery using the existing scope, then review remaining local versus owner-dependent Phase 0 gates.**
+**When the owner is back at the computer: perform the controlled Gmail authorization/setup step, then test one synthetic arrival and direct recovery.**
 
-Render deployment is deferred by the owner, not a blocker for local development. Continue autonomously, commit verified slices and push regularly. Live account/device operations remain deferred until the owner can participate. The current app remains read-only.
+The current grant remains read-only. The live experiment needs additional Google consent, an agreed controlled sender/message, and a verified offline recovery path. Native notification proof needs actual owner devices. These are empirical gates; more synthetic tests cannot pass them. Work through human setup one step at a time.
+
+Render deployment stays deferred. Hosted alert receipt and R2/Render recovery cannot be verified locally. Full Room, production mail mutations and personal dogfood remain gated on Phase 0 results.
+
+Autonomous work, verified commits and regular pushes remain authorized. Resume independent work when new information or the live results establish the next supported implementation step; no routine reapproval is needed.
 
 ## Completed work and evidence
 
@@ -41,6 +45,7 @@ Render deployment is deferred by the owner, not a blocker for local development.
 | Local occurrence resolution | Verified with IANA data | [Evidence](docs/evidence/phase-0/2026-09-04-delivery-occurrences.md); DST gaps/overlaps, stable identity and explicit date exceptions. Durable scheduler remains unimplemented. |
 | Durable scheduling probe | Verified locally | [Evidence](docs/evidence/phase-0/2026-09-04-durable-scheduling.md); saved occurrences, coalescing, revision edits, manual receipts and account serialization. No timer/Gmail integration. |
 | Encrypted local backup and restore | Verified on disposable databases | [Evidence](docs/evidence/phase-0/2026-09-04-local-backup-restore.md); actual pg_dump/age/pg_restore, corruption/key checks, inert restored jobs. No R2/Render proof. |
+| Read-only identity/filter inventory | Implemented and tested with fixtures | [Evidence](docs/evidence/phase-0/2026-09-04-read-only-inventory.md); authenticated internal API, no new scopes/UI or live inventory proof. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
@@ -52,7 +57,7 @@ Checked items require their stated evidence; implementation alone does not pass 
 - [ ] **Authorization lifecycle:** [method/scope inventory](docs/phase-0-experiment-inventory.md) prepared; settle the dogfood authorization strategy; distinguish natural token expiry, revocation and refresh-token rotation. Inventory additional scopes before any mutation work.
 - [ ] **0.2 — Interception matrix:** prove primary address, aliases, forwarding, Bcc, lists, existing threads, unusual mail and filter conflicts; document unsupported cases.
 - [ ] **0.3 — Notification/badge matrix:** observe held arrival, bypass and release on actual devices; choose and prove the app alert behavior.
-- [ ] **Real finite release:** implement per-message progress and prove fixed membership through retries, partial success, lost responses, worker crashes and concurrent arrivals. The [synthetic journal](docs/evidence/phase-0/2026-09-04-release-journal.md) now covers claims, partial outcomes and stale workers; live Gmail effects and account recovery races remain unproven.
+- [ ] **Real finite release:** implement per-message progress and prove fixed membership through retries, partial success, lost responses, worker crashes and concurrent arrivals. The [synthetic journal](docs/evidence/phase-0/2026-09-04-release-journal.md) now covers claims, partial outcomes and stale workers; synthetic account recovery races now pass; live Gmail effects and provider recovery races remain unproven.
 - [ ] **0.4 — Panic and direct Gmail recovery:** [offline recovery card](docs/phase-0-offline-recovery-card.md) prepared but not filled/rehearsed; disable interception before restoring held mail, and rehearse with the app unavailable.
 - [ ] **Safe disconnect:** restore and verify held mail before revocation, including interrupted recovery. Current app sign-out only ends the browser session.
 - [ ] **Independent monitoring:** configure Sentry and Better Stack with redaction; test meaningful failed-work and missed-heartbeat alerts, including total Render outage.
@@ -97,6 +102,7 @@ The state contract resolves implementation semantics under the autonomous-work i
 
 | Date | Result | Reference |
 |---|---|---|
+| 2026-09-04 | Durable scheduling, provider/notification fault tests, encrypted restore and read-only inventory | 98 backend / seven browser tests; current build and restore rehearsal pass |
 | 2026-09-04 | Recovery fence, finite batch review and DST occurrence resolution | 78 backend tests; local evidence above |
 | 2026-09-04 | Synthetic journal and executable work-item contract | 62 backend tests; release-journal and workflow evidence above |
 | 2026-09-04 | Written contract, Render release/restore guard and recovery preparation | `e897234`, `36df39b`; 52 backend tests, local release smoke, Blueprint schema validation |
