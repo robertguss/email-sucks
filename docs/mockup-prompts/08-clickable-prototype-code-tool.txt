@@ -1,0 +1,49 @@
+You are designing a web-based email client that looks like a page of well-set text, not a software interface.
+
+VISUAL LANGUAGE
+- Pure black text on pure white background. Grayscale only for secondary text (#888, #bbb). No other colors unless this prompt names one accent.
+- One typeface family only (a refined humanist sans such as Inter or Söhne, OR a classic book serif such as Tiempos or Freight — choose one and use it everywhere). Two sizes maximum: body and a slightly larger heading.
+- Generous whitespace. Content column is centered, about 65–75 characters wide. Large margins.
+- Sender, subject, and time are quiet metadata in gray, set in the same typeface, not in columns.
+- No icons except at most a single thin-line glyph where absolutely necessary.
+- Feel: iA Writer, a printed letter, a well-designed book page. Calm, slow, intentional.
+
+HARD CONSTRAINTS — do NOT include any of the following:
+- No sidebar, no left navigation, no folder tree, no labels list
+- No three-pane layout (list + message + sidebar)
+- No top toolbar, no button bars, no formatting toolbar
+- No cards, no boxes, no borders around messages, no drop shadows
+- No avatars, no profile pictures, no colored circles with initials
+- No unread counts, badges, red dots, or notification bubbles
+- No checkboxes, stars, flags, or row hover buttons
+- No tabs (Primary/Social/Promotions etc.)
+- No search bar visible unless this prompt asks for it
+- No gradients, no illustrations, no logos, no branding
+- Nothing that looks like Gmail, Outlook, Superhuman, or Apple Mail
+
+OUTPUT: a working clickable prototype, not an image.
+
+THE TASK
+Build a static, clickable prototype of a minimal email client as a single HTML file with inline CSS and a small amount of vanilla JavaScript. No frameworks, no build step. It must have exactly six screens, one visible at a time, filling the viewport:
+
+1. Doorstep (home). Two states, toggled with the "t" key.
+   State A, between deliveries: near vertical center the lines "Nothing needs you." and "Next mail at 1:00." Below, a thin horizontal line about half the page width representing today, with small tick marks at 9:00, 1:00, 5:00 and a small filled dot at the current time (11:15). At the bottom of the viewport, small gray text: "1 doorstep · 2 pile · 3 desk · 4 page · 5 drawer".
+   State B, mail arrived: the lines "Mail's here." and "3 need you, 14 to look over." Beneath, two quiet text links: "Start session" (goes to Pile) and "Go to desk" (goes to Desk). The day line with the dot on the 1:00 tick. Then the three needs-you items as plain lines (sender black, subject gray).
+
+2. Pile. Shows one awareness message at a time from a set of 14 placeholder messages (newsletters, receipts, notifications). Small gray metadata line at top (sender, subject, "2h ago"), then the body as clean paragraphs. "Show original" as small gray text at the end. "3 of 14" style counter in the top right corner. Bottom of viewport: "Next · Keep · Later". Keys: j or space advances, k goes back. After the last message, go to Desk.
+
+3. Desk. Centered column with small-caps gray section labels: UNSURE (one item, with "Needs you · Aware" to its right), TODAY (one item), THIS WEEK (three items), WHENEVER (one item), WAITING (two items showing "Name — waiting 4 days"). Each item is two plain lines: sender black + subject gray, then a lighter gray snippet. No borders, cards, checkboxes, or avatars. A single accent color (muted deep orange or dark teal) as a small dot or 2px left rule on TODAY items only, used nowhere else in the app. Arrow keys or j/k move focus between items (focus shown only by slightly darker text, no highlight box). Pressing "r" on a focused item opens Page. Pressing "e" removes the item (done). When the desk is empty, show the Caught up screen. Bottom of viewport: "r reply · e done · h horizon".
+
+4. Page (compose). Blank white page, centered 70-character column starting a third of the way down, containing a placeholder two-paragraph reply with a cursor. Above the text, one very small gray line: "To Sarah Chen — Re: Thursday's proposal". Pressing "Tab" reveals three quiet lines "To / Cc / Subject" with gray labels and black text, no input boxes. Bottom of viewport: "⌘↵ send · esc back". Esc returns to the previous screen.
+
+5. Drawer (search). A single large borderless text line at the top of the column acting as the search field, prefilled with "invoice acme", with a thin rule beneath. Below, about six plain two-line results grouped under small gray month labels "September 2026" and "August 2026". Bottom of viewport: "↵ open · esc back".
+
+6. Caught up. Near vertical center: "You're caught up." and "Next mail at 5:00." Beneath, smaller gray: "3 replies · 14 read · 12 minutes". Then the day line with the dot just past 1:00. Nothing else.
+
+NAVIGATION
+Keyboard only. Keys 1–5 jump directly to Doorstep, Pile, Desk, Page, Drawer. Esc goes back to the previous screen. There is no visible navigation anywhere. Transitions between screens should be instant or a very fast fade; no sliding panels.
+
+DARK MODE
+Toggled with the "d" key: near-black background (#0e0e0e), off-white text (#e8e8e8), grays adjusted for contrast, accent slightly brightened. It should feel like a printed page under lamplight.
+
+Use realistic placeholder names and subjects. Keep the code small and readable.

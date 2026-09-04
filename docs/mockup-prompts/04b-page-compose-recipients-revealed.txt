@@ -1,0 +1,43 @@
+You are designing a web-based email client that looks like a page of well-set text, not a software interface.
+
+VISUAL LANGUAGE
+- Pure black text on pure white background. Grayscale only for secondary text (#888, #bbb). No other colors unless this prompt names one accent.
+- One typeface family only (a refined humanist sans such as Inter or Söhne, OR a classic book serif such as Tiempos or Freight — choose one and use it everywhere). Two sizes maximum: body and a slightly larger heading.
+- Generous whitespace. Content column is centered, about 65–75 characters wide. Large margins.
+- Sender, subject, and time are quiet metadata in gray, set in the same typeface, not in columns.
+- No icons except at most a single thin-line glyph where absolutely necessary.
+- Feel: iA Writer, a printed letter, a well-designed book page. Calm, slow, intentional.
+
+HARD CONSTRAINTS — do NOT include any of the following:
+- No sidebar, no left navigation, no folder tree, no labels list
+- No three-pane layout (list + message + sidebar)
+- No top toolbar, no button bars, no formatting toolbar
+- No cards, no boxes, no borders around messages, no drop shadows
+- No avatars, no profile pictures, no colored circles with initials
+- No unread counts, badges, red dots, or notification bubbles
+- No checkboxes, stars, flags, or row hover buttons
+- No tabs (Primary/Social/Promotions etc.)
+- No search bar visible unless this prompt asks for it
+- No gradients, no illustrations, no logos, no branding
+- Nothing that looks like Gmail, Outlook, Superhuman, or Apple Mail
+
+OUTPUT: a single desktop browser viewport, 1440×900, showing only the one screen described below.
+
+THE SCREEN
+This is the "page": composing an email. It must look like a blank page in a distraction-free writing app, not an email form. In this variant the user has pressed a key to reveal the recipient fields.
+
+The entire viewport is white. A single text column is centered, about 70 characters wide, starting about a third of the way down the page.
+
+At the top of the column, three quiet lines, each with a small gray label on the left and black text on the right, with no boxes, borders, or input styling of any kind:
+
+  To       Sarah Chen
+  Cc
+  Subject  Re: Thursday's proposal
+
+A thin gray rule beneath these three lines, then generous space, then the body: two short paragraphs of a reply in the body typeface, with a thin text cursor at the end.
+
+No toolbar, no attachment icon, no formatting controls, no send button visible in the main area.
+
+At the very bottom of the viewport, centered, small gray text: "⌘↵ send · esc back".
+
+Nothing else on the page.

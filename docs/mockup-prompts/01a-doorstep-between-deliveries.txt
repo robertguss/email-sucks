@@ -1,0 +1,38 @@
+You are designing a web-based email client that looks like a page of well-set text, not a software interface.
+
+VISUAL LANGUAGE
+- Pure black text on pure white background. Grayscale only for secondary text (#888, #bbb). No other colors unless this prompt names one accent.
+- One typeface family only (a refined humanist sans such as Inter or Söhne, OR a classic book serif such as Tiempos or Freight — choose one and use it everywhere). Two sizes maximum: body and a slightly larger heading.
+- Generous whitespace. Content column is centered, about 65–75 characters wide. Large margins.
+- Sender, subject, and time are quiet metadata in gray, set in the same typeface, not in columns.
+- No icons except at most a single thin-line glyph where absolutely necessary.
+- Feel: iA Writer, a printed letter, a well-designed book page. Calm, slow, intentional.
+
+HARD CONSTRAINTS — do NOT include any of the following:
+- No sidebar, no left navigation, no folder tree, no labels list
+- No three-pane layout (list + message + sidebar)
+- No top toolbar, no button bars, no formatting toolbar
+- No cards, no boxes, no borders around messages, no drop shadows
+- No avatars, no profile pictures, no colored circles with initials
+- No unread counts, badges, red dots, or notification bubbles
+- No checkboxes, stars, flags, or row hover buttons
+- No tabs (Primary/Social/Promotions etc.)
+- No search bar visible unless this prompt asks for it
+- No gradients, no illustrations, no logos, no branding
+- Nothing that looks like Gmail, Outlook, Superhuman, or Apple Mail
+
+OUTPUT: a single desktop browser viewport, 1440×900, showing only the one screen described below.
+
+THE SCREEN
+This is the home screen between mail deliveries.
+
+The page is almost empty. Near the vertical center, set in the body size, two lines:
+
+  Nothing needs you.
+  Next mail at 1:00.
+
+Below that, a thin horizontal line spanning about half the page width, representing today. Three small tick marks on it at 9:00, 1:00, and 5:00 (the delivery times), with the current time shown as a small filled dot at roughly 11:15, between the first two ticks. Times labeled in small gray text beneath the ticks.
+
+At the very bottom of the viewport, a single line of small gray text listing keyboard shortcuts: "1 doorstep · 2 pile · 3 desk · 4 page · 5 drawer".
+
+Nothing else on the page.

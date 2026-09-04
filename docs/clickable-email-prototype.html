@@ -1,0 +1,1132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A throwaway prototype for testing the email room's six-screen keyboard flow.">
+  <title>The room — clickable prototype</title>
+  <style>
+    /*
+      THROWAWAY PROTOTYPE
+      Question: Does a six-place, keyboard-first session make email feel finite,
+      calm, and understandable without conventional inbox navigation?
+    */
+    :root {
+      color-scheme: light;
+      --paper: #fff;
+      --ink: #000;
+      --quiet: #707070;
+      --faint: #767676;
+      --rule: rgba(0, 0, 0, 0.22);
+      --accent: #8f3f19;
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --paper: #0e0e0e;
+      --ink: #e8e8e8;
+      --quiet: #a9a9a9;
+      --faint: #7c7c7c;
+      --rule: rgba(232, 232, 232, 0.28);
+      --accent: #c76b3d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--paper);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      margin: 0;
+      min-width: 18rem;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+      font-size: 1rem;
+      line-height: 1.68;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+    }
+
+    button,
+    a,
+    [contenteditable="true"] {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    [contenteditable="true"]:focus-visible {
+      outline: 1px dotted var(--quiet);
+      outline-offset: 0.28rem;
+    }
+
+    main {
+      isolation: isolate;
+      min-height: 100dvh;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100dvh;
+      animation: appear 100ms ease-out;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .column {
+      width: min(70ch, calc(100vw - 3rem));
+      margin-inline: auto;
+    }
+
+    .heading {
+      margin: 0;
+      font-size: 1.45rem;
+      font-weight: 400;
+      letter-spacing: -0.012em;
+      line-height: 1.35;
+      text-wrap: balance;
+    }
+
+    .muted {
+      color: var(--quiet);
+    }
+
+    .faint {
+      color: var(--faint);
+    }
+
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .quiet-action {
+      color: var(--quiet);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .quiet-action:hover,
+    .quiet-action:focus-visible {
+      color: var(--ink);
+    }
+
+    .keyline {
+      position: fixed;
+      z-index: 2;
+      bottom: max(1.6rem, env(safe-area-inset-bottom));
+      left: 1.25rem;
+      width: calc(100% - 2.5rem);
+      color: var(--quiet);
+      text-align: center;
+    }
+
+    .keyline button {
+      cursor: pointer;
+      color: inherit;
+    }
+
+    .keyline button:hover,
+    .keyline button:focus-visible {
+      color: var(--ink);
+    }
+
+    .centered {
+      min-height: 100dvh;
+      padding: 12vh 0 7rem;
+    }
+
+    .centered .column {
+      min-height: calc(88dvh - 7rem);
+      display: grid;
+      align-content: center;
+    }
+
+    .door-copy p,
+    .caught-copy p {
+      margin: 0.3rem 0 0;
+    }
+
+    .door-actions {
+      display: flex;
+      gap: 1.35rem;
+      margin-top: 1.6rem;
+    }
+
+    .timeline {
+      position: relative;
+      width: min(52vw, 34rem);
+      height: 2.3rem;
+      margin-top: 4.5rem;
+      color: var(--quiet);
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 1px;
+      background: var(--rule);
+    }
+
+    .tick {
+      position: absolute;
+      top: -0.2rem;
+      width: 1px;
+      height: 0.48rem;
+      background: var(--rule);
+    }
+
+    .tick span {
+      position: absolute;
+      top: 0.75rem;
+      left: 50%;
+      white-space: nowrap;
+      transform: translateX(-50%);
+    }
+
+    .tick-start { left: 0; }
+    .tick-middle { left: 50%; }
+    .tick-end { right: 0; }
+
+    .time-dot {
+      position: absolute;
+      top: -0.23rem;
+      width: 0.48rem;
+      height: 0.48rem;
+      border-radius: 50%;
+      background: var(--ink);
+      transform: translateX(-50%);
+    }
+
+    .arrival-list {
+      display: grid;
+      gap: 0.45rem;
+      margin-top: 3.7rem;
+    }
+
+    .arrival-list p {
+      margin: 0;
+    }
+
+    .arrival-list span {
+      color: var(--quiet);
+    }
+
+    .pile-column {
+      position: relative;
+      padding-top: 2rem;
+      padding-bottom: 7rem;
+    }
+
+    .pile-meta {
+      display: flex;
+      min-width: 0;
+      justify-content: space-between;
+      gap: 2rem;
+      padding-right: 5rem;
+      color: var(--quiet);
+    }
+
+    .pile-meta p {
+      min-width: 0;
+      margin: 0;
+    }
+
+    .pile-counter {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      flex-shrink: 0;
+    }
+
+    .pile-body {
+      margin-top: clamp(4.5rem, 12vh, 8rem);
+    }
+
+    .pile-body p {
+      margin: 0;
+      text-wrap: pretty;
+    }
+
+    .pile-body p + p {
+      margin-top: 1.35rem;
+    }
+
+    .original {
+      margin-top: 2.3rem;
+    }
+
+    .desk-column {
+      padding-top: clamp(3rem, 8vh, 6rem);
+      padding-bottom: 8rem;
+    }
+
+    .desk-section + .desk-section {
+      margin-top: 2.15rem;
+    }
+
+    .section-label-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 2rem;
+      color: var(--quiet);
+      font-variant-caps: all-small-caps;
+      letter-spacing: 0.09em;
+    }
+
+    .section-label-row p {
+      margin: 0 0 0.35rem;
+    }
+
+    .desk-item-row {
+      display: flex;
+      min-width: 0;
+      align-items: start;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .desk-item {
+      position: relative;
+      min-width: 0;
+      flex: 1;
+      padding: 0.35rem 0;
+      cursor: pointer;
+      color: var(--quiet);
+      text-align: left;
+    }
+
+    .desk-item.is-focused {
+      color: var(--ink);
+    }
+
+    .desk-item p {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .desk-item .subject,
+    .desk-item .waiting {
+      color: var(--quiet);
+    }
+
+    .desk-item .snippet {
+      color: var(--faint);
+    }
+
+    .today-marker::before {
+      content: "";
+      position: absolute;
+      top: 0.95rem;
+      left: -1rem;
+      width: 0.28rem;
+      height: 0.28rem;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .sort-actions {
+      flex-shrink: 0;
+      padding-top: 0.35rem;
+      color: var(--quiet);
+      white-space: nowrap;
+    }
+
+    .sort-actions button {
+      cursor: pointer;
+      color: inherit;
+    }
+
+    .sort-actions button:hover,
+    .sort-actions button:focus-visible {
+      color: var(--ink);
+    }
+
+    .compose-column {
+      padding-top: 31vh;
+      padding-bottom: 7rem;
+    }
+
+    .compose-meta,
+    .recipient-details {
+      color: var(--quiet);
+    }
+
+    .compose-meta {
+      margin: 0 0 2.2rem;
+    }
+
+    .recipient-details {
+      display: grid;
+      grid-template-columns: min-content 1fr;
+      gap: 0.2rem 1rem;
+      margin-bottom: 2.2rem;
+    }
+
+    .recipient-details[hidden] {
+      display: none;
+    }
+
+    .recipient-details p {
+      display: contents;
+      margin: 0;
+    }
+
+    .recipient-details span {
+      color: var(--ink);
+    }
+
+    .draft {
+      min-height: 12rem;
+      caret-color: var(--ink);
+    }
+
+    .draft:focus {
+      outline: none;
+    }
+
+    .draft p {
+      margin: 0;
+      text-wrap: pretty;
+    }
+
+    .draft p + p {
+      margin-top: 1.35rem;
+    }
+
+    .drawer-column {
+      padding-top: clamp(3rem, 9vh, 7rem);
+      padding-bottom: 7rem;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0 0 0.7rem;
+      border: 0;
+      border-bottom: 1px solid var(--rule);
+      border-radius: 0;
+      outline: none;
+      background: transparent;
+      color: var(--ink);
+      font-size: 1.45rem;
+      line-height: 1.35;
+    }
+
+    .search-input:focus {
+      border-bottom-color: var(--ink);
+    }
+
+    .search-groups {
+      margin-top: 3.25rem;
+    }
+
+    .search-group + .search-group {
+      margin-top: 2.4rem;
+    }
+
+    .month-label {
+      margin: 0 0 0.6rem;
+      color: var(--quiet);
+      font-variant-caps: all-small-caps;
+      letter-spacing: 0.09em;
+    }
+
+    .search-result {
+      width: 100%;
+      padding: 0.45rem 0;
+      cursor: pointer;
+      color: var(--quiet);
+      text-align: left;
+    }
+
+    .search-result:hover,
+    .search-result:focus-visible,
+    .search-result.is-focused {
+      color: var(--ink);
+    }
+
+    .search-result p {
+      margin: 0;
+    }
+
+    .search-result .subject,
+    .search-result .snippet {
+      color: var(--quiet);
+    }
+
+    .caught-summary {
+      margin-top: 1.35rem !important;
+      color: var(--quiet);
+    }
+
+    @keyframes appear {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @media (max-width: 40rem) {
+      .column {
+        width: min(70ch, calc(100vw - 2rem));
+      }
+
+      .keyline {
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        left: 0.75rem;
+        width: calc(100% - 1.5rem);
+      }
+
+      .timeline {
+        width: 100%;
+      }
+
+      .pile-column {
+        padding-top: 1.2rem;
+      }
+
+      .pile-meta {
+        gap: 1rem;
+      }
+
+      .pile-counter {
+        top: 1.2rem;
+        right: 1rem;
+      }
+
+      .desk-column {
+        padding-top: 2.5rem;
+      }
+
+      .desk-item-row {
+        gap: 0.75rem;
+      }
+
+      .sort-actions {
+        max-width: 8rem;
+        white-space: normal;
+        text-align: right;
+      }
+
+      .compose-column {
+        padding-top: 24vh;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .screen {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main aria-live="polite">
+    <section class="screen centered active" id="doorstep" aria-label="Doorstep">
+      <div class="column">
+        <div id="door-between">
+          <div class="door-copy">
+            <h1 class="heading">Nothing needs you.</h1>
+            <p class="muted">Next mail at 1:00.</p>
+          </div>
+          <div class="timeline tabular" aria-label="Today: deliveries at 9:00, 1:00, and 5:00; current time 11:15">
+            <div class="tick tick-start"><span>9:00</span></div>
+            <div class="tick tick-middle"><span>1:00</span></div>
+            <div class="tick tick-end"><span>5:00</span></div>
+            <div class="time-dot" style="left: 28.125%"></div>
+          </div>
+        </div>
+
+        <div id="door-arrived" hidden>
+          <div class="door-copy">
+            <h1 class="heading">Mail’s here.</h1>
+            <p class="muted">3 need you, 14 to look over.</p>
+            <div class="door-actions">
+              <button class="quiet-action" type="button" data-action="start-session">Start session</button>
+              <button class="quiet-action" type="button" data-screen="desk">Go to desk</button>
+            </div>
+          </div>
+          <div class="timeline tabular" aria-label="Today: deliveries at 9:00, 1:00, and 5:00; current time 1:00">
+            <div class="tick tick-start"><span>9:00</span></div>
+            <div class="tick tick-middle"><span>1:00</span></div>
+            <div class="tick tick-end"><span>5:00</span></div>
+            <div class="time-dot" style="left: 50%"></div>
+          </div>
+          <div class="arrival-list">
+            <p>Sarah Chen <span>— Thursday’s proposal</span></p>
+            <p>Marcus Bell <span>— Quick question about the workshop</span></p>
+            <p>Helen Park <span>— September production schedule</span></p>
+          </div>
+        </div>
+      </div>
+      <p class="keyline tabular" id="door-keyline">1 doorstep · 2 pile · 3 desk · 4 page · 5 drawer</p>
+    </section>
+
+    <section class="screen" id="pile" aria-label="Pile" hidden>
+      <div class="column pile-column">
+        <div class="pile-meta">
+          <p id="pile-meta"></p>
+          <p class="pile-counter tabular" id="pile-counter"></p>
+        </div>
+        <article class="pile-body" id="pile-body"></article>
+        <p class="original"><button class="quiet-action" type="button" data-action="show-original">Show original</button></p>
+      </div>
+      <p class="keyline">
+        <button type="button" data-action="pile-next">Next</button> ·
+        <button type="button" data-action="pile-keep">Keep</button> ·
+        <button type="button" data-action="pile-later">Later</button>
+      </p>
+    </section>
+
+    <section class="screen" id="desk" aria-label="Desk" hidden>
+      <div class="column desk-column" id="desk-list"></div>
+      <p class="keyline">r reply · e done · h horizon</p>
+    </section>
+
+    <section class="screen" id="page" aria-label="Page" hidden>
+      <div class="column compose-column">
+        <div class="recipient-details" id="recipient-details" hidden>
+          <p>To <span>Sarah Chen &lt;sarah@northstar.studio&gt;</span></p>
+          <p>Cc <span>—</span></p>
+          <p>Subject <span>Re: Thursday’s proposal</span></p>
+        </div>
+        <p class="compose-meta">To Sarah Chen — Re: Thursday’s proposal</p>
+        <div class="draft" id="draft" contenteditable="true" role="textbox" aria-label="Reply draft" aria-multiline="true" spellcheck="true">
+          <p>Hi Sarah,</p>
+          <p>Thursday works well. I read through the proposal this morning, and the quieter opening feels exactly right. I left two small notes in the margin, but otherwise I think it’s ready to share.</p>
+          <p>I’ll bring the revised timeline with me. Looking forward to it.</p>
+        </div>
+      </div>
+      <p class="keyline">⌘↵ send · esc back</p>
+    </section>
+
+    <section class="screen" id="drawer" aria-label="Drawer" hidden>
+      <div class="column drawer-column">
+        <label for="drawer-search" hidden>Search mail</label>
+        <input class="search-input" id="drawer-search" name="mail-search" type="search" value="invoice acme" aria-label="Search mail" autocomplete="off" spellcheck="false">
+        <div class="search-groups" id="search-results"></div>
+      </div>
+      <p class="keyline">↵ open · esc back</p>
+    </section>
+
+    <section class="screen centered" id="caught" aria-label="Caught up" hidden>
+      <div class="column">
+        <div class="caught-copy">
+          <h1 class="heading">You’re caught up.</h1>
+          <p class="muted">Next mail at 5:00.</p>
+          <p class="caught-summary tabular">3 replies · 14 read · 12 minutes</p>
+        </div>
+        <div class="timeline tabular" aria-label="Today: deliveries at 9:00, 1:00, and 5:00; current time just after 1:00">
+          <div class="tick tick-start"><span>9:00</span></div>
+          <div class="tick tick-middle"><span>1:00</span></div>
+          <div class="tick tick-end"><span>5:00</span></div>
+          <div class="time-dot" style="left: 54%"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const awarenessMail = [
+      {
+        sender: "Field Notes",
+        subject: "A slower way to plan the week",
+        age: "2h ago",
+        body: [
+          "Most plans fail because they are lists without limits. This week, try choosing one thing that would make Friday feel complete, then let everything else remain secondary.",
+          "A boundary is not a lack of ambition. It is the shape that lets attention become useful."
+        ]
+      },
+      {
+        sender: "Acme Paper Co.",
+        subject: "Receipt for order 10482",
+        age: "2h ago",
+        body: [
+          "Thanks for your order. Your box of A5 notebooks and replacement refills has shipped and should arrive on Monday.",
+          "The receipt total is $86.40. No action is needed."
+        ]
+      },
+      {
+        sender: "Northstar Studio",
+        subject: "September studio notes",
+        age: "3h ago",
+        body: [
+          "September has been a month of removing things. We retired two services, shortened our weekly meeting, and gave the workshop a full afternoon instead of squeezing it between calls.",
+          "The result is less motion and better work. Here are the three practices we are carrying into October."
+        ]
+      },
+      {
+        sender: "Caledon Library",
+        subject: "The Overstory is ready for pickup",
+        age: "4h ago",
+        body: [
+          "Your hold is ready at the main desk. We will keep it for seven days, through September 11.",
+          "Bring your library card or photo identification when you visit."
+        ]
+      },
+      {
+        sender: "Ferry Street Market",
+        subject: "Your Friday market receipt",
+        age: "5h ago",
+        body: [
+          "Your market purchase came to $42.18. The charge was made to the card ending in 1842.",
+          "This message is your receipt; there is nothing else you need to do."
+        ]
+      },
+      {
+        sender: "GitHub",
+        subject: "Weekly repository digest",
+        age: "6h ago",
+        body: [
+          "Four pull requests were merged across repositories you watch this week. Two discussions remain open.",
+          "You can review the full activity history whenever it is useful."
+        ]
+      },
+      {
+        sender: "The Marginalian",
+        subject: "On patience and the shape of time",
+        age: "7h ago",
+        body: [
+          "Patience is often described as waiting, but its more interesting form is attention without demand.",
+          "This week’s letter gathers a few notes on the long work of allowing something to become itself."
+        ]
+      },
+      {
+        sender: "Granite Bank",
+        subject: "Your monthly statement is available",
+        age: "8h ago",
+        body: [
+          "Your August statement is now available in online banking. There were no fees or unusual account notices this period.",
+          "Sign in when you are ready to review or download it."
+        ]
+      },
+      {
+        sender: "Mara Ortiz",
+        subject: "Photos from Sunday’s walk",
+        age: "9h ago",
+        body: [
+          "I finally sorted the photographs from our walk along the river. The fog made everything look older than it was.",
+          "I put the best twelve in a small shared album for you."
+        ]
+      },
+      {
+        sender: "Parcel",
+        subject: "Package delivered at 10:42",
+        age: "10h ago",
+        body: [
+          "Your parcel was delivered near the front entrance at 10:42 this morning.",
+          "The delivery photograph and tracking history are available in your account."
+        ]
+      },
+      {
+        sender: "Common Ground Coffee",
+        subject: "Your next shipment leaves Monday",
+        age: "11h ago",
+        body: [
+          "Your regular shipment of El Cedro beans is scheduled to roast this weekend and leave on Monday.",
+          "Your delivery address and grind preference have not changed."
+        ]
+      },
+      {
+        sender: "City Arts Council",
+        subject: "Autumn exhibitions open next week",
+        age: "12h ago",
+        body: [
+          "Three new exhibitions open next Thursday, with late hours until nine. Admission is free for the opening evening.",
+          "The smallest show, in the east gallery, brings together twenty years of letterpress work."
+        ]
+      },
+      {
+        sender: "Quiet Hours",
+        subject: "Issue 38: Rooms for thinking",
+        age: "13h ago",
+        body: [
+          "What makes a room good for thought? Not silence alone, but a sense that nothing else is expected of you there.",
+          "We visited four studios whose owners designed for return rather than escape."
+        ]
+      },
+      {
+        sender: "West Line Rail",
+        subject: "Schedule change for September 8",
+        age: "14h ago",
+        body: [
+          "Trains on the west line will run every thirty minutes after 8:00 p.m. on September 8 because of track work.",
+          "Morning and afternoon service will run on the usual schedule."
+        ]
+      }
+    ];
+
+    const initialDeskItems = [
+      { id: "unsure-arthur", section: "unsure", sender: "Priya Nair", subject: "Introduction: Arthur + you", snippet: "Arthur is exploring the same question about humane software." },
+      { id: "today-sarah", section: "today", sender: "Sarah Chen", subject: "Thursday’s proposal", snippet: "Could you confirm the quieter opening before tomorrow morning?" },
+      { id: "week-marcus", section: "week", sender: "Marcus Bell", subject: "Quick question about the workshop", snippet: "Would twenty people still feel small enough for the exercise?" },
+      { id: "week-nadia", section: "week", sender: "Nadia Brooks", subject: "October travel dates", snippet: "I held the Tuesday afternoon train for now." },
+      { id: "week-jonah", section: "week", sender: "Jonah Reed", subject: "Notes from our Tuesday call", snippet: "Here are the three decisions I wrote down." },
+      { id: "whenever-lena", section: "whenever", sender: "Lena Morita", subject: "A book you might like", snippet: "No hurry, but it reminded me of our conversation." },
+      { id: "waiting-helen", section: "waiting", sender: "Helen Park", wait: "waiting 4 days", subject: "September production schedule", snippet: "Sent Monday: I can hold the second week if that still works." },
+      { id: "waiting-owen", section: "waiting", sender: "Owen Price", wait: "waiting 2 days", subject: "Contract language", snippet: "Sent Wednesday: The revised paragraph is attached." }
+    ];
+
+    const searchMail = [
+      { month: "September 2026", sender: "Acme Paper Co.", subject: "Invoice 10482", snippet: "$86.40 · paid September 3" },
+      { month: "September 2026", sender: "Acme Hosting", subject: "September service invoice", snippet: "$24.00 · paid September 1" },
+      { month: "September 2026", sender: "Mira Solano", subject: "Re: Acme workshop invoice", snippet: "The client approved the final amount." },
+      { month: "August 2026", sender: "Acme Paper Co.", subject: "Invoice 10211", snippet: "$38.20 · paid August 18" },
+      { month: "August 2026", sender: "Acme Hosting", subject: "August service invoice", snippet: "$24.00 · paid August 1" },
+      { month: "August 2026", sender: "Jonah Reed", subject: "Acme reimbursement", snippet: "I attached the invoice and the receipt." }
+    ];
+
+    const sectionNames = {
+      unsure: "Unsure",
+      today: "Today",
+      week: "This week",
+      whenever: "Whenever",
+      waiting: "Waiting"
+    };
+
+    const sectionOrder = ["unsure", "today", "week", "whenever", "waiting"];
+
+    const initialState = {
+      screen: "doorstep",
+      history: [],
+      doorArrived: false,
+      pileIndex: 0,
+      deskItems: initialDeskItems,
+      deskFocus: initialDeskItems[0].id,
+      composeDetails: false,
+      dark: false,
+      drawerFocus: 0
+    };
+
+    function orderedDeskItems(state) {
+      return sectionOrder.flatMap(section => state.deskItems.filter(item => item.section === section));
+    }
+
+    function enterScreen(state, screen) {
+      const destination = screen === "desk" && !state.deskItems.length ? "caught" : screen;
+      if (destination === state.screen) return state;
+      return {
+        ...state,
+        screen: destination,
+        history: [...state.history, state.screen],
+        composeDetails: destination === "page" ? false : state.composeDetails
+      };
+    }
+
+    function moveDeskFocus(state, amount) {
+      const items = orderedDeskItems(state);
+      if (!items.length) return state;
+      const current = Math.max(0, items.findIndex(item => item.id === state.deskFocus));
+      const next = Math.min(items.length - 1, Math.max(0, current + amount));
+      return { ...state, deskFocus: items[next].id };
+    }
+
+    function removeFocusedDeskItem(state) {
+      const items = orderedDeskItems(state);
+      const current = Math.max(0, items.findIndex(item => item.id === state.deskFocus));
+      const remaining = state.deskItems.filter(item => item.id !== state.deskFocus);
+      if (!remaining.length) {
+        return enterScreen({ ...state, deskItems: remaining, deskFocus: null }, "caught");
+      }
+      const nextOrdered = sectionOrder.flatMap(section => remaining.filter(item => item.section === section));
+      const nextFocus = nextOrdered[Math.min(current, nextOrdered.length - 1)].id;
+      return { ...state, deskItems: remaining, deskFocus: nextFocus };
+    }
+
+    function reduce(state, action) {
+      switch (action.type) {
+        case "NAVIGATE":
+          return enterScreen(state, action.screen);
+        case "BACK": {
+          if (!state.history.length) return state;
+          const history = state.history.slice();
+          const screen = history.pop();
+          return screen === "desk" && !state.deskItems.length
+            ? { ...state, history }
+            : { ...state, screen, history };
+        }
+        case "TOGGLE_ARRIVAL":
+          return state.screen === "doorstep" ? { ...state, doorArrived: !state.doorArrived } : state;
+        case "TOGGLE_DARK":
+          return { ...state, dark: !state.dark };
+        case "PILE_NEXT":
+          return state.pileIndex === awarenessMail.length - 1
+            ? enterScreen(state, "desk")
+            : { ...state, pileIndex: state.pileIndex + 1 };
+        case "PILE_BACK":
+          return { ...state, pileIndex: Math.max(0, state.pileIndex - 1) };
+        case "DESK_MOVE":
+          return moveDeskFocus(state, action.amount);
+        case "DESK_FOCUS":
+          return { ...state, deskFocus: action.id };
+        case "DESK_DONE":
+          return removeFocusedDeskItem(state);
+        case "DESK_SORT": {
+          if (action.destination === "aware") return removeFocusedDeskItem(state);
+          const items = state.deskItems.map(item => item.id === state.deskFocus ? { ...item, section: "week" } : item);
+          return { ...state, deskItems: items };
+        }
+        case "DESK_HORIZON": {
+          const horizons = ["today", "week", "whenever", "waiting"];
+          const items = state.deskItems.map(item => {
+            if (item.id !== state.deskFocus) return item;
+            const current = horizons.indexOf(item.section);
+            const section = current < 0 ? "week" : horizons[(current + 1) % horizons.length];
+            const moved = { ...item, section };
+            if (section === "waiting") return { ...moved, wait: moved.wait || "waiting today" };
+            const { wait, ...withoutWait } = moved;
+            return withoutWait;
+          });
+          return { ...state, deskItems: items };
+        }
+        case "REVEAL_COMPOSE_DETAILS":
+          return { ...state, composeDetails: true };
+        case "DRAWER_MOVE":
+          return { ...state, drawerFocus: Math.min(searchMail.length - 1, Math.max(0, state.drawerFocus + action.amount)) };
+        default:
+          return state;
+      }
+    }
+
+    let state = initialState;
+
+    function dispatch(action) {
+      state = reduce(state, action);
+      render();
+    }
+
+    function renderTimelineState() {
+      document.getElementById("door-between").hidden = state.doorArrived;
+      document.getElementById("door-arrived").hidden = !state.doorArrived;
+      document.getElementById("door-keyline").hidden = state.doorArrived;
+    }
+
+    function renderPile() {
+      const mail = awarenessMail[state.pileIndex];
+      document.getElementById("pile-meta").textContent = `${mail.sender} — ${mail.subject} — ${mail.age}`;
+      document.getElementById("pile-counter").textContent = `${state.pileIndex + 1} of ${awarenessMail.length}`;
+      document.getElementById("pile-body").innerHTML = mail.body.map(paragraph => `<p>${paragraph}</p>`).join("");
+    }
+
+    function renderDesk() {
+      const list = document.getElementById("desk-list");
+      list.innerHTML = sectionOrder.map(section => {
+        const items = state.deskItems.filter(item => item.section === section);
+        if (!items.length) return "";
+        const rows = items.map(item => {
+          const focused = item.id === state.deskFocus;
+          const waiting = item.wait ? ` <span class="waiting">— ${item.wait}</span>` : "";
+          const marker = section === "today" ? " today-marker" : "";
+          const sort = section === "unsure" ? `
+            <div class="sort-actions">
+              <button type="button" data-sort="needs" data-sort-id="${item.id}" aria-label="Sort ${item.sender} to Needs you">Needs you</button> ·
+              <button type="button" data-sort="aware" data-sort-id="${item.id}" aria-label="Sort ${item.sender} to Aware">Aware</button>
+            </div>` : "";
+          return `
+            <div class="desk-item-row">
+              <button class="desk-item${focused ? " is-focused" : ""}${marker}" type="button" data-desk-id="${item.id}" aria-current="${focused ? "true" : "false"}">
+                <p>${item.sender}${waiting} <span class="subject">— ${item.subject}</span></p>
+                <p class="snippet">${item.snippet}</p>
+              </button>
+              ${sort}
+            </div>`;
+        }).join("");
+        return `
+          <section class="desk-section" aria-labelledby="section-${section}">
+            <div class="section-label-row">
+              <p id="section-${section}">${sectionNames[section]}</p>
+            </div>
+            ${rows}
+          </section>`;
+      }).join("");
+    }
+
+    function renderSearchResults() {
+      const grouped = searchMail.reduce((groups, item, index) => {
+        (groups[item.month] ||= []).push({ ...item, index });
+        return groups;
+      }, {});
+      document.getElementById("search-results").innerHTML = Object.entries(grouped).map(([month, items]) => `
+        <section class="search-group" aria-labelledby="month-${month.replace(/\s/g, "-")}">
+          <p class="month-label" id="month-${month.replace(/\s/g, "-")}">${month}</p>
+          ${items.map(item => `
+            <button class="search-result${item.index === state.drawerFocus ? " is-focused" : ""}" type="button" data-result-index="${item.index}" aria-current="${item.index === state.drawerFocus ? "true" : "false"}">
+              <p>${item.sender} <span class="subject">— ${item.subject}</span></p>
+              <p class="snippet">${item.snippet}</p>
+            </button>`).join("")}
+        </section>`).join("");
+    }
+
+    function placeCaretAtEnd(element) {
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
+    function render() {
+      document.documentElement.dataset.theme = state.dark ? "dark" : "light";
+      document.querySelectorAll(".screen").forEach(screen => {
+        const active = screen.id === state.screen;
+        screen.hidden = !active;
+        screen.classList.toggle("active", active);
+        screen.inert = !active;
+      });
+
+      renderTimelineState();
+      renderPile();
+      renderDesk();
+      document.getElementById("recipient-details").hidden = !state.composeDetails;
+      renderSearchResults();
+
+      if (state.screen === "page") {
+        requestAnimationFrame(() => {
+          const draft = document.getElementById("draft");
+          draft.focus();
+          placeCaretAtEnd(draft);
+        });
+      }
+
+      if (state.screen === "drawer") {
+        requestAnimationFrame(() => document.getElementById("drawer-search").focus());
+      }
+    }
+
+    document.addEventListener("click", event => {
+      const screenTarget = event.target.closest("[data-screen]");
+      if (screenTarget) dispatch({ type: "NAVIGATE", screen: screenTarget.dataset.screen });
+
+      const actionTarget = event.target.closest("[data-action]");
+      if (actionTarget) {
+        const actions = {
+          "start-session": () => dispatch({ type: "NAVIGATE", screen: "pile" }),
+          "pile-next": () => dispatch({ type: "PILE_NEXT" }),
+          "pile-keep": () => dispatch({ type: "PILE_NEXT" }),
+          "pile-later": () => dispatch({ type: "PILE_NEXT" }),
+          "show-original": () => actionTarget.textContent = "Original hidden in this prototype"
+        };
+        actions[actionTarget.dataset.action]?.();
+      }
+
+      const deskTarget = event.target.closest("[data-desk-id]");
+      if (deskTarget) dispatch({ type: "DESK_FOCUS", id: deskTarget.dataset.deskId });
+
+      const sortTarget = event.target.closest("[data-sort]");
+      if (sortTarget) {
+        state = reduce(state, { type: "DESK_FOCUS", id: sortTarget.dataset.sortId });
+        dispatch({ type: "DESK_SORT", destination: sortTarget.dataset.sort === "aware" ? "aware" : "needs" });
+      }
+
+      const resultTarget = event.target.closest("[data-result-index]");
+      if (resultTarget) {
+        state = { ...state, drawerFocus: Number(resultTarget.dataset.resultIndex) };
+        dispatch({ type: "NAVIGATE", screen: "page" });
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        dispatch({ type: "BACK" });
+        return;
+      }
+
+      if (/^[1-5]$/.test(event.key)) {
+        event.preventDefault();
+        const screens = ["doorstep", "pile", "desk", "page", "drawer"];
+        dispatch({ type: "NAVIGATE", screen: screens[Number(event.key) - 1] });
+        return;
+      }
+
+      const editing = event.target.matches("input, textarea, [contenteditable='true']");
+
+      if (state.screen === "page") {
+        if (event.key === "Tab") {
+          event.preventDefault();
+          dispatch({ type: "REVEAL_COMPOSE_DETAILS" });
+          return;
+        }
+        if (event.key === "Enter" && event.metaKey) {
+          event.preventDefault();
+          dispatch({ type: "BACK" });
+          return;
+        }
+      }
+
+      if (state.screen === "drawer") {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          dispatch({ type: "NAVIGATE", screen: "page" });
+          return;
+        }
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+          event.preventDefault();
+          dispatch({ type: "DRAWER_MOVE", amount: event.key === "ArrowDown" ? 1 : -1 });
+          return;
+        }
+      }
+
+      if (editing) return;
+
+      if (event.key.toLowerCase() === "d") {
+        dispatch({ type: "TOGGLE_DARK" });
+        return;
+      }
+
+      if (state.screen === "doorstep" && event.key.toLowerCase() === "t") {
+        dispatch({ type: "TOGGLE_ARRIVAL" });
+        return;
+      }
+
+      if (state.screen === "pile") {
+        if (event.key.toLowerCase() === "j" || event.key === " ") {
+          event.preventDefault();
+          dispatch({ type: "PILE_NEXT" });
+        } else if (event.key.toLowerCase() === "k") {
+          dispatch({ type: "PILE_BACK" });
+        }
+        return;
+      }
+
+      if (state.screen === "desk") {
+        if (event.key === "ArrowDown" || event.key.toLowerCase() === "j") {
+          event.preventDefault();
+          dispatch({ type: "DESK_MOVE", amount: 1 });
+        } else if (event.key === "ArrowUp" || event.key.toLowerCase() === "k") {
+          event.preventDefault();
+          dispatch({ type: "DESK_MOVE", amount: -1 });
+        } else if (event.key.toLowerCase() === "r") {
+          dispatch({ type: "NAVIGATE", screen: "page" });
+        } else if (event.key.toLowerCase() === "e") {
+          dispatch({ type: "DESK_DONE" });
+        } else if (event.key.toLowerCase() === "h") {
+          dispatch({ type: "DESK_HORIZON" });
+        }
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

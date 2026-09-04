@@ -1,0 +1,37 @@
+You are designing a web-based email client that looks like a page of well-set text, not a software interface.
+
+VISUAL LANGUAGE
+- Pure black text on pure white background. Grayscale only for secondary text (#888, #bbb). No other colors unless this prompt names one accent.
+- One typeface family only (a refined humanist sans such as Inter or Söhne, OR a classic book serif such as Tiempos or Freight — choose one and use it everywhere). Two sizes maximum: body and a slightly larger heading.
+- Generous whitespace. Content column is centered, about 65–75 characters wide. Large margins.
+- Sender, subject, and time are quiet metadata in gray, set in the same typeface, not in columns.
+- No icons except at most a single thin-line glyph where absolutely necessary.
+- Feel: iA Writer, a printed letter, a well-designed book page. Calm, slow, intentional.
+
+HARD CONSTRAINTS — do NOT include any of the following:
+- No sidebar, no left navigation, no folder tree, no labels list
+- No three-pane layout (list + message + sidebar)
+- No top toolbar, no button bars, no formatting toolbar
+- No cards, no boxes, no borders around messages, no drop shadows
+- No avatars, no profile pictures, no colored circles with initials
+- No unread counts, badges, red dots, or notification bubbles
+- No checkboxes, stars, flags, or row hover buttons
+- No tabs (Primary/Social/Promotions etc.)
+- No search bar visible unless this prompt asks for it
+- No gradients, no illustrations, no logos, no branding
+- Nothing that looks like Gmail, Outlook, Superhuman, or Apple Mail
+
+OUTPUT: a single desktop browser viewport, 1440×900, showing only the one screen described below.
+
+THE SCREEN
+This is the "pile": reading one awareness message at a time. These are messages the user only needs to be aware of, never reply to.
+
+A single message fills the centered reading column, already open. At the top, small gray metadata on one line: sender name, then the subject, then relative time ("2h ago"). Below it, the message body rendered as clean reading text. The message is a newsletter about software design, rendered as plain paragraphs with one subheading, as if it were a book page. No HTML email styling, no marketing images, no buttons or banners from the original email.
+
+At the bottom of the message body, one small gray line of text: "Show original".
+
+At the bottom of the viewport, centered, small gray text: "Next  ·  Keep  ·  Later", with single keyboard letters shown subtly next to each.
+
+In the top right corner of the viewport, very small gray text: "3 of 14".
+
+Nothing else. No list of other messages, no navigation, no message preview strip.
