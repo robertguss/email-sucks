@@ -8,19 +8,19 @@ This is the current status and next-action tracker. The [product specification](
 
 **Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. Nothing is deployed to Render yet.
 
-**Active implementation:** autonomous Phase 0 work. The written state contract and Render configuration are complete; preparing recovery materials while the owner completes Render login.
+**Active implementation:** autonomous Phase 0 work. Local deployment preparation is complete. Hosted validation/provisioning awaits the owner completing `render login`; the recovery card and fixture/scope inventory are prepared for the next experiment steps.
 
 **Latest completed slice:** Render deployment preparation and restore startup guard. Local release build, disposable-database migration/startup/worker checks, published Blueprint schema validation and 52 backend tests passed. Hosted validation/provisioning is blocked on Render login. See [evidence](docs/evidence/phase-0/2026-09-04-render-preparation.md).
 
 ## Next action
 
-**Prepare the isolated Render test deployment and offline recovery materials, then execute the feasible local safety checks.**
+**Owner action: complete `render login`. Then validate the prepared Blueprint in the intended workspace and proceed with hosted setup.**
 
 The owner has authorized autonomous work through this tracker, with verified commits and regular pushes. Routine implementation choices proceed using documented defaults. Pause only for genuinely required credentials, account actions, answers or explicit live-mail activation.
 
 The [state contract](docs/phase-0-state-contract.md) defines primary transitions, illegal states, Waiting visibility, existing Inbox boundaries, calendar behavior and external edits. Its choices are recorded as engineering defaults under this delegation; live provider/device behavior remains unproven.
 
-Next external gate: establish the hosted test environment and test-only authorization before interception experiments. Prepare concrete configuration and instructions before asking the owner to act.
+The CLI account check and authenticated Blueprint validation returned unauthorized. [Deployment setup](docs/render-phase-0-setup.md), [offline recovery card](docs/phase-0-offline-recovery-card.md), and [fixture/scope inventory](docs/phase-0-experiment-inventory.md) are ready. Hosted provisioning, filled private recovery details, additional consent and device experiments remain outstanding.
 
 ## Completed work and evidence
 
@@ -37,6 +37,7 @@ Next external gate: establish the hosted test environment and test-only authoriz
 | Desk-inspired preview design | Implemented and visually verified | [Design evidence](docs/evidence/phase-0/2026-09-04-desk-preview-design.md): local Newsreader, responsive whitespace-led layout, light/dark themes, connection disclosure and interaction states. Full Room design implementation remains later work. |
 | Written state contract | Complete as documentation | [Contract](docs/phase-0-state-contract.md); runtime and live-provider proof remain separate. |
 | Render release and restore startup | Verified locally; not deployed | [Evidence](docs/evidence/phase-0/2026-09-04-render-preparation.md), [setup](docs/render-phase-0-setup.md). CLI login required for hosted checks. |
+| Recovery card and experiment inventory | Prepared, not rehearsed | [Card](docs/phase-0-offline-recovery-card.md), [scope/fixture inventory](docs/phase-0-experiment-inventory.md). Private account details and device results pending. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
@@ -45,11 +46,11 @@ Checked items require their stated evidence; implementation alone does not pass 
 
 - [x] **0.1 — Written state and workflow contract:** [transition table and decisions](docs/phase-0-state-contract.md), with illegal states, calendar semantics and acceptance examples. Runtime implementation and provider experiments are separate gates; the static app page is not the full contract.
 - [ ] **Test environment:** [Render configuration/setup](docs/render-phase-0-setup.md) prepared and locally tested; login required for provisioning. Still document test identities, controlled fixtures, existing Gmail filters, devices and notification settings. Select and provision the isolated Render environment before test interception.
-- [ ] **Authorization lifecycle:** settle the dogfood authorization strategy; distinguish natural token expiry, revocation and refresh-token rotation. Inventory additional scopes before any mutation work.
+- [ ] **Authorization lifecycle:** [method/scope inventory](docs/phase-0-experiment-inventory.md) prepared; settle the dogfood authorization strategy; distinguish natural token expiry, revocation and refresh-token rotation. Inventory additional scopes before any mutation work.
 - [ ] **0.2 — Interception matrix:** prove primary address, aliases, forwarding, Bcc, lists, existing threads, unusual mail and filter conflicts; document unsupported cases.
 - [ ] **0.3 — Notification/badge matrix:** observe held arrival, bypass and release on actual devices; choose and prove the app alert behavior.
 - [ ] **Real finite release:** implement per-message progress and prove fixed membership through retries, partial success, lost responses, worker crashes and concurrent arrivals. The synthetic snapshot probe is not sufficient.
-- [ ] **0.4 — Panic and direct Gmail recovery:** prepare the offline recovery card, disable interception before restoring held mail, and rehearse with the app unavailable.
+- [ ] **0.4 — Panic and direct Gmail recovery:** [offline recovery card](docs/phase-0-offline-recovery-card.md) prepared but not filled/rehearsed; disable interception before restoring held mail, and rehearse with the app unavailable.
 - [ ] **Safe disconnect:** restore and verify held mail before revocation, including interrupted recovery. Current app sign-out only ends the browser session.
 - [ ] **Independent monitoring:** configure Sentry and Better Stack with redaction; test meaningful failed-work and missed-heartbeat alerts, including total Render outage.
 - [ ] **Backups and restore:** configure managed Render recovery and encrypted R2 exports; restore both into isolated environments with Gmail writes/jobs disabled and verify reconciliation and measured losses/recovery time.
@@ -93,6 +94,7 @@ The state contract resolves implementation semantics under the autonomous-work i
 
 | Date | Result | Reference |
 |---|---|---|
+| 2026-09-04 | Written contract, Render release/restore guard and recovery preparation | `e897234`, `36df39b`; 52 backend tests, local release smoke, Blueprint schema validation |
 | 2026-09-04 | Desk-inspired preview styling and visual checks | Design evidence; 47 backend and seven browser tests |
 | 2026-09-04 | Read-only five-message preview | `0618405`, listing evidence |
 | 2026-09-04 | Real refresh after simulated local expiry | `c79bc69`, connection evidence |
