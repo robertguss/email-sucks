@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (live arrival rehearsal paused at 11:52 UTC)
+Last updated: 2026-09-05 UTC (live arrival recovery completed at 11:56 UTC)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -22,23 +22,16 @@ interception, continuous sync and sending remain disabled. Hosted read-only
 sign-in and preview have live evidence; the controlled app hold/release now also
 has live provider evidence, including recovery after a web restart.
 
-**Current status:** the owner chose to continue on the configured Mac. SSH and
-Gmail incognito access are restored. Concurrent-arrival rehearsal is in progress
-at repeat revision two. At 11:51:35 UTC, release was interrupted after Google's
-second accepted write: the database has one released member and two pending;
-independent Gmail reads show two in Inbox and the third still held, all unread.
-The fault adapter/files were removed and web restarted; at 11:52 UTC normal
-configuration and readiness were verified. Awaiting a new synthetic arrival
-before completing the saved release. No test pass is claimed yet.
+**Current status:** work continues on the configured Mac with restored SSH and
+Gmail incognito access. The new-arrival rehearsal passed. All three original
+batch messages are released at repeat revision two, with zero pending/errors;
+the new arrival stayed outside membership, unread in Inbox with unchanged labels.
+Temporary diagnostics were removed and web restarted. No rehearsal is pending.
 
-The Amp orb's earlier host-key/SSH-agent blocker is preserved as historical
-context in the deployment handoff; it does not block the current Mac session.
-
-**Latest verified result:** safe disconnect restored all three held messages,
-read them back, then requested revocation only after all three were recorded
-released. Google accepted revocation; credentials/session were cleared.
-Reconnection and Gmail read-back confirmed all three remain in Inbox unread.
-[Held-batch evidence](docs/evidence/phase-0/2026-09-05-held-batch-disconnect.md).
+**Latest verified result:** an email sent after interrupted delivery did not join
+the saved batch. Recovery modified only the remaining original member; all three
+originals returned to Inbox unread and the newcomer was unchanged.
+[Arrival evidence](docs/evidence/phase-0/2026-09-05-live-arrival-recovery.md).
 
 **Latest implemented slice:** revision-guarded repeat of the same frozen batch,
 deployed at `ed8756f`. Every member is verified released before new hold intent;
@@ -51,14 +44,13 @@ proof remains valid.
 
 ## Next action
 
-Ask the owner to send one separate email with subject `phase0-arrival-001`
-from the configured sender to the receiving test account, body “test”, leaving
-it unread in Inbox. The subject had zero matches at 11:52:17 UTC before the send
-request. Verify the new message's identity, arrival time and exclusion from the
-saved three IDs; then resume the saved release and verify the newcomer remains
-unchanged and outside membership. Do not repeat hold or reset durable records.
-Broader interception, independent alerts and device proof remain open. The old
-manual Gmail filter exercise remains superseded.
+Prepare the next bounded Phase 0 proof: interrupted multi-message hold and
+recovery, followed by broader arrival/interception cases. The new-arrival test
+now has live evidence for an arrival between interrupted release and recovery;
+it does not prove automatic interception or a continuously executing worker race.
+Independent alerts and actual-device notification proof remain open. Use explicit
+revision-guarded repeat controls; do not reset durable records or repeat the
+superseded manual Gmail filter exercise.
 
 The owner uses the Gmail app on iPhone and reports all Gmail notifications,
 sounds and badges disabled. Batch notifications are optional and off by default
@@ -113,7 +105,7 @@ supported implementation step; no routine reapproval is needed.
 | Primary-address ordinary arrival                   | Owner-reported live baseline              | [Evidence](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md); synthetic message visible in Inbox through direct Gmail access. Automatic interception remains untested; later controlled recovery has separate evidence below.                                                                                                      |
 | Dedicated exe.dev deployment                       | Live controlled prototype deployed        | [Initial evidence](docs/evidence/phase-0/2026-09-04-exe-deployment.md), [current release](docs/evidence/phase-0/2026-09-05-held-batch-disconnect.md): Linux build, migrations, healthy web, separate worker, hosted OAuth and controlled Gmail recovery. Same-VM backups are scheduled; R2 and independent outage alerts remain open/deferred. |
 | Hosted read-only OAuth configuration               | Live sign-in/profile/preview verified     | [Evidence](docs/evidence/phase-0/2026-09-04-hosted-oauth-setup.md): separate client/keys, web-only read-only mounts, corrected production compile setting and live inventory (three existing filters).                                                                                                                                         |
-| Controlled Gmail hold/release and guarded repeats  | Verified live for one and three messages  | [Batch crash evidence](docs/evidence/phase-0/2026-09-05-live-batch-recovery.md), [repeat implementation](docs/evidence/phase-0/2026-09-05-held-batch-disconnect.md). Fixed saved membership, partial release recovery across restart and no duplicate writes. Concurrent-arrival and multi-message hold-crash proof remain open.               |
+| Controlled Gmail hold/release and guarded repeats  | Verified live for one and three messages  | [Batch crash evidence](docs/evidence/phase-0/2026-09-05-live-batch-recovery.md), [repeat implementation](docs/evidence/phase-0/2026-09-05-held-batch-disconnect.md). Fixed saved membership, partial release recovery across restart and no duplicate writes. Arrival during interrupted release now passed; multi-message hold-crash proof remains open.               |
 | Controlled safe disconnect and revocation recovery | Verified live within fixture scope        | [Held-batch restoration](docs/evidence/phase-0/2026-09-05-held-batch-disconnect.md), [revocation crash recovery](docs/evidence/phase-0/2026-09-05-live-revoke-recovery.md). Restore/verify before revoke, cleanup and reconnect passed; general interception recovery remains open.                                                            |
 | Scheduled same-VM encrypted backups                | Enabled; first unattended run verified    | [Evidence](docs/evidence/phase-0/2026-09-05-vm-backups.md). Retain 14 successful copies; an actual archive restored independently on the owner Mac. R2/off-VM scheduling and independent failure alerts remain deferred/unconfigured.                                                                                                          |
 | Shared progress tracking                           | Complete                                  | This document is linked from README and the Phase 0 plan.                                                                                                                                                                                                                                                                                      |
@@ -244,6 +236,7 @@ explicitly recorded contract defaults.
 
 | Date       | Result                                                                                           | Reference                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-05 | New arrival stayed outside interrupted batch; recovery left its labels unchanged | [Evidence](docs/evidence/phase-0/2026-09-05-live-arrival-recovery.md); one remaining write, originals and newcomer unread in Inbox |
 | 2026-09-05 | Safe disconnect restored all three held messages before revocation; reconnect passed             | [Evidence](docs/evidence/phase-0/2026-09-05-held-batch-disconnect.md); guarded repeat deployed, 138 backend / 23 browser tests                     |
 | 2026-09-05 | Interrupted revocation recovered after restart; cleanup and reconnect passed                     | [Evidence](docs/evidence/phase-0/2026-09-05-live-revoke-recovery.md); zero refresh/Gmail requests on retry                                         |
 | 2026-09-05 | Live three-message release crash recovered across restart with no duplicate writes               | [Evidence](docs/evidence/phase-0/2026-09-05-live-batch-recovery.md); all three returned to Inbox unread                                            |

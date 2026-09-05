@@ -4,15 +4,16 @@ Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide
 describes the existing deployment, not instructions to provision a replacement
 VM. No secrets are stored here.
 
-## Current session update — 11:52 UTC
+## Current session update — 11:56 UTC
 
-The owner chose to continue on the original configured Mac. SSH and the correct
-Gmail incognito session are restored. The arrival rehearsal is now paused at
-batch revision two: one saved released member and two pending; Gmail has two
-released and one held, all unread. Diagnostic cleanup and web restart passed.
-Awaiting the new `phase0-arrival-001` message before recovery. The historical
-orb access checks and earlier stopping point below are superseded for current
-work by this update and PROGRESS.md; retain their machine-specific guidance.
+The owner continues on the configured Mac; SSH and the correct Gmail session
+are restored. The new-arrival rehearsal passed: the three original members are
+released at repeat revision two, with zero pending/errors; the separate newcomer
+stayed outside membership, unread in Inbox with unchanged labels. Temporary
+diagnostics were removed and web restarted. No owner send or recovery action is
+pending. Historical orb access checks and stopping-point details below are
+superseded by this update and PROGRESS.md. See the
+[live evidence](evidence/phase-0/2026-09-05-live-arrival-recovery.md).
 
 ## Where the app runs
 
