@@ -4,7 +4,20 @@ Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide
 describes the existing deployment, not instructions to provision a replacement
 VM. No secrets are stored here.
 
-## Current session update — bounded filters active
+## Current session update — overlap and separate-process proof passed
+
+Both temporary filters are removed; the one-shot experiment is disabled with one
+excluded Trash fixture, zero restored and no error. Guarded cleanup and its retry
+attempted zero message writes; originals unchanged. The fixture remains unread
+in Trash. No send is pending. Separate BEAM release contention then passed on the
+original three-message batch: first executor three writes, competing executor
+refused then retried with zero writes. Batch is released at revision four with
+zero pending/errors; original labels/unread Inbox state preserved. Temporary
+proof files/processes are removed; final monitor dry run is healthy. Image remains
+`6679507`. [Overlap](evidence/phase-0/2026-09-05-filter-overlap.md),
+[worker proof](evidence/phase-0/2026-09-05-multiworker-release.md).
+
+## Previous session update — bounded filters active
 
 Owner settings consent is verified. The two tracked filters were activated through
 the reviewed service and independently inspected: active, zero pending/errors,

@@ -1,6 +1,6 @@
 # Bounded existing-filter compatibility proof
 
-Prepared 2026-09-05 after the [live inventory](evidence/phase-0/2026-09-05-filter-compatibility-inventory.md). Status: inspection passed for existing fixtures; arrival-time overlap experiment not run. Automatic interception remains disabled.
+Prepared 2026-09-05 after the [live inventory](evidence/phase-0/2026-09-05-filter-compatibility-inventory.md). Status: bounded live Trash-overlap and guarded cleanup passed; [evidence](evidence/phase-0/2026-09-05-filter-overlap.md). Both temporary filters are removed. General interception remains disabled.
 
 ## Supported boundary
 
@@ -24,6 +24,6 @@ This tests overlap and Trash exclusion. It does not pass aliases, forwarding, Bc
 
 The bounded lifecycle is now implemented and locally tested; see the [implementation evidence](evidence/phase-0/2026-09-05-filter-lifecycle.md). Complete review and deployment before requesting activation. Required failure checks include response loss after filter creation, duplicate activation, wrong/stale ownership, partial filter removal, revoked settings access and disconnect while the test is active. Never delete a user filter based only on matching criteria or label names.
 
-The connected app currently has `gmail.modify`; filter creation/deletion requires `gmail.settings.basic`. Broader access needs the owner's Google consent after the implementation and exact activation form are reviewable. Do not request consent merely to inspect filters, and do not work around the missing lifecycle with untracked browser-created filters. [Create authorization](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/create), [delete authorization](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/delete).
+The connected app now has verified `gmail.modify` and `gmail.settings.basic` after owner consent; filter creation/deletion requires the latter. Broader access needs the owner's Google consent after the implementation and exact activation form are reviewable. Do not request consent merely to inspect filters, and do not work around the missing lifecycle with untracked browser-created filters. [Create authorization](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/create), [delete authorization](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/delete).
 
 Success requires provider evidence for the overlap, zero prohibited recovery writes, unchanged original filters, durable test ownership and verified filter cleanup. A read-only inventory alone cannot pass this gate.

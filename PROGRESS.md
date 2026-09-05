@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (settings consent verified; two bounded filters active; awaiting one fixture)
+Last updated: 2026-09-05 UTC (Trash-overlap cleanup and separate-process release contention passed)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -29,21 +29,18 @@ worker-outage detection/recovery passed. The monitor timer is installed but
 inactive/disabled: no external workspace, heartbeat or alert delivery is configured.
 [Monitor evidence](docs/evidence/phase-0/2026-09-05-operational-monitor.md).
 
-The owner completed settings consent; the grant and valid token were verified at
-14:16 UTC. Both bounded test filters are now active and independently read back:
-zero pending/errors, no baseline changes, zero observed messages. The three
-original filters remain unchanged. A private offline recovery copy contains the
-exact owned IDs, label and criteria. The next action is one owner-sent fixture;
-agent sending is not authorized. [Activation evidence](docs/evidence/phase-0/2026-09-05-filter-activation.md).
+**Latest verified results:** the owner-sent overlap fixture arrived unread in Trash,
+outside Inbox, with its test label. Guarded cleanup made zero message writes,
+removed both owned filters, and left the three original filters unchanged. The
+experiment is disabled; one message remains excluded in Trash for evidence.
+[Overlap evidence](docs/evidence/phase-0/2026-09-05-filter-overlap.md).
 
-**Latest verified result:** the three existing sender filters are configured to route matches
-to Trash and do not overlap the five controlled fixtures. A private full snapshot
-was preserved and a final read confirmed the filters unchanged. The app also
-successfully refreshed after observed natural access-token expiry without another
-sign-in. [Inventory and refresh evidence](docs/evidence/phase-0/2026-09-05-filter-compatibility-inventory.md).
-Earlier [hold recovery](docs/evidence/phase-0/2026-09-05-live-hold-recovery.md)
-and [arrival recovery](docs/evidence/phase-0/2026-09-05-live-arrival-recovery.md)
-proved restart recovery without duplicate writes or expanded membership.
+Two independent BEAM/OS release executors then contended over the original frozen
+batch. The first made three release writes; the competing worker was refused,
+then retried successfully with zero writes. All three messages retain their prior
+labels and unread Inbox placement. Batch is released at revision four with zero
+pending/errors. Temporary diagnostics are removed and health is good.
+[Separate-process evidence](docs/evidence/phase-0/2026-09-05-multiworker-release.md).
 
 **Previous implemented slice:** revision-guarded repeat of the same frozen batch,
 first deployed at `ed8756f`. Every member is verified released before new hold intent;
@@ -56,18 +53,18 @@ proof remains valid.
 
 ## Next action
 
-Await exactly one owner-sent fixture from `robertguss@gmail.com` to
-`howtocodeio@gmail.com`, subject `phase0-filter-trash-001`, with the active marker
-shown in the app as its body. Then inspect message-level labels without opening
-or marking it read, verify Trash exclusion under a write guard, disable the two
-tracked filters and verify the original inventory unchanged. Do not reset the
-one-shot experiment or add this message to the existing frozen batch.
+Continue the next bounded hold-only interception slice for ordinary arrival and
+broader receiving/thread cases, preserving the completed one-shot filter journal.
+The overlap experiment is complete and disabled; no owner send is pending and
+agent sending remains unauthorized. Its retained Trash fixture is intentionally
+excluded, not stranded recovery work.
 
 Operational setup next needs the owner's existing Better Stack/Sentry workspace
 and independent alert destination. The monitor code and runbook are ready; then
 configure, prime, and measure actual failure/recovery delivery. Periodic provider
-reconciliation, broader arrival cases, independently executing Gmail worker races
-and actual-device notification proof remain open. External storage remains
+reconciliation, broader arrival cases, scheduled/recovery worker races
+and actual-device notification proof remain open. Separate-process release
+contention now has live proof. External storage remains
 deferred unless the owner changes that choice. The requested owner answers/actions
 are pending, not routine reapproval of implementation or deployment.
 
@@ -145,8 +142,8 @@ a proof gate.
       inventory passed. Configured identities and single/three-message fixtures
       were validated in live rehearsals; the existing-filter inventory and
       owner-reported iPhone settings are recorded. Read-only existing-filter
-      overlap inspection now passed for current fixtures. Remaining work: live
-      filter-conflict behavior, broader fixture coverage and measured device behavior
+      overlap inspection now passed for current fixtures. The bounded Trash-filter conflict and guarded cleanup now passed. Remaining
+      work: broader fixture coverage and measured device behavior
       before automatic interception.
 - [x] **Provider error classification:** disabled API, insufficient scope and
       other permission errors are distinct; covered by automated tests in the
@@ -174,8 +171,8 @@ a proof gate.
       recovery now passed; the fixed three-message implementation now passes
       automated partial/crash recovery and disconnect tests; live three-message
       interrupted hold and release recovery now passed, including a new arrival
-      between interrupted release and recovery; continuously executing worker
-      races and broader provider recovery races remain unproven.
+      between interrupted release and recovery; separate-process release contention now passed with one writer and a write-free
+      competing retry; scheduled delivery and broader recovery races remain unproven.
 - [ ] **0.4 — Panic and direct Gmail recovery:**
       [offline recovery card](docs/phase-0-offline-recovery-card.md) now
       includes rehearsed one-fixture direct Gmail recovery with web/worker
@@ -258,6 +255,7 @@ explicitly recorded contract defaults.
 
 | Date       | Result                                                                                           | Reference                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-05 | Trash-overlap cleanup and separate-process release contention passed | [Overlap](docs/evidence/phase-0/2026-09-05-filter-overlap.md), [workers](docs/evidence/phase-0/2026-09-05-multiworker-release.md); filters disabled, batch released revision four |
 | 2026-09-05 | Reviewed filter lifecycle and monitor code deployed; hosted worker-outage dry run passed | [Filter evidence](docs/evidence/phase-0/2026-09-05-filter-lifecycle.md), [monitor evidence](docs/evidence/phase-0/2026-09-05-operational-monitor.md); live consent and external alert receipt pending |
 | 2026-09-05 | Existing filters inspected; natural access-token expiry refreshed successfully | [Evidence](docs/evidence/phase-0/2026-09-05-filter-compatibility-inventory.md); three Trash filters, zero current-fixture overlap, unchanged filters |
 | 2026-09-05 | Interrupted three-message hold survived restart and recovered without duplicate writes | [Evidence](docs/evidence/phase-0/2026-09-05-live-hold-recovery.md); all three restored unread to Inbox at repeat revision three |
