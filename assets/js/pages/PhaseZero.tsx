@@ -36,6 +36,7 @@ export default function PhaseZero({ gmail_configured, gmail_connected, gmail_ema
         <p>A few recent messages, with room to breathe.</p>
       </div>
       {notice && <p className="feedback" role="status">{notice}</p>}
+      {gmail_connected && <p><Link href="/batch">Open your delivery</Link></p>}
       {gmail_connected ? <RecentMessages /> : !gmail_disconnect_phase && (
         <section className="connect-prompt" aria-labelledby="connection-heading">
           <h2 id="connection-heading">{gmail_reconnect ? 'Reconnect your Gmail account' : 'No Gmail account connected'}</h2>

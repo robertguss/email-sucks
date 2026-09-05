@@ -3,11 +3,12 @@
 Plan: [plan.md](plan.md). These are implementation tasks, not completed evidence.
 
 ## 1. Review a real saved test batch
-- [ ] Show the exact existing batch's available messages with sender, subject and safe preview.
-- [ ] Persist per-batch reviewed state independently of Gmail unread state; show a finite remaining count.
-- [ ] Clearly distinguish unavailable/pending content and do not pull new Inbox arrivals into the batch.
+- [x] Show the exact existing batch's available messages with sender, subject and safe preview.
+- [x] Persist per-batch reviewed state independently of Gmail unread state; show a finite remaining count.
+- [x] Clearly distinguish unavailable/pending content and do not pull new Inbox arrivals into the batch.
 Verification: focused query/review tests and authenticated browser flow, including reload,
-mobile layout and zero Gmail mutation requests. Dependencies: none.
+mobile layout and zero Gmail mutation requests. Local verification passed: 229 backend /
+53 browser tests; hosted validation pending. Dependencies: none.
 Likely scope: batch presentation/query and review persistence, page/controller and browser tests;
 split persistence and UI implementation if the change exceeds one small unit.
 

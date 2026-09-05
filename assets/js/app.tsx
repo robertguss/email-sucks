@@ -2,8 +2,9 @@ import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import PhaseZero from './pages/PhaseZero';
 import Contract from './pages/Contract';
+import BatchView from './pages/BatchView';
 
-const pages = { PhaseZero, Contract };
+const pages = { PhaseZero, Contract, BatchView };
 
 void createInertiaApp({
   resolve: name => {

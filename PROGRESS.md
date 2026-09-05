@@ -60,7 +60,8 @@ proof remains valid.
 Build the [usable controlled delivery experiment](tasks/plan.md), following its
 [task checklist](tasks/todo.md). The owner agreed to evaluate technical and product
 viability together: a real finite batch view, bounded test intake, visible next
-delivery, Check Now and review. Start with the existing saved test batch view;
+delivery, Check Now and review. The saved test batch view is implemented and reviewed locally (229 backend /
+53 browser tests), with hosted verification next;
 resolve durable Gmail scheduling before timed live intake. Retain all remaining
 Phase 0 gates before broader everyday-mailbox use. This supersedes diagnostic-by-
 diagnostic expansion as the immediate work order; it does not mark Phase 0 complete.

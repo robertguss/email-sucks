@@ -261,6 +261,25 @@ defmodule EmailSucks.Gmail do
     end
   end
 
+  def batch_view(session), do: batch_view_access(session, &EmailSucks.Gmail.BatchView.load/2)
+
+  def review_batch_view(session, revision, item_id, reviewed) do
+    batch_view_access(session, fn config, token ->
+      EmailSucks.Gmail.BatchView.review(config, token, revision, item_id, reviewed)
+    end)
+  end
+
+  defp batch_view_access(session, operation) do
+    with_access(session, fn account, tokens ->
+      result = operation.(config(), tokens["access_token"])
+
+      if result in [{:error, :missing_scope}, {:error, :reconnect_required}],
+        do: update_current(account, status: "reconnect_required")
+
+      result
+    end)
+  end
+
   def history(session, action) when action in ["sync", "rescan"] do
     with_access(session, fn account, tokens ->
       result = EmailSucks.Gmail.HistoryProbe.run(config(), tokens["access_token"], action)
