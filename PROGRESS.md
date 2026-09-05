@@ -6,13 +6,13 @@ This is the current status and next-action tracker. The [product specification](
 
 ## Current position
 
-**Phase 0 is in progress; its exit gate has not passed.** The authenticated app previews five Inbox messages and now implements one controlled message hold/release with durable recovery. Automatic interception, continuous sync and sending remain disabled. Hosted read-only sign-in and preview have live evidence; the new modification flow still requires hosted consent and a live app run.
+**Phase 0 is in progress; its exit gate has not passed.** The authenticated app previews five Inbox messages and now implements one controlled message hold/release with durable recovery. Automatic interception, continuous sync and sending remain disabled. Hosted read-only sign-in and preview have live evidence; the controlled app hold/release now also has live provider evidence, including recovery after a web restart.
 
-**Latest implemented slice:** exact fixture matching, message-level label changes, independently committed pending intent, serialized operations, provider read-back and explicit recovery. The UI exposes saved state and last verification time honestly. See the [controlled app experiment](docs/phase-0-controlled-filter-experiment.md). Automated provider simulations include real-commit killed-request recovery; they do not replace live Gmail evidence.
+**Latest implemented slice:** exact fixture matching, message-level label changes, independently committed pending intent, serialized operations, provider read-back and explicit recovery. The UI exposes saved state and last verification time honestly. See the [controlled app experiment](docs/phase-0-controlled-filter-experiment.md). Automated provider simulations include real-commit killed-request recovery. The deployed app also held, verified after restart, released, and read back the live fixture with unread/unrelated labels preserved. [Evidence](docs/evidence/phase-0/2026-09-05-controlled-app-flow.md).
 
 ## Next action
 
-Deploy the controlled flow, reconnect through the app for Gmail modification permission, and run the hold/recover/release/verify sequence against the existing disposable fixture. The manual Gmail filter exercise is superseded and must not be repeated. The owner has authorized implementation, verification, pushing to main and deployment to the existing exe.dev VM. Group any human Google instructions into one manageable batch.
+The controlled slice is deployed at `3e17d90`, and its live fixture is released back to Inbox. The saved grant already had modification permission; no further consent action is needed. Next assess the remaining Phase 0 proofs, including device notification behavior and independent recovery operations. The manual Gmail filter exercise is superseded and must not be repeated. The owner has authorized implementation, verification, pushing to main and deployment to the existing exe.dev VM. Group any human Google instructions into one manageable batch.
 
 The owner waived manual export of disposable test mail. Product-wide recovery requirements remain in force. Native notification proof needs actual owner devices, and full Phase 0 acceptance still needs empirical evidence.
 

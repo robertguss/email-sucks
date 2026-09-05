@@ -20,10 +20,10 @@ Label creation is resolved by exact name on the next attempt if its response is 
 
 Recovery is explicitly requested in this slice, not background or continuous sync. Keep the database and Gmail vault/session keys together in the existing encrypted recovery procedure. Restore mode omits Gmail configuration and blocks these actions. Returning to an older app image preserves this additive table, but the new image is required to execute its recovery actions.
 
-## Verification and remaining live gate
+## Verification and live results
 
 Automated checks use the real app, database, and provider transport boundary. They cover exact matching, hold/release read-back, read/unread preservation, wrong sessions, CSRF, ambiguous writes, label-creation ambiguity, missing/trashed messages, competing release, and killed-request recovery with real commits on separate connections. Browser checks render all five states, check mobile overflow and submit the appropriate CSRF-protected forms. These are simulated-provider checks, not live Gmail evidence.
 
-After deployment, the owner reconnects once and approves modification access. Then exercise Hold, Recover / verify, Release, and Recover / verify in the app, recording provider-backed state and preserved unread status. Only Google consent may require the human. No mail sending or native Gmail filter setup is part of this test.
+The deployed app completed Hold, restart, Recover / verify, Release, and Recover / verify against live Gmail. The fixture is back in Inbox, still unread, with unrelated labels preserved. The saved grant already had modification access. See [dated evidence and browser limitations](evidence/phase-0/2026-09-05-controlled-app-flow.md). No mail sending or native Gmail filter setup was part of this test.
 
 Phase 0 remains incomplete: native notifications, broad interception, scheduling against Gmail, independent backup alerts and whole-VM recovery are outside this slice.
