@@ -2,16 +2,16 @@ defmodule EmailSucks.Gmail do
   @moduledoc "Personal Gmail connection. Ecto records here are private authentication infrastructure."
   import Ecto.Query
   alias EmailSucks.Repo
-  alias EmailSucks.Gmail.{Account, Controlled, Flow, Google, Vault}
+  alias EmailSucks.Gmail.{Account, Controlled, FilterExperiment, Flow, Google, Vault}
 
   def configured?, do: Application.get_env(:email_sucks, :gmail) != nil
   defp config, do: Application.fetch_env!(:email_sucks, :gmail)
   defp now, do: System.system_time(:second)
   defp digest(value), do: :crypto.hash(:sha256, value) |> Base.encode16(case: :lower)
 
-  def begin_connection, do: Controlled.exclusive(&begin_flow/0)
+  def begin_connection(purpose \\ nil), do: Controlled.exclusive(fn -> begin_flow(purpose) end)
 
-  defp begin_flow do
+  defp begin_flow(purpose) do
     if configured?() do
       Repo.transaction(fn ->
         # Global cap is deliberate for this single-user proof; includes consumed attempts.
@@ -23,7 +23,7 @@ defmodule EmailSucks.Gmail do
           Repo.aggregate(from(f in Flow, where: f.created_at > ^(time - 60)), :count, log: false)
 
         if count >= 10, do: Repo.rollback(:rate_limited)
-        {:ok, authorization} = Google.authorize(config())
+        {:ok, authorization} = Google.authorize(config(), purpose)
         browser = Google.random()
 
         Repo.insert!(
@@ -193,7 +193,10 @@ defmodule EmailSucks.Gmail do
           with_access(
             session,
             fn account, tokens ->
-              with :ok <- Controlled.restore_for_disconnect(config(), tokens["access_token"]),
+              with :ok <- filter_disconnect_access(tokens),
+                   :ok <-
+                     FilterExperiment.restore_for_disconnect(config(), tokens["access_token"]),
+                   :ok <- Controlled.restore_for_disconnect(config(), tokens["access_token"]),
                    :ok <-
                      EmailSucks.Gmail.Batch.restore_for_disconnect(
                        config(),
@@ -239,6 +242,50 @@ defmodule EmailSucks.Gmail do
       {:error, :invalid_ciphertext} -> {:error, :reconnect_required}
       error -> error
     end
+  end
+
+  def filter_summary(session) do
+    if account(session), do: FilterExperiment.summary(), else: nil
+  end
+
+  def filter_settings_access?(session) do
+    with %Account{} = account <- account(session),
+         {:ok, tokens} <- Vault.open(account.credentials, "gmail-tokens") do
+      Google.filter_settings_access?(tokens)
+    else
+      _ -> false
+    end
+  end
+
+  def filter_experiment(session, action) do
+    with_access(session, fn account, tokens ->
+      result =
+        cond do
+          action not in ~w(activate recover inspect disable) ->
+            {:error, :invalid_transition}
+
+          action != "inspect" and not Google.filter_settings_access?(tokens) ->
+            {:error, :filter_settings_required}
+
+          true ->
+            FilterExperiment.run(config(), tokens["access_token"], action)
+        end
+
+      if result == {:error, :reconnect_required},
+        do: update_current(account, status: "reconnect_required")
+
+      case result do
+        {:error, :missing_scope} -> {:error, :filter_settings_required}
+        other -> other
+      end
+    end)
+  end
+
+  defp filter_disconnect_access(tokens) do
+    if FilterExperiment.summary().state in ["not_started", "disabled"] or
+         Google.filter_settings_access?(tokens),
+       do: :ok,
+       else: {:error, :filter_settings_required}
   end
 
   def batch_summary(session) do

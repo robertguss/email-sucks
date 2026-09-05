@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import RecentMessages from '../components/RecentMessages';
 import GmailBatch, { type BatchStatus } from '../components/GmailBatch';
 import GmailDisconnect from '../components/GmailDisconnect';
+import GmailFilters, { type FilterStatus } from '../components/GmailFilters';
 
 type Props = {
   gmail_configured: boolean;
@@ -12,11 +13,13 @@ type Props = {
   gmail_disconnect_phase?: 'restoring' | 'revoking' | null;
   controlled?: { state: string; verified_at: number | null; repeat_revision?: number } | null;
   batch?: BatchStatus | null;
+  filters?: FilterStatus | null;
+  gmail_filter_settings?: boolean;
   csrf_token: string;
   notice: string | null;
 };
 
-export default function PhaseZero({ gmail_configured, gmail_connected, gmail_email, gmail_reconnect, gmail_checked, gmail_disconnect_phase, controlled, batch, csrf_token, notice }: Props) {
+export default function PhaseZero({ gmail_configured, gmail_connected, gmail_email, gmail_reconnect, gmail_checked, gmail_disconnect_phase, controlled, batch, filters, gmail_filter_settings, csrf_token, notice }: Props) {
   return (
     <main className="preview">
       <Head title="Inbox preview · Deliberate email" />
@@ -79,12 +82,13 @@ export default function PhaseZero({ gmail_configured, gmail_connected, gmail_ema
           <form method="post" action="/auth/google">
             <input type="hidden" name="_csrf_token" value={csrf_token} />
             <button type="submit">Reconnect for Gmail modification access</button>
-            <p className="detail">Google grants broader mailbox permission; this app limits changes to the controlled fixture.</p>
+            <p className="detail">Google grants broader mailbox permission; this app limits changes to its controlled tests.</p>
           </form>
         </section>
       )}
       {gmail_connected && <GmailBatch batch={batch ?? null} csrfToken={csrf_token} />}
-      {gmail_email && <GmailDisconnect phase={gmail_disconnect_phase ?? null} csrfToken={csrf_token} />}
+      {gmail_connected && <GmailFilters experiment={filters ?? null} settingsAccess={gmail_filter_settings ?? false} email={gmail_email ?? 'this account'} csrfToken={csrf_token} />}
+      {gmail_email && <GmailDisconnect phase={gmail_disconnect_phase ?? null} filterRecovery={filters != null && !['not_started', 'disabled'].includes(filters.state)} csrfToken={csrf_token} />}
       {gmail_email && (
         <details className="connection-details">
           <summary>Connection <span className="connection-state">{gmail_disconnect_phase ? 'Disconnect pending' : gmail_reconnect ? 'Reconnect required' : gmail_checked ? 'Verified' : 'Connected'}</span></summary>
@@ -107,7 +111,7 @@ export default function PhaseZero({ gmail_configured, gmail_connected, gmail_ema
         </details>
       )}
       <footer className="preview-footer">
-        <p>Only the controlled tests can change messages. Automatic interception and sending are not enabled.</p>
+        <p>Only controlled tests can change messages. Temporary filters can intercept matching test arrivals when explicitly activated. General interception and sending are not enabled.</p>
         <Link href="/phase-0/contract">Read the delivery contract</Link>
       </footer>
     </main>

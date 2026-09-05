@@ -17,6 +17,9 @@ defmodule EmailSucksWeb.PageController do
       gmail_checked: account != nil && account.checked_at != nil,
       controlled: EmailSucks.Gmail.controlled_summary(get_session(conn, :gmail_session)),
       batch: EmailSucks.Gmail.batch_summary(get_session(conn, :gmail_session)),
+      filters: EmailSucks.Gmail.filter_summary(get_session(conn, :gmail_session)),
+      gmail_filter_settings:
+        EmailSucks.Gmail.filter_settings_access?(get_session(conn, :gmail_session)),
       csrf_token: get_csrf_token(),
       notice: conn.assigns.flash["info"]
     })

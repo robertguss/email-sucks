@@ -22,11 +22,14 @@ interception, continuous sync and sending remain disabled. Hosted read-only
 sign-in and preview have live evidence; the controlled app hold/release now also
 has live provider evidence, including recovery after a web restart.
 
-**Current status:** the interrupted three-message hold rehearsal passed. SSH
-access works again. The same three saved members are released at repeat revision
-three, all unread in Inbox, with zero pending/errors and no pending disconnect.
-The newcomer remains outside membership with unchanged labels. Temporary
-diagnostics were removed and web restarted; readiness and cleanup passed.
+**Current status:** the opt-in filter lifecycle and settings consent are implemented
+and verified locally: 175 backend and 33 browser tests pass. Independent review
+found and prompted fixes for unrelated-filter cleanup blocking and false drift
+reports during unfinished work; independent revalidation is complete with no open
+actionable findings. This slice
+is not yet deployed or activated. The live app remains `ed8756f`, with the
+three-message batch released at revision three and no pending errors.
+[Implementation evidence](docs/evidence/phase-0/2026-09-05-filter-lifecycle.md).
 
 **Latest verified result:** the three existing sender filters are configured to route matches
 to Trash and do not overlap the five controlled fixtures. A private full snapshot
@@ -48,15 +51,13 @@ proof remains valid.
 
 ## Next action
 
-Implement the durable, opt-in filter lifecycle required by the prepared
-[bounded filter-overlap experiment](docs/phase-0-filter-compatibility.md), including
-ownership, ambiguous-create reconciliation and disable-before-restore recovery.
-The existing prototype has no filter lifecycle; do not activate temporary filters
-through an untracked workaround. Request settings consent and the new synthetic
-arrival only after the implementation and exact activation are reviewable.
-Current filters are unchanged and no owner authentication or send is pending.
-Broader arrival cases, independently executing worker races, independent alerts
-and actual-device notification proof remain open.
+Push and deploy the reviewed bounded filter lifecycle.
+Then group owner settings consent and the synthetic arrival instructions around
+the [bounded filter-overlap experiment](docs/phase-0-filter-compatibility.md).
+No filters are active and no message send is authorized. Broader arrival cases,
+independently executing worker races, independent alerts and actual-device
+notification proof remain open. Monitoring workspace/destination details have been
+requested; external storage remains deferred unless the owner changes that choice.
 
 The owner uses the Gmail app on iPhone and reports all Gmail notifications,
 sounds and badges disabled. Batch notifications are optional and off by default

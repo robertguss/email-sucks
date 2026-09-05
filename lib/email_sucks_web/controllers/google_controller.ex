@@ -4,8 +4,10 @@ defmodule EmailSucksWeb.GoogleController do
 
   plug :private_response
 
-  def start(conn, _params) do
-    case Gmail.begin_connection() do
+  def start(conn, params) do
+    purpose = if params["purpose"] == "filters", do: "filters", else: nil
+
+    case Gmail.begin_connection(purpose) do
       {:ok, flow, url} -> conn |> put_session(:gmail_flow, flow) |> redirect(external: url)
       {:error, reason} -> failure(conn, reason)
     end
@@ -56,6 +58,21 @@ defmodule EmailSucksWeb.GoogleController do
         conn
         |> put_status(status)
         |> json(%{error: if(status == 401, do: "reconnect_required", else: "unavailable")})
+    end
+  end
+
+  def filters(conn, %{"action" => action}) do
+    case Gmail.filter_experiment(get_session(conn, :gmail_session), action) do
+      {:ok, %{state: state}} ->
+        conn
+        |> put_flash(
+          :info,
+          "Filter experiment #{state}. Review saved progress before continuing."
+        )
+        |> redirect(to: ~p"/")
+
+      {:error, reason} ->
+        failure(conn, reason)
     end
   end
 
@@ -153,6 +170,18 @@ defmodule EmailSucksWeb.GoogleController do
 
         :wrong_account ->
           "That Google account is not allowed for this personal prototype."
+
+        reason when reason in [:filter_creation_uncertain, :filter_ownership_uncertain] ->
+          "Gmail has not confirmed which test filters exist. No duplicate filters will be created. Retry recovery; keep access until cleanup is verified."
+
+        reason when reason in [:filter_drift, :filter_baseline_changed] ->
+          "Gmail filters changed outside the saved experiment. Review the filters in Gmail; the app will not delete changed or unrelated filters."
+
+        :filter_cleanup_pending ->
+          "Filter cleanup or held-mail recovery is still unverified. Retry cleanup before disconnecting."
+
+        :filter_settings_required ->
+          "This experiment needs Gmail filter settings and modification permission. Use the separate filter permission form; your ordinary Gmail connection is unchanged."
 
         :missing_scope ->
           "Gmail modification permission is missing. Reconnect and allow that permission."

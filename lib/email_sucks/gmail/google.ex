@@ -1,6 +1,7 @@
 defmodule EmailSucks.Gmail.Google do
   @moduledoc "Google OAuth and message boundary. Provider responses and credentials never become UI errors."
   @scope "https://www.googleapis.com/auth/gmail.modify"
+  @settings_scope "https://www.googleapis.com/auth/gmail.settings.basic"
   # Google's published discovery document, checked 2026-09-04. Only fixed Google endpoints.
   @discovery %{
     "issuer" => "https://accounts.google.com",
@@ -9,11 +10,20 @@ defmodule EmailSucks.Gmail.Google do
     "jwks_uri" => "https://www.googleapis.com/oauth2/v3/certs"
   }
 
-  def authorize(config) do
-    config
-    |> strategy()
-    |> Keyword.put(:nonce, random())
-    |> Assent.Strategy.Google.authorize_url()
+  def authorize(config, purpose \\ nil) do
+    required = if purpose == "filters", do: [@scope, @settings_scope], else: [@scope]
+
+    with {:ok, authorization} <-
+           config
+           |> strategy(required)
+           |> Keyword.put(:nonce, random())
+           |> Assent.Strategy.Google.authorize_url() do
+      {:ok,
+       %{
+         authorization
+         | session_params: Map.put(authorization.session_params, :required_scopes, required)
+       }}
+    end
   end
 
   def callback(config, session, params) do
@@ -23,7 +33,7 @@ defmodule EmailSucks.Gmail.Google do
            |> Keyword.put(:session_params, session)
            |> Assent.Strategy.Google.callback(params),
          {:ok, identity} <- identity(user, config),
-         true <- @scope in String.split(Map.get(token, "scope", "")),
+         true <- granted_scopes?(token, Map.get(session, :required_scopes, [@scope])),
          {:ok, token} <- credentials(token) do
       {:ok, identity, token}
     else
@@ -46,7 +56,10 @@ defmodule EmailSucks.Gmail.Google do
 
     case request(config, method: :post, url: @discovery["token_endpoint"], form: form) do
       {:ok, %{status: 200, body: body}} when is_map(body) ->
-        body = Map.put_new(body, "refresh_token", previous["refresh_token"])
+        body =
+          body
+          |> Map.put_new("refresh_token", previous["refresh_token"])
+          |> Map.put_new("scope", previous["scope"])
 
         case credentials(body) do
           {:ok, token} -> {:ok, token}
@@ -444,7 +457,14 @@ defmodule EmailSucks.Gmail.Google do
 
   def random, do: :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
 
-  defp strategy(config) do
+  def filter_settings_access?(tokens), do: granted_scopes?(tokens, [@scope, @settings_scope])
+
+  defp granted_scopes?(tokens, required) do
+    scope = tokens["scope"]
+    is_binary(scope) and Enum.all?(required, &(&1 in String.split(scope)))
+  end
+
+  defp strategy(config, required \\ [@scope]) do
     [
       client_id: Keyword.fetch!(config, :client_id),
       client_secret: Keyword.fetch!(config, :client_secret),
@@ -455,7 +475,7 @@ defmodule EmailSucks.Gmail.Google do
       id_token_ttl_seconds: 600,
       http_adapter: {Assent.HTTPAdapter.Req, http_options(config)},
       authorization_params: [
-        scope: "email #{@scope}",
+        scope: "email " <> Enum.join(required, " "),
         access_type: "offline",
         prompt: "consent"
       ]

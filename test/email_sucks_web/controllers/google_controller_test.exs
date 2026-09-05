@@ -334,5 +334,57 @@ defmodule EmailSucksWeb.GoogleControllerTest do
     assert Gmail.account(session) == nil
   end
 
+  test "filter opt-in scope is saved in the encrypted server-side flow", %{conn: conn} do
+    started = conn |> bypass_csrf() |> post("/auth/google", %{"purpose" => "filters"})
+    assert redirected_to(started) =~ "gmail.settings.basic"
+    flow_id = get_session(started, :gmail_flow)
+    assert {:ok, flow} = Gmail.consume_flow(flow_id)
+    assert "https://www.googleapis.com/auth/gmail.settings.basic" in flow.required_scopes
+    assert Map.keys(get_session(started)) == ["gmail_flow"]
+  end
+
+  test "filter actions require CSRF and session", %{conn: conn} do
+    for action <- ~w(activate recover inspect disable) do
+      assert_raise Plug.CSRFProtection.InvalidCSRFTokenError, fn ->
+        conn |> put_private(:plug_skip_csrf_protection, false) |> post("/gmail/filters/#{action}")
+      end
+
+      Req.Test.stub(__MODULE__, fn _ -> flunk("unauthorized filter request") end)
+      denied = conn |> bypass_csrf() |> post("/gmail/filters/#{action}")
+      assert denied.assigns.flash["info"] =~ "Connect Gmail"
+    end
+
+    public = get(conn, "/")
+    assert Inertia.Testing.inertia_props(public).filters == nil
+    refute Inertia.Testing.inertia_props(public).gmail_filter_settings
+  end
+
+  test "missing filter scope leaves ordinary connection usable and ignores client scope claims",
+       %{conn: conn} do
+    {:ok, session} =
+      Gmail.connect(%{subject: "subject", email: "owner@gmail.com"}, %{
+        "access_token" => "private-access",
+        "refresh_token" => "private-refresh",
+        "scope" => "https://www.googleapis.com/auth/gmail.modify",
+        "expires_at" => System.system_time(:second) + 3600
+      })
+
+    Req.Test.stub(__MODULE__, fn _ -> flunk("must reject before any provider request") end)
+
+    result =
+      conn
+      |> Plug.Test.init_test_session(gmail_session: session)
+      |> bypass_csrf()
+      |> post("/gmail/filters/activate", %{
+        "scope" => "https://www.googleapis.com/auth/gmail.settings.basic",
+        "subject" => "arbitrary"
+      })
+
+    assert result.assigns.flash["info"] =~ "separate filter permission form"
+    assert Gmail.account(session).status == "connected"
+    assert Gmail.filter_summary(session).state == "not_started"
+    assert Gmail.filter_experiment(session, "arbitrary") == {:error, :invalid_transition}
+  end
+
   defp bypass_csrf(conn), do: Plug.Conn.put_private(conn, :plug_skip_csrf_protection, true)
 end

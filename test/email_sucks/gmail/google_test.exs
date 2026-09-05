@@ -120,6 +120,55 @@ defmodule EmailSucks.Gmail.GoogleTest do
              Google.refresh(ctx.config, %{"refresh_token" => "keep-refresh"})
   end
 
+  test "only the explicit filter flow requests and requires settings scope", ctx do
+    {:ok, authorization} = Google.authorize(ctx.config, "filters")
+    params = URI.decode_query(URI.parse(authorization.url).query)
+    assert "https://www.googleapis.com/auth/gmail.settings.basic" in String.split(params["scope"])
+
+    ctx = %{
+      ctx
+      | authorization: authorization,
+        claims: Map.put(ctx.claims, "nonce", authorization.session_params.nonce)
+    }
+
+    stub(ctx)
+    assert {:error, :missing_scope} = callback(ctx)
+
+    stub(ctx, %{
+      "scope" =>
+        "https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.settings.basic"
+    })
+
+    assert {:ok, _, _} = callback(ctx)
+
+    {:ok, ordinary} = Google.authorize(ctx.config, "arbitrary")
+    refute URI.decode_query(URI.parse(ordinary.url).query)["scope"] =~ "gmail.settings.basic"
+  end
+
+  test "refresh preserves omitted scope but honors explicit scope reduction", ctx do
+    previous = %{
+      "refresh_token" => "keep-refresh",
+      "scope" =>
+        "https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.settings.basic"
+    }
+
+    body = %{"access_token" => "new-access", "expires_in" => 3600, "token_type" => "Bearer"}
+    Req.Test.stub(__MODULE__, &Req.Test.json(&1, body))
+    assert {:ok, token} = Google.refresh(ctx.config, previous)
+    assert Google.filter_settings_access?(token)
+
+    Req.Test.stub(
+      __MODULE__,
+      &Req.Test.json(&1, Map.put(body, "scope", "https://www.googleapis.com/auth/gmail.modify"))
+    )
+
+    assert {:ok, token} = Google.refresh(ctx.config, previous)
+    refute Google.filter_settings_access?(token)
+    Req.Test.stub(__MODULE__, &Req.Test.json(&1, Map.put(body, "scope", "")))
+    assert {:ok, token} = Google.refresh(ctx.config, previous)
+    refute Google.filter_settings_access?(token)
+  end
+
   defp callback(ctx),
     do:
       Google.callback(ctx.config, ctx.authorization.session_params, %{
