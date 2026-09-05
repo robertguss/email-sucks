@@ -23,7 +23,7 @@ Final state: `released`, provider-verified. The empty controlled label and durab
 
 ## Evidence limits
 
-Live operations called the deployed app's own functions over its release RPC boundary, with credentials loaded privately in the VM. Chrome reached the deployed page but an extension UI blocked automation; this is not evidence of a complete hosted browser form/Google callback round trip for the new flow. Those route/UI behaviors have automated local coverage.
+Hold/release operations called the deployed app's own functions over its release RPC boundary, with credentials loaded privately in the VM. After correcting an initial regular-window selection to the owner's authenticated incognito window, clicked the actual app's **Recover / verify** form at 01:48:58 UTC. The hosted page returned “Controlled message released; verified against Gmail just now” and updated its last-verified time. Loading recent messages in the app showed the controlled fixture in Inbox as unread. This supplies live authenticated browser/CSRF recovery evidence; the hold and release form states themselves have local browser/controller coverage. No new Google callback was needed during this verification.
 
 The live restart occurred after a verified hold. Mid-request crash and ambiguous-response recovery were tested with a simulated provider and real durable database commits, not by deliberately interrupting a live Gmail request. Verification records observations at a point in time; it does not establish continuous synchronization or protect against later external mailbox changes.
 
