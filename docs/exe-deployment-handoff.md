@@ -12,27 +12,30 @@ with a real saved batch view. Phase 0 remains open; the experiment does not auth
 broad mailbox interception or waive operational/device gates. The history proof
 below is complete and no longer the next implementation milestone.
 
-## Current stopping point — trial ready; SSH signing locked
+## Current stopping point — trial live; first owner fixture needed
 
-Controlled trial implementation is committed and pushed at `d034e6e`. 253 backend
-and 60 browser tests pass, plus formatting, compilation with warnings as errors and
-TypeScript. Review `email-sucks-trial-review-20260905-144036` completed; all three
-findings are fixed with regressions. See [trial evidence](evidence/phase-0/2026-09-05-delivery-trial.md).
+Image `d034e6e` is deployed and the controlled trial is active. 253 backend / 60
+browser tests and all review fixes pass. Fresh 21:28 UTC backup was copied to the
+owner Mac and fully authenticated. Readiness and operational monitor check-only
+are healthy. Web runs `gmail_delivery: 1`; worker stays credential-free with
+`phase_zero: 5`. All five previous journals are unchanged across deployment.
 
-The next SSH archive transfer waited for 1Password signing. Its lock screen requires
-the owner account password before Touch ID can be used. The waiting transfer was
-terminated; build/migration/deployment has not run. After owner unlock, resume
-archive `d034e6e`, build with both compose files, then `.local/deploy-trial.sh`.
-Do not use only the base compose file. Live remains `58e23a5`, no trial is active.
+Authenticated Chrome activated one exact Hold-only filter. Its full specification
+matches live Gmail and all three original filters are unchanged. Private evidence
+under `~/.config/email-sucks/hosted-cougar-cedar/delivery-trial/` includes before,
+post-deploy, activated and empty-check JSON, plus the exact offline recovery card.
+An empty Check Now completed through Oban on attempt one without changing the
+scheduled occurrence. First due time is 21:35:22 UTC, recurring every five minutes.
+No trial fixture has been sent yet. Browser `trialTab` currently shows expanded
+send instructions at `/batch`. Ask owner to send from the exact sender to the
+configured recipient, using the displayed subject and body marker; do not send as
+agent. On 'sent', inspect only this profile's held mail and observe timed delivery.
+Then test another arrival with Check Now and trial Stop/restore, preserving old
+experiments. Record actual owner feedback; full Phase 0 remains open.
 
-Fresh 18:34 UTC encrypted backup is copied/checksummed/fully authenticated on the
-owner Mac. Private `hosted-cougar-cedar/delivery-trial/before.json` contains the three
-original filters and five journal fingerprints; `recovery.md` is prepared. After
-migration compare fingerprints, verify web `gmail_delivery: 1` and credential-free
-worker, readiness and monitor. Then activate the trial, save exact owned filter
-and marker on the private recovery card, and request the first owner fixture.
-Do not send email as the agent. Trial Stop cleans up only its own profile;
-account disconnect remains all-profile. User evaluation/live timing remain open.
+Trial Stop is profile-specific; account disconnect retains all-profile cleanup.
+Do not restart/reset the trial after completed stop. General interception remains
+off. [Evidence](evidence/phase-0/2026-09-05-delivery-trial.md).
 
 ## Current session update — usable saved delivery verified
 

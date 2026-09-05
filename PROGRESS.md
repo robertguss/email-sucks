@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (controlled trial implemented; deployment awaiting SSH unlock)
+Last updated: 2026-09-05 UTC (controlled trial deployed and active)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -17,14 +17,14 @@ queue.
 
 **Phase 0 is in progress; its exit gate has not passed.** The authenticated app
 previews five Inbox messages and now implements single-message and fixed
-three-message controlled hold/release with durable recovery. Automatic
+three-message controlled hold/release with durable recovery. General mailbox
 interception, continuous sync and sending remain disabled. Hosted read-only
 sign-in and preview have live evidence; the controlled app hold/release now also
 has live provider evidence, including recovery after a web restart.
 
-**Current status:** reviewed saved delivery image `58e23a5` is live at `/batch`.
-All 229 backend and 53 browser tests pass, plus compilation, formatting and
-TypeScript. Hosted review/reload/undo passed with unchanged Gmail metadata and
+**Current status:** reviewed delivery trial image `d034e6e` is live at `/batch`.
+All 253 backend and 60 browser tests pass, plus compilation, formatting and
+TypeScript. One exact test-mail Hold filter is active; general mail remains outside. Hosted review/reload/undo passed with unchanged Gmail metadata and
 original recovery journals. [Delivery evidence](docs/evidence/phase-0/2026-09-05-batch-experience.md).
 
 The preceding history recovery proof also passed:
@@ -67,10 +67,11 @@ viability together: a real finite batch view, bounded test intake, visible next
 delivery, Check Now and review. The saved test batch view is deployed and verified.
 The controlled trial is implemented and pushed at `d034e6e`: bounded intake,
 five-minute delivery, durable Check Now, trial-only stop/restore and per-delivery
-review. All 253 backend / 60 browser tests and review fixes pass. Deployment is
-waiting for the owner to unlock 1Password for SSH signing. No trial filter is
-active; live remains `58e23a5`. After deployment, verify the runtime and request
-the first owner-sent fixture. [Trial evidence](docs/evidence/phase-0/2026-09-05-delivery-trial.md). Retain all remaining
+review. All 253 backend / 60 browser tests and review fixes pass. Deployment and
+runtime checks passed. The exact trial is active, original filters/journals are
+unchanged, and an empty Check Now completed without shifting the scheduled time.
+Await the first owner-sent matching fixture; verify held arrival and timed delivery,
+then a second fixture for Check Now, followed by stop/restore and owner feedback. [Trial evidence](docs/evidence/phase-0/2026-09-05-delivery-trial.md). Retain all remaining
 Phase 0 gates before broader everyday-mailbox use. This supersedes diagnostic-by-
 diagnostic expansion as the immediate work order; it does not mark Phase 0 complete.
 

@@ -59,12 +59,19 @@ starting intent before any filter journal/provider write exists. No cross-model 
 
 ## Hosted validation
 
-Reviewed implementation is pushed at `d034e6e`; deployment awaits owner unlock
-of 1Password for SSH signing. Live remains `58e23a5`, with no trial active. The fresh 18:34 UTC encrypted archive was copied to
-the owner Mac, checksum matched and full decryption authenticated. Before live
-activation, verify migrations/readiness, web-only queue configuration, old journal
-fingerprints and the authenticated trial page. Save original filters and the exact
-owned filter recovery details privately before requesting a fixture.
+Image `d034e6e` is deployed. Fresh 21:28 UTC encrypted backup was copied to the
+owner Mac, checksum matched and full decryption authenticated. Migrations/readiness
+passed, web delivery queue is active at concurrency one, and the separate worker
+has no Gmail configuration and retains its five-worker synthetic queue. All five
+pre-existing journal fingerprints match. Operational monitor check-only is healthy.
+
+The authenticated page activated the exact trial profile. Live readback confirms
+one owned Hold filter with exact saved specification; all three original filters
+are unchanged. Exact filter/nonce/label and recovery details are saved privately.
+An empty Check Now ran through the real Oban executor and completed on attempt one;
+the future scheduled occurrence remained unchanged. No trial message has been sent
+or released yet. The first scheduled time is 21:35:22 UTC, then every five minutes.
+The trial remains active awaiting the owner's first fixture.
 
 Then observe owner-sent held arrival → scheduled delivery and another arrival →
 Check Now, followed by stop/restore and the owner's actual feedback. Agent email
