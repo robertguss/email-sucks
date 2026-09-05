@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (bounded filter lifecycle deployed; monitoring implementation under review)
+Last updated: 2026-09-05 UTC (filter lifecycle and monitor code deployed; hosted worker-outage dry run passed)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -22,18 +22,18 @@ interception, continuous sync and sending remain disabled. Hosted read-only
 sign-in and preview have live evidence; the controlled app hold/release now also
 has live provider evidence, including recovery after a web restart.
 
-**Current status:** the reviewed opt-in filter lifecycle and settings consent are
-live at `9e39454`. All 175 backend and 33 browser tests passed before deployment;
-backup authentication, additive migrations, readiness and saved-state checks
-passed. No filter experiment is active. The batch remains released at revision
-three with no pending errors. Owner settings consent has been requested through
-the deployed form; no message send is authorized.
-[Implementation/deployment evidence](docs/evidence/phase-0/2026-09-05-filter-lifecycle.md).
+**Current status:** the reviewed filter lifecycle and operational monitor code are
+live at `6679507`. All 186 backend tests and nine monitor runner tests pass; the
+33 browser tests passed for the unchanged filter UI. Hosted systemd dry-run and
+worker-outage detection/recovery passed. The monitor timer is installed but
+inactive/disabled: no external workspace, heartbeat or alert delivery is configured.
+[Monitor evidence](docs/evidence/phase-0/2026-09-05-operational-monitor.md).
 
-Independent work continues: the local operational monitor implementation is under
-review. It withholds an external heartbeat for unavailable web/worker, saved failed
-recovery or stale backup; external workspace/destination and actual alert receipt
-remain unconfigured and unproven.
+No filter experiment is active. The batch remains released at revision three with
+no pending errors and no disconnect. The connected grant still lacks settings
+permission as of 14:03 UTC. Owner consent has been requested through the deployed
+form; no message send is authorized.
+[Filter evidence](docs/evidence/phase-0/2026-09-05-filter-lifecycle.md).
 
 **Latest verified result:** the three existing sender filters are configured to route matches
 to Trash and do not overlap the five controlled fixtures. A private full snapshot
@@ -55,13 +55,20 @@ proof remains valid.
 
 ## Next action
 
-Complete monitoring review and local/live dry-run verification while owner settings
-consent is pending. After consent, activate and verify the tracked filters before
-requesting the synthetic arrival for the
-[bounded filter-overlap experiment](docs/phase-0-filter-compatibility.md).
-Broader arrival cases, independently executing worker races, independent alerts
+The next provider dependency is owner Google settings consent using **Allow filter
+settings access** in the deployed app. Once verified, activate and inspect the
+tracked filters before requesting the synthetic arrival for the
+[bounded overlap experiment](docs/phase-0-filter-compatibility.md). Its live result
+must inform broader interception work; the current implementation is not proof
+that Gmail preserves exact filter criteria or action overlap.
+
+Operational setup next needs the owner's existing Better Stack/Sentry workspace
+and independent alert destination. The monitor code and runbook are ready; then
+configure, prime, and measure actual failure/recovery delivery. Periodic provider
+reconciliation, broader arrival cases, independently executing Gmail worker races
 and actual-device notification proof remain open. External storage remains
-deferred unless the owner changes that choice.
+deferred unless the owner changes that choice. The requested owner answers/actions
+are pending, not routine reapproval of implementation or deployment.
 
 The owner uses the Gmail app on iPhone and reports all Gmail notifications,
 sounds and badges disabled. Batch notifications are optional and off by default
@@ -182,9 +189,10 @@ a proof gate.
       mail operations; held-batch restore-before-revoke now passed live; future
       general interception recovery remains unproven. Browser sign-out remains
       separate.
-- [ ] **Independent monitoring:** configure Sentry and Better Stack with
-      redaction; test meaningful failed-work and missed-heartbeat alerts,
-      including total VM outage.
+- [ ] **Independent monitoring:** heartbeat gating and redaction are implemented;
+      hosted systemd and worker-outage dry runs passed. Configure/prime Better
+      Stack and Sentry, add provider reconciliation, and verify actual failed-work
+      and missed-heartbeat alert receipt including total VM outage.
 - [ ] **Backups and restore:** one-off encrypted hosted export restored
       successfully on the owner Mac with stale held metadata, Gmail disabled and
       no Oban process; same-VM daily encrypted exports with 14-copy retention
@@ -249,6 +257,7 @@ explicitly recorded contract defaults.
 
 | Date       | Result                                                                                           | Reference                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-05 | Reviewed filter lifecycle and monitor code deployed; hosted worker-outage dry run passed | [Filter evidence](docs/evidence/phase-0/2026-09-05-filter-lifecycle.md), [monitor evidence](docs/evidence/phase-0/2026-09-05-operational-monitor.md); live consent and external alert receipt pending |
 | 2026-09-05 | Existing filters inspected; natural access-token expiry refreshed successfully | [Evidence](docs/evidence/phase-0/2026-09-05-filter-compatibility-inventory.md); three Trash filters, zero current-fixture overlap, unchanged filters |
 | 2026-09-05 | Interrupted three-message hold survived restart and recovered without duplicate writes | [Evidence](docs/evidence/phase-0/2026-09-05-live-hold-recovery.md); all three restored unread to Inbox at repeat revision three |
 | 2026-09-05 | New arrival stayed outside interrupted batch; recovery left its labels unchanged | [Evidence](docs/evidence/phase-0/2026-09-05-live-arrival-recovery.md); one remaining write, originals and newcomer unread in Inbox |

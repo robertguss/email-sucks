@@ -4,7 +4,19 @@ Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide
 describes the existing deployment, not instructions to provision a replacement
 VM. No secrets are stored here.
 
-## Current session update — 13:38 UTC
+## Current session update — 14:03 UTC
+
+The reviewed monitor and filter-error preservation fix are deployed at `6679507`.
+All 186 backend and nine Python runner tests passed. Hosted systemd check-only
+execution passed; stopping the worker produced worker_unavailable while web
+readiness stayed healthy, and restarting the worker restored healthy status.
+Both app containers are running. Monitor units are installed but timer remains
+inactive/disabled; no external URL, workspace or alert delivery is configured.
+Owner workspace/destination answer and Google settings consent remain pending.
+Filter state not_started; batch released revision three, zero pending/errors,
+no disconnect. [Monitor evidence](evidence/phase-0/2026-09-05-operational-monitor.md).
+
+## Previous session update — 13:38 UTC
 
 The reviewed bounded filter lifecycle is deployed at `9e39454`; both additive
 migrations, web/worker readiness and saved-state checks passed. Filter state is
@@ -50,13 +62,13 @@ refreshed it successfully without sign-in. No message/filter mutations occurred.
 | Compose files             | `deploy/exe.compose.yaml` **and** `deploy/exe.gmail.compose.yaml`                                               |
 | Containers                | `email-sucks-phase0-web-1`, `email-sucks-phase0-worker-1`, `email-sucks-phase0-db-1`                            |
 | Database                  | PostgreSQL 18.6, database `email_sucks_phase0`, Compose volume `postgres_data` mounted at `/var/lib/postgresql` |
-| Latest verified app image | `email-sucks:9e39454`                                                                                           |
+| Latest verified app image | `email-sucks:6679507`                                                                                           |
 | Deployed revision marker  | `/home/exedev/email-sucks/DEPLOYED_REVISION`                                                                    |
 | Repository                | `https://github.com/robertguss/email-sucks.git`, deployment source branch `main`                                |
 
 The VM builds the Linux Docker image locally; there is no registry push or
 automatic deployment pipeline. Updating GitHub does **not** deploy.
-Documentation commits after `9e39454` do not change the running image. Web
+Documentation commits after `6679507` do not change the running image. Web
 serves Phoenix/React/Inertia; the separate Oban worker handles synthetic jobs
 only. Real Gmail operations currently run through authenticated web requests.
 General interception, scheduled Gmail delivery and sending are disabled. Bounded
@@ -133,7 +145,7 @@ key agent can stall signing even after the connection succeeds.
 ## Release procedure for the existing VM
 
 Use the checked-in runtimes (`mise.toml`), locked dependencies and Dockerfile.
-Test and review changes first; current deployed baseline is 175 backend and 33 browser
+Test and review changes first; current deployed baseline is 186 backend, nine Python monitor and 33 browser
 tests. Commands are in [README](../README.md#verification). Apply development
 migrations before browser tests; leave port 4010 free. Do not point local test
 commands at the hosted database.
