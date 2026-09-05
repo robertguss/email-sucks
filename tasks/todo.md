@@ -15,29 +15,32 @@ split persistence and UI implementation if the change exceeds one small unit.
 
 ## 2. Connect durable execution to the controlled Gmail boundary
 - [x] Select the smallest execution design that preserves account serialization and the existing credential boundary; document the decision.
-- [ ] Prove a persisted due request survives executor restart and uses frozen exact-message membership.
-- [ ] Prove failure/retry, concurrent manual execution and recovery preserve known/unknown outcomes.
-Verification: real independent-process tests with bounded provider fixtures; no live interception.
+- [x] Prove a persisted due request survives executor restart and uses frozen exact-message membership.
+- [x] Prove failure/retry, concurrent manual execution and recovery preserve known/unknown outcomes.
+Verification: independent connection/process-death and restarted Oban/Lifeline tests
+pass with bounded fixture provider; live OS/container restart remains unobserved.
 Dependencies: none; required before timed live intake. Likely scope: execution adapter,
 existing scheduling integration and focused process tests; separate units as needed.
 
 ## Checkpoint A
-- [ ] Real saved batch is usable; execution design and failure tests pass.
-- [ ] Compile and relevant tests pass. Record owner feedback when available without blocking independent implementation.
+- [x] Real saved batch is usable; execution design and failure tests pass.
+- [x] Compile and relevant tests pass. Record owner feedback when available without blocking independent implementation.
 
 ## 3. Add repeatable bounded intake
-- [ ] Create a separate trial journal and exact test criteria; preserve historical experiment records and unrelated filters.
-- [ ] Discover only matching test arrivals with bounded pagination and explicit incomplete/error state.
-- [ ] Stop disables owned interception before tracked restore; repeated stop is safe and preserves unread state.
-Verification: scoped filter/intake/recovery tests plus guarded attended provider readback.
+- [x] Create a separate trial journal and exact test criteria; preserve historical experiment records and unrelated filters.
+- [x] Discover only matching test arrivals with bounded pagination and explicit incomplete/error state.
+- [x] Stop disables owned interception before tracked restore; repeated stop is safe and preserves unread state.
+Verification: scoped filter/intake/recovery tests pass; guarded attended provider
+readback remains pending.
 Dependencies: 2. Likely scope: trial state, bounded provider integration and recovery tests;
 implement intake and recovery as separate small units before activation.
 
 ## 4. Experience delivery and Check Now
-- [ ] Display the saved next delivery with timezone, overdue and failed states that reflect server state.
-- [ ] Due execution and Check Now join one account release, freeze membership and expose confirmed progress.
-- [ ] Arrivals during release remain for the next batch; completion leads to the real review view.
-Verification: scheduler/manual/recovery contention tests, browser flow and attended live test.
+- [x] Display the saved next delivery with timezone, overdue and failed states that reflect server state.
+- [x] Due execution and Check Now join one account release, freeze membership and expose confirmed progress.
+- [x] Arrivals during release remain for the next batch; completion leads to the real review view.
+Verification: local scheduler/manual/recovery tests and browser flow pass (253
+backend / 60 browser total). Review/deployment and attended live test pending.
 Dependencies: 1–3. Likely scope: scheduling facade, delivery page and integration tests;
 separate backend and UI units if needed.
 

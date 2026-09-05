@@ -255,6 +255,7 @@ defmodule EmailSucks.Gmail.FilterExperimentTest do
 
     assert Map.keys(FilterExperiment.summaries()) |> Enum.sort() == [
              "arrival-primary-v1",
+             "delivery-trial-v1",
              "primary"
            ]
   end

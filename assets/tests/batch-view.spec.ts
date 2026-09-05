@@ -5,6 +5,7 @@ const item = { id: 'thread-one', contents: [content], messages: 1, reviewed: fal
 const batch = { revision: 4, state: 'ready', items: [item], total: 1, remaining: 1, pending: 0, unavailable: 0 };
 
 async function shell(page: Page) {
+  await page.route('**/gmail/trial', route => route.fulfill({ json: { state: 'not_started', next_due: null, error: null, instructions: null, latest_run_id: null, running: false } }));
   await page.route('http://127.0.0.1:4010/batch', route => {
     const payload = JSON.stringify({ component: 'BatchView', props: { csrf_token: 'test-csrf' }, url: '/batch', version: 'fixture', clearHistory: false, encryptHistory: true }).replaceAll('&', '&amp;').replaceAll("'", '&#39;');
     return route.fulfill({ contentType: 'text/html', body: `<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/assets/app.css"></head><body><div id="app" data-page='${payload}'></div><script type="module" src="/assets/app.js"></script></body></html>` });

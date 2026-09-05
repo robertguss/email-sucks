@@ -47,7 +47,7 @@ defmodule EmailSucks.Gmail.FilterExperiment do
 
   def run(config, token, action, profile)
       when action in ~w(activate recover inspect disable) and
-             profile in ["primary", "arrival-primary-v1"] do
+             profile in ["primary", "arrival-primary-v1", "delivery-trial-v1"] do
     Controlled.exclusive(fn ->
       row = Repo.get(__MODULE__, profile, log: false)
 

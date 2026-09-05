@@ -105,3 +105,13 @@ ol li { padding-left: .4rem; margin-bottom: 1rem; }
 @media (min-width: 1024px) { .delivery-mobile-nav { display: none; } .delivery-desktop-nav { display: flex; } }
 .delivery-letter > section { display: flex; flex-direction: column; gap: .75rem; }
 .delivery-letter > section + section { border-top: 1px solid var(--line); padding-top: 1rem; }
+
+.trial-controls { display: flex; flex-direction: column; gap: .875rem; padding: 1.5rem 0; border-block: 1px solid var(--line); }
+.trial-actions { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; }
+.trial-actions button { padding-left: 0; color: var(--accent); }
+.trial-instructions { font-size: 1rem; overflow-wrap: anywhere; }
+.trial-instructions summary { cursor: pointer; padding-block: .75rem; }
+.trial-instructions dl { margin-bottom: 0; }
+.trial-instructions dl > div { margin-block: .75rem; }
+.trial-instructions dt { color: var(--muted); text-transform: capitalize; }
+.trial-instructions dd { margin-left: 0; }

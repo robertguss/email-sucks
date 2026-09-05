@@ -134,7 +134,8 @@ if config_env() == :prod do
 end
 
 # Explicit opt-in: ordinary development and all automated tests run without real credentials.
-if config_env() != :test && not restore_mode && System.get_env("GMAIL_OAUTH_FILE") do
+if config_env() != :test && role == "web" && not restore_mode &&
+     System.get_env("GMAIL_OAUTH_FILE") do
   load_private_json = fn path ->
     case path && File.read(path) do
       {:ok, body} ->
@@ -190,4 +191,12 @@ if config_env() != :test && not restore_mode && System.get_env("GMAIL_OAUTH_FILE
   config :email_sucks, EmailSucksWeb.Endpoint,
     secret_key_base: keys["session_secret"],
     debug_errors: false
+end
+
+if config_env() != :test and role == "web" and not restore_mode and
+     System.get_env("GMAIL_OAUTH_FILE") do
+  config :email_sucks, Oban,
+    queues: [gmail_delivery: 1],
+    plugins: [],
+    lifeline: [rescue_after: {5, :minutes}]
 end

@@ -29,6 +29,12 @@ defmodule EmailSucksWeb.Router do
     post "/gmail/arrival-filters/:action", GoogleController, :arrival_filters, log: false
     post "/gmail/history/:action", GoogleController, :history, log: false
     get "/batch", BatchViewController, :page, log: false
+    get "/gmail/trial", TrialController, :show, log: false
+    post "/gmail/trial/start", TrialController, :start, log: false
+    post "/gmail/trial/check-now", TrialController, :check_now, log: false
+    post "/gmail/trial/stop", TrialController, :stop, log: false
+    get "/gmail/trial/view", TrialController, :view, log: false
+    post "/gmail/trial/review", TrialController, :review, log: false
     get "/gmail/batch-view", BatchViewController, :show, log: false
     post "/gmail/batch-view/review", BatchViewController, :review, log: false
     get "/gmail/messages", GoogleController, :messages, log: false

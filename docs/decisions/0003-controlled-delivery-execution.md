@@ -1,6 +1,6 @@
 # ADR-0003: Execute controlled Gmail deliveries in the web service
 
-Date: 2026-09-05. Status: selected for the usable experiment; implementation pending.
+Date: 2026-09-05. Status: implemented locally for the usable experiment; live validation pending.
 
 The existing web service owns Gmail credentials. Existing workers have no mounted
 Gmail secrets. The synthetic scheduler uses different account identities and locks

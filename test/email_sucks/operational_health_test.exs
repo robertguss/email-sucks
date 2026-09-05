@@ -243,4 +243,35 @@ defmodule EmailSucks.OperationalHealthTest do
       refute :jobs_unresolved in OperationalHealth.check().failures
     end
   end
+
+  test "overdue trial and failed manual intent are unhealthy but retained stopped history is not" do
+    trial =
+      Repo.insert!(%EmailSucks.Gmail.Trial{
+        id: "primary",
+        state: "active",
+        next_due: System.system_time(:second) - 301
+      })
+
+    assert :jobs_unresolved in OperationalHealth.check().failures
+
+    trial
+    |> Ecto.Changeset.change(
+      next_due: System.system_time(:second) + 300,
+      error: "provider_unavailable"
+    )
+    |> Repo.update!()
+
+    assert :gmail_operation_failed in OperationalHealth.check().failures
+
+    Repo.insert!(%EmailSucks.Gmail.TrialRun{
+      kind: "manual",
+      state: "frozen",
+      due_at: System.system_time(:second),
+      error: "provider_unavailable"
+    })
+
+    assert :jobs_unresolved in OperationalHealth.check().failures
+    trial |> Ecto.Changeset.change(state: "stopped", next_due: nil, error: nil) |> Repo.update!()
+    assert OperationalHealth.check().failures == [:worker_queue_unavailable]
+  end
 end

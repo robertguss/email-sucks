@@ -30,8 +30,28 @@ defmodule EmailSucks.OperationalHealth do
         log: false
       )
 
+    trial = Repo.get(EmailSucks.Gmail.Trial, "primary", log: false)
+    trial_open = trial != nil and trial.state != "stopped"
+
+    trial_due =
+      trial_open and trial.next_due != nil and trial.next_due < System.system_time(:second) - 300
+
+    trial_failed = trial_open and trial.error != nil
+
+    trial_jobs =
+      trial_open and
+        Repo.exists?(
+          from(r in EmailSucks.Gmail.TrialRun,
+            where:
+              r.state in ["planned", "frozen"] and
+                (r.due_at < ^(System.system_time(:second) - 300) or not is_nil(r.error))
+          ),
+          log: false
+        )
+
     recovery =
-      unsupported_filters or controlled.state in ["hold_pending", "release_pending"] or
+      (trial_open and trial.state in ["starting", "stopping"]) or unsupported_filters or
+        controlled.state in ["hold_pending", "release_pending"] or
         batch.pending > 0 or
         batch.state in ["holding", "releasing"] or
         Enum.any?(filters, &(&1.state in ["preparing", "disabling"])) or
@@ -54,13 +74,14 @@ defmodule EmailSucks.OperationalHealth do
       )
 
     failed =
-      unsupported_filters or (history.error != nil and not disconnected) or batch.errors > 0 or
+      trial_failed or unsupported_filters or (history.error != nil and not disconnected) or
+        batch.errors > 0 or
         Enum.any?(filters, &(&1.error not in [nil, "invalid_transition"]))
 
     failures =
       [
         worker_queue_unavailable: not match?(%{paused: false, limit: n} when n > 0, queue),
-        jobs_unresolved: unresolved,
+        jobs_unresolved: unresolved or trial_due or trial_jobs,
         gmail_recovery_pending: recovery,
         gmail_operation_failed: failed,
         gmail_access_unavailable: access_missing,

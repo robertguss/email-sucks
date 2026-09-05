@@ -186,6 +186,8 @@ defmodule EmailSucks.Gmail do
           finish_disconnect(account)
 
         account ->
+          :ok = EmailSucks.Gmail.Trial.fence()
+
           account
           |> Ecto.Changeset.change(disconnect_phase: "restoring")
           |> Repo.update!(log: false)
@@ -202,6 +204,8 @@ defmodule EmailSucks.Gmail do
                        config(),
                        tokens["access_token"]
                      ) do
+                :ok = EmailSucks.Gmail.Trial.finish_stop()
+
                 account =
                   account
                   |> Ecto.Changeset.change(disconnect_phase: "revoking")
@@ -259,6 +263,88 @@ defmodule EmailSucks.Gmail do
     else
       _ -> false
     end
+  end
+
+  def trial_summary(session) do
+    if account(session),
+      do: {:ok, EmailSucks.Gmail.Trial.summary(config())},
+      else: {:error, :unauthorized}
+  end
+
+  def trial_start(session) do
+    with_access(session, fn _account, tokens ->
+      if Google.filter_settings_access?(tokens),
+        do: EmailSucks.Gmail.Trial.start(config(), tokens["access_token"]),
+        else: {:error, :filter_settings_required}
+    end)
+  end
+
+  def trial_check_now(session, request_id) do
+    # This action saves intent only. The worker owns token refresh and provider access;
+    # requiring its account lock here would prevent joining a delivery in progress.
+    case account(session) do
+      nil ->
+        {:error, :unauthorized}
+
+      %Account{disconnect_phase: phase} when not is_nil(phase) ->
+        {:error, :disconnect_pending}
+
+      %Account{status: "connected"} ->
+        with {:ok, _} <- EmailSucks.Gmail.Trial.request(request_id),
+             do: {:ok, EmailSucks.Gmail.Trial.summary(config())}
+
+      %Account{} ->
+        {:error, :reconnect_required}
+    end
+  end
+
+  def trial_stop(session) do
+    Controlled.exclusive(fn ->
+      if account(session) do
+        :ok = EmailSucks.Gmail.Trial.fence()
+
+        with_access(session, fn _account, tokens ->
+          with :ok <- filter_disconnect_access(tokens),
+               do: EmailSucks.Gmail.Trial.stop(config(), tokens["access_token"])
+        end)
+      else
+        {:error, :unauthorized}
+      end
+    end)
+  end
+
+  def trial_view(session), do: batch_view_access(session, &EmailSucks.Gmail.TrialView.load/2)
+
+  def trial_review(session, run_id, revision, item_id, reviewed) do
+    batch_view_access(session, fn config, token ->
+      EmailSucks.Gmail.TrialView.review(config, token, run_id, revision, item_id, reviewed)
+    end)
+  end
+
+  @doc false
+  def execute_trial(id) do
+    Controlled.exclusive(fn ->
+      with true <- configured?() and not Application.get_env(:email_sucks, :restore_mode, false),
+           true <- EmailSucks.Gmail.Trial.active?(),
+           {:ok, id} <- Ecto.UUID.cast(id),
+           %EmailSucks.Gmail.TrialRun{} <- Repo.get(EmailSucks.Gmail.TrialRun, id, log: false),
+           %Account{status: "connected", disconnect_phase: nil} = account <-
+             Repo.get(Account, "primary", log: false),
+           true <- account.email == config()[:allowed_email],
+           {:ok, tokens} <- Vault.open(account.credentials, "gmail-tokens"),
+           {:ok, account, tokens} <- access(account, tokens) do
+        result = EmailSucks.Gmail.Trial.execute(config(), tokens["access_token"], id)
+
+        if result in [{:error, :missing_scope}, {:error, :reconnect_required}],
+          do: update_current(account, status: "reconnect_required")
+
+        result
+      else
+        {:error, reason} -> EmailSucks.Gmail.Trial.fail(reason)
+        %Account{} -> EmailSucks.Gmail.Trial.fail(:reconnect_required)
+        _ -> {:error, :invalid_transition}
+      end
+    end)
   end
 
   def batch_view(session), do: batch_view_access(session, &EmailSucks.Gmail.BatchView.load/2)
