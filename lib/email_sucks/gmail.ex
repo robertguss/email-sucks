@@ -303,10 +303,16 @@ defmodule EmailSucks.Gmail do
       if account(session) do
         :ok = EmailSucks.Gmail.Trial.fence()
 
-        with_access(session, fn _account, tokens ->
-          with :ok <- filter_disconnect_access(tokens),
-               do: EmailSucks.Gmail.Trial.stop(config(), tokens["access_token"])
-        end)
+        result =
+          with_access(session, fn _account, tokens ->
+            with :ok <- filter_disconnect_access(tokens),
+                 do: EmailSucks.Gmail.Trial.stop(config(), tokens["access_token"])
+          end)
+
+        case result do
+          {:error, reason} -> EmailSucks.Gmail.Trial.fail(reason)
+          success -> success
+        end
       else
         {:error, :unauthorized}
       end

@@ -174,6 +174,10 @@ defmodule EmailSucks.Gmail.TrialDurabilityTest do
     after
       Process.exit(pid, :kill)
       assert_receive {:DOWN, ^monitor, :process, ^pid, :killed}, 3000
+      # BEAM death precedes PostgreSQL noticing the closed connection. Wait for
+      # that actual lock release before allowing the next fixture to connect.
+      Repo.query!("SELECT pg_advisory_lock(71403)", [], timeout: 5000, log: false)
+      Repo.query!("SELECT pg_advisory_unlock(71403)", [], log: false)
     end
   end
 
@@ -274,6 +278,10 @@ defmodule EmailSucks.Gmail.TrialDurabilityTest do
     assert Repo.aggregate("gmail_trial_requests", :count, log: false) == 3
     Process.exit(pid, :kill)
     assert_receive {:DOWN, ^monitor, :process, ^pid, :killed}, 3000
+    # BEAM death precedes PostgreSQL noticing the closed connection. Wait for
+    # that actual lock release before allowing the next fixture to connect.
+    Repo.query!("SELECT pg_advisory_lock(71403)", [], timeout: 5000, log: false)
+    Repo.query!("SELECT pg_advisory_unlock(71403)", [], log: false)
 
     # Start, stop, and restart an independent Oban supervisor; invoke the installed Lifeline.
     opts = [

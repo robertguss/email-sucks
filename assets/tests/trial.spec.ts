@@ -105,3 +105,17 @@ test('failed overdue delivery shows attention and keeps stop available', async (
   await expect(page.getByRole('button', { name: 'Stop & restore' })).toBeEnabled();
   await expect(page.getByText('Send a test message', { exact: true })).toHaveCount(0);
 });
+
+
+test('missing cleanup permission persists across status refresh and exposes scoped reconnect', async ({ page }) => {
+  await shell(page);
+  await page.route('**/gmail/trial', route => route.fulfill({ json: { ...idle, state: 'stopping', error: 'filter_settings_required' } }));
+  await page.goto('/batch');
+  await page.getByRole('button', { name: 'Refresh status' }).click();
+  await expect(page.getByRole('alert')).toContainText('Gmail filter access needs to be restored');
+  const form = page.locator('form[action="/auth/google"]');
+  await expect(form.locator('input[name="purpose"]')).toHaveValue('filters');
+  await expect(form.locator('input[name="_csrf_token"]')).toHaveValue('test-csrf');
+  await expect(page.getByRole('button', { name: 'Reconnect for filter cleanup' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Stop & restore' })).toBeEnabled();
+});

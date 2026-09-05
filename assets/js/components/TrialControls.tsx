@@ -73,7 +73,14 @@ export default function TrialControls({ csrf_token, onChange }: { csrf_token: st
     </>}
     {trial?.state === 'stopping' && <p className="detail">New delivery jobs are stopped. Cleanup still needs confirmation; retry Stop &amp; restore.</p>}
     {trial?.state === 'stopped' && <p className="detail">The trial filter is removed and eligible held test mail is restored. Saved delivery history remains available.</p>}
-    {trial?.error && <p className="feedback" role="alert">The last operation needs attention. Delivery is not confirmed. Retry Check Now or Stop &amp; restore.</p>}
+    {trial?.error === 'filter_settings_required' ? <>
+      <p className="feedback" role="alert">Gmail filter access needs to be restored before cleanup can finish. Reconnect, then retry Stop &amp; restore.</p>
+      <form method="post" action="/auth/google">
+        <input type="hidden" name="_csrf_token" value={csrf_token} />
+        <input type="hidden" name="purpose" value="filters" />
+        <button type="submit">Reconnect for filter cleanup</button>
+      </form>
+    </> : trial?.error && <p className="feedback" role="alert">The last operation needs attention. Delivery is not confirmed. Retry Check Now or Stop &amp; restore.</p>}
     {error && <p className="feedback" role="alert">{error}</p>}
     {notice && <p className="detail" role="status">{notice}</p>}
     <div className="trial-actions">

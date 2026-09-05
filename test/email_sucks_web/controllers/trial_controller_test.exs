@@ -103,4 +103,30 @@ defmodule EmailSucksWeb.TrialControllerTest do
              409
            )
   end
+
+  test "stop preserves missing filter permission error for recovery after polling", %{
+    conn: conn,
+    session: session
+  } do
+    Repo.insert!(%Trial{id: "primary", state: "active"})
+
+    Repo.insert!(%EmailSucks.Gmail.FilterExperiment{
+      id: "delivery-trial-v1",
+      state: "active",
+      nonce: String.duplicate("a", 32),
+      baseline_ids: [],
+      baseline_digest: "test"
+    })
+
+    conn =
+      conn
+      |> Plug.Test.init_test_session(gmail_session: session)
+      |> put_private(:plug_skip_csrf_protection, true)
+
+    assert json_response(post(conn, "/gmail/trial/stop", %{}), 401)
+    summary = json_response(get(conn, "/gmail/trial"), 200)
+    assert summary["state"] == "stopping"
+    assert summary["error"] == "filter_settings_required"
+    assert summary["next_due"] == nil
+  end
 end
