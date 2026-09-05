@@ -38,7 +38,7 @@ Use unique synthetic tokens such as `phase0-primary-001`, never actual bank code
 
 | Fixture | Preconditions / observation | Status |
 |---|---|---|
-| Primary address | Baseline ordinary delivery, then controlled interception and recovery | Not run |
+| Primary address | Baseline ordinary delivery, then controlled interception and recovery | Ordinary Inbox arrival owner-confirmed ([evidence](evidence/phase-0/2026-09-04-primary-arrival-baseline.md)); interception and recovery not run |
 | Plus-address | Account-supported plus receiving identity | Not run |
 | Alias / send-as | Verify actual receiving and sending identity separately | Not run |
 | Forwarded mail | Owner-controlled forwarding source and known filter chain | Not run |

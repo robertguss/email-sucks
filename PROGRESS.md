@@ -14,7 +14,7 @@ This is the current status and next-action tracker. The [product specification](
 
 ## Next action
 
-**When the owner is back at the computer: perform the controlled Gmail authorization/setup step, then test one synthetic arrival and direct recovery.**
+**Reconcile the Render deployment deferral with the hosted prerequisites before the controlled interception experiment.** The owner supplied a controlled sender, sent `phase0-primary-001`, and confirmed ordinary Inbox arrival directly in Gmail. This is an [owner-reported baseline](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md), not interception or recovery proof.
 
 The current grant remains read-only. The live experiment needs additional Google consent, an agreed controlled sender/message, and a verified offline recovery path. Native notification proof needs actual owner devices. These are empirical gates; more synthetic tests cannot pass them. Work through human setup one step at a time.
 
@@ -46,6 +46,7 @@ Autonomous work, verified commits and regular pushes remain authorized. Resume i
 | Durable scheduling probe | Verified locally | [Evidence](docs/evidence/phase-0/2026-09-04-durable-scheduling.md); saved occurrences, coalescing, revision edits, manual receipts and account serialization. No timer/Gmail integration. |
 | Encrypted local backup and restore | Verified on disposable databases | [Evidence](docs/evidence/phase-0/2026-09-04-local-backup-restore.md); actual pg_dump/age/pg_restore, corruption/key checks, inert restored jobs. No R2/Render proof. |
 | Read-only identity/filter inventory | Implemented and tested with fixtures | [Evidence](docs/evidence/phase-0/2026-09-04-read-only-inventory.md); authenticated internal API, no new scopes/UI or live inventory proof. |
+| Primary-address ordinary arrival | Owner-reported live baseline | [Evidence](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md); synthetic message visible in Inbox through direct Gmail access. Interception and recovery remain untested. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
