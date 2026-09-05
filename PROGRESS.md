@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (controlled trial deployed and active)
+Last updated: 2026-09-05 UTC (live timed/manual delivery and cleanup passed)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -22,9 +22,9 @@ interception, continuous sync and sending remain disabled. Hosted read-only
 sign-in and preview have live evidence; the controlled app hold/release now also
 has live provider evidence, including recovery after a web restart.
 
-**Current status:** reviewed delivery trial image `d034e6e` is live at `/batch`.
-All 253 backend and 60 browser tests pass, plus compilation, formatting and
-TypeScript. One exact test-mail Hold filter is active; general mail remains outside. Hosted review/reload/undo passed with unchanged Gmail metadata and
+**Current status:** reviewed delivery trial image `c9bd467` is live at `/batch`.
+All 254 backend and 61 browser tests pass, plus compilation, formatting and
+TypeScript. The controlled trial is stopped and its filter removed; general interception is off. Hosted review/reload/undo passed with unchanged Gmail metadata and
 original recovery journals. [Delivery evidence](docs/evidence/phase-0/2026-09-05-batch-experience.md).
 
 The preceding history recovery proof also passed:
@@ -70,11 +70,15 @@ five-minute delivery, durable Check Now, trial-only stop/restore and per-deliver
 review. All 253 backend / 60 browser tests and review fixes pass. Deployment and
 runtime checks passed. The exact trial is active, original filters/journals are
 unchanged, and an empty Check Now completed without shifting the scheduled time.
-The first owner fixture passed held arrival and manual Check Now at 22:35:55 UTC:
-one exact message returned unread to Inbox; other labels and schedule unchanged.
-It is visible in the real review page. Await a second fixture for automatic timed
-delivery, then stop/restore and owner feedback. Do not count the manual run as
-scheduled delivery evidence. [Trial evidence](docs/evidence/phase-0/2026-09-05-delivery-trial.md). Retain all remaining
+The first owner fixture passed manual Check Now at 22:35:55 UTC; the second was
+delivered automatically at 22:45:23, one second after its scheduled time. Both
+remain unread in Inbox. Stop/restore, repeated stop, original-filter/journal
+preservation and healthy monitoring passed. A missing filter-scope recovery issue
+was fixed in the UI/backend; reconnect completed cleanup and a real refresh of the
+new grant retained the needed scope. The earlier scope-loss cause remains unproven.
+No more fixtures are needed for this basic flow. Next is owner evaluation of the
+saved delivery/review experience and a product decision; broader Phase 0 gates
+remain open. [Trial evidence](docs/evidence/phase-0/2026-09-05-delivery-trial.md). Retain all remaining
 Phase 0 gates before broader everyday-mailbox use. This supersedes diagnostic-by-
 diagnostic expansion as the immediate work order; it does not mark Phase 0 complete.
 

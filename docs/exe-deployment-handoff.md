@@ -12,36 +12,30 @@ with a real saved batch view. Phase 0 remains open; the experiment does not auth
 broad mailbox interception or waive operational/device gates. The history proof
 below is complete and no longer the next implementation milestone.
 
-## Current stopping point — manual delivery passed; timed fixture needed
+## Current stopping point — timed/manual flow and cleanup passed
 
-Image `d034e6e` is deployed and the controlled trial is active. 253 backend / 60
-browser tests and all review fixes pass. Fresh 21:28 UTC backup was copied to the
-owner Mac and fully authenticated. Readiness and operational monitor check-only
-are healthy. Web runs `gmail_delivery: 1`; worker stays credential-free with
-`phase_zero: 5`. All five previous journals are unchanged across deployment.
+Image `c9bd467` is live. 254 backend / 61 browser tests pass. First owner fixture
+passed manual Check Now at 22:35:55 UTC. The second passed scheduled delivery at
+22:45:23, one second after due, attempt one. Both remain unread in Inbox. Trial
+Stop removed its exact filter; repeat Stop passed; three original filters and
+five historical journal fingerprints are unchanged. Trial is stopped, no next due,
+no error, monitor check-only healthy. No further test mail is needed for this flow.
 
-Authenticated Chrome activated one exact Hold-only filter. Its full specification
-matches live Gmail and all three original filters are unchanged. Private evidence
-under `~/.config/email-sucks/hosted-cougar-cedar/delivery-trial/` includes before,
-post-deploy, activated and empty-check JSON, plus the exact offline recovery card.
-An empty Check Now completed through Oban on attempt one without changing the
-scheduled occurrence. First due time is 21:35:22 UTC, recurring every five minutes.
-The first owner fixture was observed unread outside Inbox, then delivered by a
-manual Check Now run at 22:35:55 UTC (attempt one). Exact membership, unread and
-unrelated labels, and the 22:40:22 scheduled occurrence were preserved. Browser
-shows one available unreviewed conversation. Operational health is green. Private
-`first-arrival.json` and `first-manual-delivery.json` retain the evidence; the
-scheduled 22:35:22 run was empty. Do not mislabel this as timed delivery.
+Cleanup initially failed because refreshed credentials lacked filter settings
+scope. Fix `c9bd467` persists the error through polling and exposes the existing
+CSRF-protected filter-purpose reconnect. Same-owner Google reconnect restored access;
+cleanup then passed and a subsequent real token refresh retained filter settings
+scope. The cause of the earlier reduced-scope grant is unproven; do not claim a
+root-cause fix or reset/restart this stopped profile. No revoked credentials or
+held messages remain from this trial. Account remains connected.
 
-Next: owner sends one more message using the same displayed criteria/marker and
-leaves Check Now untouched. On 'sent', promptly snapshot held exact metadata and
-watch the scheduled due run. Then verify readback/UI and trial Stop/restore,
-preserving old experiments. Do not send as agent. Record actual owner feedback;
-full Phase 0 remains open. `trialTab` remains on the real delivery view.
-
-Trial Stop is profile-specific; account disconnect retains all-profile cleanup.
-Do not restart/reset the trial after completed stop. General interception remains
-off. [Evidence](evidence/phase-0/2026-09-05-delivery-trial.md).
+Private evidence directory `~/.config/email-sucks/hosted-cougar-cedar/delivery-trial/`
+contains `scheduled-delivery.json`, `stopped-proof.json`, and
+`reconnected-refresh.json`, alongside original filter/journal baselines and the
+recovery card. Browser `trialTab` shows the last scheduled message available and
+unreviewed at `/batch`. Owner review/viability feedback is the next step. Broader
+Phase 0 device/operational/mailbox gates remain open.
+[Evidence](evidence/phase-0/2026-09-05-delivery-trial.md).
 
 ## Current session update — usable saved delivery verified
 

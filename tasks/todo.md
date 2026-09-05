@@ -40,14 +40,13 @@ implement intake and recovery as separate small units before activation.
 - [x] Due execution and Check Now join one account release, freeze membership and expose confirmed progress.
 - [x] Arrivals during release remain for the next batch; completion leads to the real review view.
 Verification: local scheduler/manual/recovery tests and browser flow pass (253
-backend / 60 browser total). Review fixes, deployment and empty live Check Now pass. Trial active; first owner
-fixture passed manual Check Now; a second fixture for timed delivery and stop
-evaluation remains pending.
+backend / 60 browser total). Review fixes, deployment and empty live Check Now pass. Both owner fixtures passed manual and scheduled delivery. Trial Stop/restore
+and repeat Stop passed; trial is stopped and owner evaluation remains pending.
 Dependencies: 1–3. Likely scope: scheduling facade, delivery page and integration tests;
 separate backend and UI units if needed.
 
 ## Checkpoint B / 5. Evaluate the experiment
-- [ ] Run attended held arrival → timed delivery, then held arrival → Check Now; verify stop/restore.
+- [x] Run attended held arrival → timed delivery, then held arrival → Check Now; verify stop/restore. (Observed in reverse order; second arrival held state is journal evidence.)
 - [ ] Verify restart/failure and release-versus-recovery behavior for the bounded flow.
 - [ ] Record the owner's actual experience and decision to repeat, revise or stop.
 Verification: sanitized live evidence and explicit owner feedback; leave unobserved criteria open.

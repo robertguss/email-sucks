@@ -88,3 +88,41 @@ Check Now untouched while observing the schedule.
 Next observe owner-sent held arrival → scheduled delivery, followed by stop/restore
 and the owner's actual feedback. Agent email
 sending is not authorized. Unobserved steps remain open.
+
+
+## Nonempty scheduled delivery and cleanup access failure
+
+The second owner fixture was released by the scheduled 22:45:22 UTC occurrence,
+completed at 22:45:23 on attempt one. Its frozen set contains exactly one message,
+distinct from the prior manual run. Both messages are unread in Inbox without the
+trial label. The app shows the second message available for review. This is live
+nonempty scheduled-delivery evidence; the second arrival was not independently
+snapshotted while held, so its pre-release evidence is the durable execution journal.
+
+Stop persisted its fence, but cleanup was blocked: the saved refreshed token
+reported gmail.modify without gmail.settings.basic. The trial filter remained
+active and semantic health correctly failed. Do not claim completed cleanup.
+The cause of the provider's reduced scope response is not yet established.
+
+Fix `c9bd467` preserves cleanup failures in trial state so polling cannot hide them,
+and exposes the existing CSRF-protected filter-purpose reconnect flow. 254 backend
+and 61 browser tests pass. Review `email-sucks-cleanup-review-20260905-185358`
+completed without findings. A test teardown race was also fixed by waiting for the
+actual PostgreSQL advisory-lock release after killed BEAM workers; a BEAM DOWN
+message alone does not prove the database connection has closed.
+
+
+Recovery completed after reconnecting the same owner account through the existing
+filter-purpose Google consent flow. Trial Stop then removed the exact owned filter;
+repeat Stop succeeded. All three original filters and five old journal fingerprints
+match baseline. Both delivered messages retain exactly their pre-cleanup labels,
+including Inbox and Unread. Trial is stopped, next due is nil, error is nil, and
+operational monitor check-only is healthy. Browser still shows the last scheduled
+message available and unreviewed. The code fix is deployed at `c9bd467`.
+
+A subsequent real refresh using the reconnected grant succeeded and retained
+filter-management scope. Its temporary access token was not persisted or exposed.
+This verifies the current grant; the earlier reduced-scope response's cause remains
+unproven. Private `stopped-proof.json` and `reconnected-refresh.json` retain results.
+No additional fixture is needed for the basic timed/manual delivery experiment.
+Owner experience/viability feedback and broader Phase 0 gates remain open.
