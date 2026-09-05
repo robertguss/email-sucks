@@ -87,6 +87,39 @@ defmodule EmailSucks.Gmail.BatchTest do
     assert {:ok, %{released: 3}} = Gmail.batch(s, "release")
   end
 
+  test "repeat preserves membership and rejects stale forms across later releases", %{session: s} do
+    assert {:ok, _} = Gmail.batch(s, "hold")
+    assert {:ok, _} = Gmail.batch(s, "release")
+    Process.put(:no_search, true)
+    assert {:error, :invalid_transition} = Gmail.batch(s, "repeat", nil)
+    assert {:ok, %{held: 3, repeat_revision: 1}} = Gmail.batch(s, "repeat", "0")
+    assert {:error, :invalid_transition} = Gmail.batch(s, "repeat", "0")
+    assert {:ok, _} = Gmail.batch(s, "release")
+    assert {:error, :invalid_transition} = Gmail.batch(s, "repeat", "0")
+    assert length(Process.get(:writes)) == 12
+    assert {:ok, %{held: 3, repeat_revision: 2}} = Gmail.batch(s, "repeat", "1")
+    assert {:ok, :revoked} = Gmail.disconnect(s)
+    assert Process.get(:revoked)
+  end
+
+  test "repeat validates every released member before holding any and recovers uncertain hold", %{
+    session: s
+  } do
+    assert {:ok, _} = Gmail.batch(s, "hold")
+    assert {:ok, _} = Gmail.batch(s, "release")
+    Process.put(:missing, "3")
+    assert {:error, :not_found} = Gmail.batch(s, "repeat", "0")
+    assert length(Process.get(:writes)) == 6
+    assert %{repeat_revision: 0} = Gmail.batch_summary(s)
+    Process.delete(:missing)
+    assert {:ok, _} = Gmail.batch(s, "recover")
+    Process.put(:ambiguous, "2")
+    assert {:error, :provider_unavailable} = Gmail.batch(s, "repeat", "0")
+    assert %{repeat_revision: 1, pending: 1} = Gmail.batch_summary(s)
+    assert {:ok, %{held: 3}} = Gmail.batch(s, "recover")
+    assert length(Process.get(:writes)) == 9
+  end
+
   defp provider(conn) do
     case {conn.method, conn.request_path} do
       {"GET", "/gmail/v1/users/me/messages"} ->

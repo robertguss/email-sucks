@@ -8,7 +8,7 @@ This is the current status and next-action tracker. The [product specification](
 
 **Phase 0 is in progress; its exit gate has not passed.** The authenticated app previews five Inbox messages and now implements single-message and fixed three-message controlled hold/release with durable recovery. Automatic interception, continuous sync and sending remain disabled. Hosted read-only sign-in and preview have live evidence; the controlled app hold/release now also has live provider evidence, including recovery after a web restart.
 
-**Active work:** live interrupted-revocation recovery passed, following the three-message release crash proof. Next proof gaps are held-batch disconnect and live arrival/interception boundaries; independent alert setup and actual-device notification evidence remain outstanding.
+**Active work:** adding a revision-guarded repeat of the saved batch, then rehearsing safe disconnect from all three held messages. Live interrupted-revocation recovery already passed. Next proof gaps are held-batch disconnect and live arrival/interception boundaries; independent alert setup and actual-device notification evidence remain outstanding.
 
 **Latest verified result:** Google accepted revocation before an injected request crash. After web restart, retry handled the already-invalid token, cleared credentials/session and made zero refresh or Gmail operations. Reconnection succeeded; all three batch messages remain in Inbox unread. [Revocation evidence](docs/evidence/phase-0/2026-09-05-live-revoke-recovery.md). The preceding [batch crash proof](docs/evidence/phase-0/2026-09-05-live-batch-recovery.md) passed with zero duplicate release writes. The deployed slice previously passed 136 backend and 23 browser tests.
 

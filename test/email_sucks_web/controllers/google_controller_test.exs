@@ -277,7 +277,7 @@ defmodule EmailSucksWeb.GoogleControllerTest do
   end
 
   test "batch actions require CSRF and a current session", %{conn: conn} do
-    for action <- ["hold", "release", "recover"] do
+    for action <- ["hold", "release", "recover", "repeat"] do
       assert_raise Plug.CSRFProtection.InvalidCSRFTokenError, fn ->
         conn |> put_private(:plug_skip_csrf_protection, false) |> post("/gmail/batch/#{action}")
       end

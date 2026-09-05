@@ -59,8 +59,8 @@ defmodule EmailSucksWeb.GoogleController do
     end
   end
 
-  def batch(conn, %{"action" => action}) do
-    case Gmail.batch(get_session(conn, :gmail_session), action) do
+  def batch(conn, %{"action" => action} = params) do
+    case Gmail.batch(get_session(conn, :gmail_session), action, params["repeat_revision"]) do
       {:ok, %{state: state}} ->
         conn
         |> put_flash(

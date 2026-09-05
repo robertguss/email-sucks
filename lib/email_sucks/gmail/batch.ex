@@ -6,6 +6,7 @@ defmodule EmailSucks.Gmail.Batch do
   @primary_key {:id, :string, autogenerate: false}
   @derive {Inspect, only: [:id, :state]}
   schema "gmail_batches" do
+    field :repeat_revision, :integer, default: 0
     field :state, :string
     field :label_id, :string
     field :entries, :map, redact: true
@@ -23,6 +24,7 @@ defmodule EmailSucks.Gmail.Batch do
 
     %{
       state: row.state,
+      repeat_revision: row.repeat_revision,
       total: length(values),
       held: Enum.count(values, &(&1["state"] == "held")),
       released: Enum.count(values, &(&1["state"] == "released")),
@@ -88,6 +90,40 @@ defmodule EmailSucks.Gmail.Batch do
   end
 
   def run(_, _, _), do: {:error, :invalid_transition}
+
+  def repeat(config, token, expected_revision) do
+    Controlled.exclusive(fn ->
+      with %{state: "released"} = row <- Repo.get(__MODULE__, "primary", log: false),
+           true <-
+             is_binary(expected_revision) and
+               expected_revision == Integer.to_string(row.repeat_revision),
+           :ok <- verify_released(row, config, token) do
+        entries =
+          Map.new(row.entries, fn {id, _} ->
+            {id, %{"state" => "hold_pending", "error" => nil}}
+          end)
+
+        save(row, state: "holding", entries: entries, repeat_revision: row.repeat_revision + 1)
+        run(config, token, "recover")
+      else
+        {:error, _} = error -> error
+        _ -> {:error, :invalid_transition}
+      end
+    end)
+  end
+
+  defp verify_released(row, config, token) do
+    Enum.reduce_while(row.entries, :ok, fn {id, entry}, :ok ->
+      if entry["state"] == "released" do
+        case Projection.reconcile(config, token, id, row.label_id, false, false) do
+          :ok -> {:cont, :ok}
+          error -> {:halt, error}
+        end
+      else
+        {:halt, {:error, :invalid_transition}}
+      end
+    end)
+  end
 
   def restore_for_disconnect(config, token) do
     if Repo.get(__MODULE__, "primary", log: false) do

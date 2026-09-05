@@ -1,4 +1,4 @@
-export type BatchStatus = { state: string; total: number; held: number; released: number; pending: number; errors: number };
+export type BatchStatus = { state: string; repeat_revision?: number; total: number; held: number; released: number; pending: number; errors: number };
 
 export default function GmailBatch({ batch, csrfToken }: { batch: BatchStatus | null; csrfToken: string }) {
   const state = batch?.state ?? 'not_started';
@@ -24,6 +24,15 @@ export default function GmailBatch({ batch, csrfToken }: { batch: BatchStatus | 
             <input type="hidden" name="_csrf_token" value={csrfToken} />
             <button type="submit">Recover / verify batch</button>
           </form>
+          {state === 'released' && <details className="connection-details">
+            <summary>Repeat the batch recovery test</summary>
+            <p>Holds the same three saved messages again after verifying they are in Inbox. Safe disconnect can then restore them before removing access.</p>
+            <form method="post" action="/gmail/batch/repeat">
+              <input type="hidden" name="_csrf_token" value={csrfToken} />
+              <input type="hidden" name="repeat_revision" value={batch?.repeat_revision ?? 0} />
+              <button type="submit">Hold this same batch again</button>
+            </form>
+          </details>}
         </>
       )}
     </section>
