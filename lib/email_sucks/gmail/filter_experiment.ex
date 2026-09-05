@@ -71,6 +71,9 @@ defmodule EmailSucks.Gmail.FilterExperiment do
         {:ok, row} ->
           {:ok, summarize(save(row, error: nil))}
 
+        {:error, :invalid_transition} = error ->
+          error
+
         {:error, reason} = error ->
           if row = Repo.get(__MODULE__, "primary", log: false),
             do: save(row, error: Atom.to_string(reason))

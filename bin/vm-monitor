@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""Send an independent heartbeat only after all local operational checks pass."""
+import argparse
+import datetime
+import json
+import os
+from pathlib import Path
+import re
+import selectors
+import stat
+import subprocess
+import time
+import urllib.request
+import uuid
+
+BACKUP_DIR = Path('/home/exedev/backups/email-sucks')
+HEARTBEAT_FILE = Path('/home/exedev/.config/email-sucks/monitor-heartbeat-url')
+WORKER_COMMAND = [
+    'docker', 'exec', 'email-sucks-phase0-worker-1', '/app/bin/email_sucks', 'rpc',
+    'IO.puts("EMAIL_SUCKS_HEALTH=" <> Jason.encode!(EmailSucks.OperationalHealth.check()))',
+]
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def request(url, run_id):
+    # No proxy or redirects: the local probe stays local and the secret stays on its host.
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
+    req = urllib.request.Request(url, headers={'X-Request-ID': run_id})
+    with opener.open(req, timeout=5) as response:
+        if response.status != 200:
+            raise ValueError('Unexpected status')
+        return response.read(4097)
+
+
+def web_check(run_id):
+    try:
+        body = request('http://127.0.0.1:4000/health/ready', run_id)
+        if len(body) > 4096 or json.loads(body) != {'status': 'ok'}:
+            return 'web_response_invalid'
+    except Exception:
+        return 'web_unavailable'
+    return None
+
+
+def worker_output(command=WORKER_COMMAND, timeout=20):
+    # Bound both elapsed time and retained stdout; stderr is never retained or printed.
+    deadline = time.monotonic() + timeout
+    output = bytearray()
+    with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) as process:
+        try:
+            with selectors.DefaultSelector() as selector:
+                selector.register(process.stdout, selectors.EVENT_READ)
+                while True:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0 or not selector.select(remaining):
+                        raise TimeoutError('Worker deadline exceeded')
+                    chunk = os.read(process.stdout.fileno(), 4096)
+                    if not chunk:
+                        break
+                    if len(output) + len(chunk) > 65536:
+                        raise ValueError('Worker output limit exceeded')
+                    output.extend(chunk)
+            if process.wait(timeout=max(0, deadline - time.monotonic())):
+                raise ValueError('Worker command failed')
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+    return bytes(output)
+
+
+def worker_check():
+    try:
+        output = worker_output()
+    except Exception:
+        return 'worker_unavailable'
+    try:
+        # Erlang startup warnings may surround the response. Only one marked line is valid.
+        prefix = b'EMAIL_SUCKS_HEALTH='
+        lines = [line[len(prefix):] for line in output.splitlines() if line.startswith(prefix)]
+        if len(lines) != 1:
+            return 'worker_response_invalid'
+        result = json.loads(lines[0])
+        if (not isinstance(result, dict) or set(result) != {'healthy', 'failures'}
+                or type(result['healthy']) is not bool
+                or not isinstance(result['failures'], list)
+                or not all(isinstance(item, str) for item in result['failures'])
+                or result['healthy'] != (result['failures'] == [])):
+            return 'worker_response_invalid'
+        return None if result['healthy'] else 'worker_unhealthy'
+    except Exception:
+        return 'worker_response_invalid'
+
+
+def backup_check(directory=BACKUP_DIR, now=None):
+    try:
+        receipt = json.loads((directory / 'last-success.json').read_text())
+        stamp = datetime.datetime.fromisoformat(receipt['completed_at'])
+        if stamp.tzinfo is None:
+            return 'backup_invalid'
+        age = ((now or datetime.datetime.now(datetime.timezone.utc)) - stamp).total_seconds()
+        if age < 0:
+            return 'backup_future'
+        if age > 26 * 60 * 60:
+            return 'backup_stale'
+        name = receipt['archive']
+        if not isinstance(name, str) or not re.fullmatch(
+                r'email-sucks-\d{8}T\d{6}Z-[0-9a-f]{8}\.dump\.age', name):
+            return 'backup_invalid'
+        archive = directory / name
+        info = archive.lstat()
+        if (not stat.S_ISREG(info.st_mode) or type(receipt['bytes']) is not int
+                or receipt['bytes'] <= 0 or info.st_size != receipt['bytes']
+                or not isinstance(receipt['sha256'], str)
+                or not re.fullmatch(r'[0-9a-f]{64}', receipt['sha256'])):
+            return 'backup_invalid'
+    except FileNotFoundError:
+        return 'backup_missing'
+    except Exception:
+        return 'backup_invalid'
+    return None
+
+
+def heartbeat(run_id, path=HEARTBEAT_FILE):
+    try:
+        info = path.lstat()
+        if not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o600:
+            return 'heartbeat_configuration_invalid'
+        url = path.read_text().strip()
+        if not re.fullmatch(r'https://uptime\.betterstack\.com/api/v1/heartbeat/[A-Za-z0-9_-]+', url):
+            return 'heartbeat_configuration_invalid'
+    except Exception:
+        return 'heartbeat_configuration_invalid'
+    try:
+        request(url, run_id)
+    except Exception:
+        return 'heartbeat_delivery_failed'
+    return None
+
+
+def monitor(check_only=False):
+    run_id = str(uuid.uuid4())
+    failures = [failure for failure in (web_check(run_id), worker_check(), backup_check())
+                if failure]
+    if not check_only and not failures:
+        failure = heartbeat(run_id)
+        if failure:
+            failures.append(failure)
+    print(json.dumps({'event': 'operational_check', 'run_id': run_id,
+                      'healthy': not failures, 'failures': failures,
+                      'check_only': check_only}))
+    return 1 if failures else 0
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check-only', action='store_true')
+    raise SystemExit(monitor(parser.parse_args().check_only))

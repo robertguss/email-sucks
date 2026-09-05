@@ -1,0 +1,11 @@
+[Unit]
+Description=Check email-sucks operational health every minute
+
+[Timer]
+OnBootSec=60s
+OnUnitActiveSec=60s
+AccuracySec=1s
+Unit=email-sucks-monitor.service
+
+[Install]
+WantedBy=timers.target

@@ -187,6 +187,25 @@ defmodule EmailSucks.Gmail.FilterExperimentTest do
     assert {:ok, _} = FilterExperiment.run(c, "test", "recover")
   end
 
+  test "rejected stale actions cannot erase a known provider failure", %{config: c} do
+    Process.put(:lose_create, true)
+    assert {:error, :provider_unavailable} = FilterExperiment.run(c, "test", "activate")
+    assert {:error, :invalid_transition} = FilterExperiment.run(c, "test", "inspect")
+    assert FilterExperiment.summary().error == "provider_unavailable"
+    assert {:ok, _} = FilterExperiment.run(c, "test", "recover")
+    [user, first | rest] = Process.get(:filters)
+
+    Process.put(:filters, [
+      user,
+      put_in(first, ["criteria", "from"], "changed@example.com") | rest
+    ])
+
+    assert {:error, :filter_drift} = FilterExperiment.run(c, "test", "inspect")
+    assert {:error, :invalid_transition} = FilterExperiment.run(c, "test", "activate")
+    assert FilterExperiment.summary().error == "filter_drift"
+    assert :gmail_operation_failed in EmailSucks.OperationalHealth.check().failures
+  end
+
   defp provider(conn) do
     case {conn.method, conn.request_path} do
       {"POST", "/revoke"} ->

@@ -1,0 +1,16 @@
+[Unit]
+Description=Operational heartbeat for email-sucks
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=exedev
+Group=exedev
+ExecStart=/home/exedev/email-sucks/bin/vm-monitor
+UMask=0077
+TimeoutStartSec=45s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
