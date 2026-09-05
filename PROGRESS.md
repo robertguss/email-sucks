@@ -12,7 +12,7 @@ This is the current status and next-action tracker. The [product specification](
 
 ## Next action
 
-The controlled slice is deployed at `3e17d90`, and its live fixture is released back to Inbox. The saved grant already had modification permission; no further consent action is needed. Safe disconnect is implemented and ready for deployment verification. The live Google grant stays connected until the owner selects the disconnect action. Next empirical gates include a chosen live disconnect/reconnect rehearsal, device notification behavior, and independent recovery operations. The manual Gmail filter exercise is superseded and must not be repeated. The owner has authorized implementation, verification, pushing to main and deployment to the existing exe.dev VM. Group any human Google instructions into one manageable batch.
+The controlled slice is deployed at `3e17d90`, and its live fixture is released back to Inbox. The saved grant already had modification permission; no further consent action is needed. Safe disconnect is deployed at `08e06d3`; 125 backend and 18 browser checks passed, and the review panel plus existing provider verification work in the authenticated incognito window. [Evidence](docs/evidence/phase-0/2026-09-05-safe-disconnect.md). The live Google grant stays connected until the owner selects the disconnect action. Next empirical gates include a chosen live disconnect/reconnect rehearsal, device notification behavior, and independent recovery operations. The manual Gmail filter exercise is superseded and must not be repeated. The owner has authorized implementation, verification, pushing to main and deployment to the existing exe.dev VM. Group any human Google instructions into one manageable batch.
 
 The owner waived manual export of disposable test mail. Product-wide recovery requirements remain in force. Native notification proof needs actual owner devices, and full Phase 0 acceptance still needs empirical evidence.
 
@@ -104,6 +104,7 @@ The state contract resolves implementation semantics under the autonomous-work i
 
 | Date | Result | Reference |
 |---|---|---|
+| 2026-09-05 | Controlled safe disconnect deployed; live connection retained | 125 backend / 18 browser tests; [evidence](docs/evidence/phase-0/2026-09-05-safe-disconnect.md) |
 | 2026-09-04 | Durable scheduling, provider/notification fault tests, encrypted restore and read-only inventory | 98 backend / seven browser tests; current build and restore rehearsal pass |
 | 2026-09-04 | Recovery fence, finite batch review and DST occurrence resolution | 78 backend tests; local evidence above |
 | 2026-09-04 | Synthetic journal and executable work-item contract | 62 backend tests; release-journal and workflow evidence above |
