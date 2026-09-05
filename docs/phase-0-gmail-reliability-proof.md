@@ -6,6 +6,8 @@ For the current work queue and next recommended action, see [Project progress](.
 
 Status: In progress. The [local foundation and synthetic persistence probe](evidence/phase-0/2026-09-04-foundation.md) have passed their checks. The [read-only Google connection](evidence/phase-0/2026-09-04-google-connection.md) passes local automated checks, owner consent, a live profile check, and automatic refresh after simulated local expiry. Gmail interception/recovery, device, external-alert, and restore experiments remain unproven.
 
+Hosting amendment: [ADR-0002](decisions/0002-exe-vm-hosting.md) selects a dedicated exe.dev VM. Hosted checks below apply to this VM; independently restored encrypted PostgreSQL exports replace the Render-managed recovery path. Preserve the outage, recovery and side-effect isolation gates.
+
 This expands Phase 0 of the [product specification](email-client-product-implementation-spec.md) using [ADR-0001](decisions/0001-application-architecture.md). It authorizes a small feasibility implementation when implementation begins, not the full Room. The owner has explicitly authorized a read-only connection for the selected Gmail account. This does not authorize interception, sending, or full personal-mail dogfooding; later security and operational gates still apply.
 
 ## Objective and sequence
@@ -18,7 +20,7 @@ Prove arrival interception and recovery first, finite delivery second, and the s
 | 2 | Isolated test setup and OAuth inventory | Correct identity/scopes; only the owner-authorized account; direct Gmail access works |
 | 3 | Interception and notification matrix | Provider state plus actual device observations for each fixture |
 | 4 | Durable batch prototype | Crash, retry, and concurrency tests preserve exact membership |
-| 5 | Recovery and independent alerting | Panic, direct Gmail recovery, disconnect, and full Render outage rehearsals |
+| 5 | Recovery and independent alerting | Panic, direct Gmail recovery, disconnect, and full VM outage rehearsals |
 | 6 | Restore rehearsal and evidence review | Safe restored state, no unintended Gmail writes, all exit gates supported |
 
 No deployment, account provisioning, or Gmail mutation is performed by creating this plan.
@@ -109,7 +111,7 @@ Proposed monitor cadences must be selected so combined polling and grace deliver
 |---|---|
 | Web healthy but worker stopped | Missed work detected; independent alert received within deadline |
 | Scheduler runs but Gmail sync/release fails | Semantic health goes critical even though processes remain alive |
-| All Render services unavailable | External missing-heartbeat/uptime alert arrives; Gmail recovery card works without Render |
+| Entire exe.dev VM unavailable | External missing-heartbeat/uptime alert arrives; Gmail recovery card works without the VM |
 | OAuth revoked while interception exists | Clear critical state; direct Gmail recovery succeeds without API credentials |
 | Database unavailable | No false success; independent alert and manual recovery remain usable |
 | Backup upload fails or backup runner stops | No success heartbeat; independent missed-backup alert arrives |
@@ -123,7 +125,7 @@ Disconnect rehearsal: pause release, disable interception, restore and verify, o
 
 ## 6. Backup and restore proof
 
-Create synthetic rules, windows, workflow states, local drafts, and batches with known checksums/identifiers. Take a Render recovery point and a separate encrypted R2 export. Then change Gmail and database state so restored jobs are stale relative to Gmail.
+Create synthetic rules, windows, workflow states, local drafts, and batches with known checksums/identifiers. Take an encrypted PostgreSQL export retained outside the VM and a separate encrypted R2 export. Then change Gmail and database state so restored jobs are stale relative to Gmail.
 
 Restore each path into an isolated database with Gmail writes and all job execution disabled before application startup. Verify decryption using separately stored keys, schema compatibility, expected records, and known losses since the backup. Quarantine pending send/release operations, reconcile Gmail, and demonstrate that merely starting the restored app cannot send or release mail.
 
@@ -150,9 +152,9 @@ All entries start unchecked. A plan is not evidence.
 - [ ] Device notifications and badge behavior observed; app batch-notification behavior chosen and proven.
 - [ ] Frozen membership, retries, multiple workers, and partial failures pass.
 - [ ] History recovery and external Gmail changes preserve the agreed contract.
-- [ ] Independent alerts received during both partial failure and total Render outage within the required deadline.
+- [ ] Independent alerts received during both partial failure and total VM outage within the required deadline.
 - [ ] Panic, manual recovery, and safe disconnect pass on the real test account, including repetition and new mail afterward.
-- [ ] Render and R2 restores verified with side effects disabled; recovery point/time and key custody documented.
+- [ ] Off-VM PostgreSQL export and R2 restores verified with side effects disabled; recovery point/time and key custody documented.
 - [ ] Telemetry redaction checked with sensitive synthetic fixtures.
 - [ ] Evidence reviewed with the owner; no unexplained critical gap remains.
 

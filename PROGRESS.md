@@ -6,19 +6,19 @@ This is the current status and next-action tracker. The [product specification](
 
 ## Current position
 
-**Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. Nothing is deployed to Render yet.
+**Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. The synthetic prototype is now deployed privately to exe.dev; hosted Gmail is not configured.
 
-**Active implementation:** local groundwork is verified through durable scheduling, release/notification probes, encrypted restore rehearsal and read-only identity/filter discovery. The next critical-path proof needs owner participation in a controlled live Gmail experiment. The owner has resumed Render setup and will deploy the prepared Blueprint through the dashboard.
+**Active implementation:** local groundwork is verified through durable scheduling, release/notification probes, encrypted restore rehearsal and read-only identity/filter discovery. The next critical-path proof needs owner participation in a controlled live Gmail experiment. The owner selected a dedicated exe.dev VM; initial deployment passed the checks recorded under [ADR-0002](docs/decisions/0002-exe-vm-hosting.md).
 
-**Latest completed slice:** read-only Gmail inventory boundary. All 98 backend and seven browser tests pass; current production build and encrypted local restore rehearsal pass. [Evidence](docs/evidence/phase-0/2026-09-04-read-only-inventory.md).
+**Latest completed slice:** dedicated exe.dev deployment: Linux release, migrations, readiness/assets, separate synthetic worker, container restart and encrypted off-VM export/isolated restore passed. [Evidence](docs/evidence/phase-0/2026-09-04-exe-deployment.md). Application code is unchanged from the previous 98 backend/seven browser checks.
 
 ## Next action
 
-**Owner deploys the prepared Blueprint from `main`; then verify hosted smoke checks before the controlled interception experiment.** The owner supplied a controlled sender, sent `phase0-primary-001`, and confirmed ordinary Inbox arrival directly in Gmail. This is an [owner-reported baseline](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md), not interception or recovery proof.
+**Owner opens the private exe.dev URL to confirm browser access; then prepare a separate hosted read-only OAuth client before the controlled interception experiment.** The owner supplied a controlled sender, sent `phase0-primary-001`, and confirmed ordinary Inbox arrival directly in Gmail. This is an [owner-reported baseline](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md), not interception or recovery proof.
 
 The current grant remains read-only. The live experiment needs additional Google consent, an agreed controlled sender/message, and a verified offline recovery path. Native notification proof needs actual owner devices. These are empirical gates; more synthetic tests cannot pass them. Work through human setup one step at a time.
 
-The owner will perform Render deployment through the dashboard, one setup step at a time. Hosted alert receipt and R2/Render recovery cannot be verified locally. Full Room, production mail mutations and personal dogfood remain gated on Phase 0 results.
+Render provisioning is superseded by the dedicated exe.dev VM. Hosted alert receipt, independent backup scheduling and total-VM-loss recovery still need evidence. Full Room, production mail mutations and personal dogfood remain gated on Phase 0 results.
 
 Autonomous work, verified commits and regular pushes remain authorized. Resume independent work when new information or the live results establish the next supported implementation step; no routine reapproval is needed.
 
@@ -26,7 +26,7 @@ Autonomous work, verified commits and regular pushes remain authorized. Resume i
 
 | Work | Status | Evidence and limits |
 |---|---|---|
-| Architecture choice | Decided | [ADR-0001](docs/decisions/0001-application-architecture.md): Elixir/Phoenix/Ash, React/Inertia, PostgreSQL/Oban, Render, R2, Sentry and Better Stack. Choosing a service does not mean it is configured. |
+| Architecture choice | Decided | [ADR-0001](docs/decisions/0001-application-architecture.md): Elixir/Phoenix/Ash, React/Inertia, PostgreSQL/Oban, R2, Sentry and Better Stack; [ADR-0002](docs/decisions/0002-exe-vm-hosting.md) replaces Render with exe.dev. Choosing a service does not mean it is configured. |
 | Compatible dependency baseline and local app | Verified locally | [Foundation evidence](docs/evidence/phase-0/2026-09-04-foundation.md), [versions](docs/dependency-versions.md). Local build/release, database readiness, browser navigation. |
 | Immutable snapshots and atomic job enqueue | Verified with synthetic data | Foundation evidence: concurrency, rollback, membership invariants, duplicate execution and separate worker. No real Gmail release yet. |
 | Restricted Google OAuth and encrypted credentials | Implemented; live sign-in verified | [Connection evidence](docs/evidence/phase-0/2026-09-04-google-connection.md). Tests cover state/nonce/PKCE, signed identity, allowed account, replay and session controls. |
@@ -36,7 +36,7 @@ Autonomous work, verified commits and regular pushes remain authorized. Resume i
 | Five-message Inbox metadata preview | Implemented and verified live | [Listing evidence](docs/evidence/phase-0/2026-09-04-read-only-message-list.md). No bodies/attachments, database persistence of email metadata, or Gmail mutations. |
 | Desk-inspired preview design | Implemented and visually verified | [Design evidence](docs/evidence/phase-0/2026-09-04-desk-preview-design.md): local Newsreader, responsive whitespace-led layout, light/dark themes, connection disclosure and interaction states. Full Room design implementation remains later work. |
 | Written state contract | Complete as documentation | [Contract](docs/phase-0-state-contract.md); runtime and live-provider proof remain separate. |
-| Render release and restore startup | Verified locally; not deployed | [Evidence](docs/evidence/phase-0/2026-09-04-render-preparation.md), [setup](docs/render-phase-0-setup.md). CLI login required for hosted checks. |
+| Render release and restore startup | Verified locally; not deployed | [Evidence](docs/evidence/phase-0/2026-09-04-render-preparation.md), [setup](docs/render-phase-0-setup.md). Retained as an unused alternative after the exe.dev decision. |
 | Recovery card and experiment inventory | Prepared, not rehearsed | [Card](docs/phase-0-offline-recovery-card.md), [scope/fixture inventory](docs/phase-0-experiment-inventory.md). Private account details and device results pending. |
 | Per-message release journal | Verified with synthetic outcomes | [Evidence](docs/evidence/phase-0/2026-09-04-release-journal.md); live provider integration remains open. |
 | Executable work-item contract | Verified locally | [Evidence](docs/evidence/phase-0/2026-09-04-workflow-contract.md); calendar dates, Waiting visibility and confirmed-send guards. Not a persisted workflow engine. |
@@ -47,6 +47,7 @@ Autonomous work, verified commits and regular pushes remain authorized. Resume i
 | Encrypted local backup and restore | Verified on disposable databases | [Evidence](docs/evidence/phase-0/2026-09-04-local-backup-restore.md); actual pg_dump/age/pg_restore, corruption/key checks, inert restored jobs. No R2/Render proof. |
 | Read-only identity/filter inventory | Implemented and tested with fixtures | [Evidence](docs/evidence/phase-0/2026-09-04-read-only-inventory.md); authenticated internal API, no new scopes/UI or live inventory proof. |
 | Primary-address ordinary arrival | Owner-reported live baseline | [Evidence](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md); synthetic message visible in Inbox through direct Gmail access. Interception and recovery remain untested. |
+| Dedicated exe.dev deployment | Verified with synthetic data | [Evidence](docs/evidence/phase-0/2026-09-04-exe-deployment.md): Linux build, migrations, web readiness, separate worker, restart and one-off encrypted restore. Hosted OAuth, R2 scheduling and outage alerts pending. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
@@ -54,15 +55,15 @@ Autonomous work, verified commits and regular pushes remain authorized. Resume i
 Checked items require their stated evidence; implementation alone does not pass a proof gate.
 
 - [x] **0.1 — Written state and workflow contract:** [transition table and decisions](docs/phase-0-state-contract.md), with illegal states, calendar semantics and acceptance examples. Runtime implementation and provider experiments are separate gates; the static app page is not the full contract.
-- [ ] **Test environment:** [Render configuration/setup](docs/render-phase-0-setup.md) prepared and locally tested; login required for provisioning. Still document test identities, controlled fixtures, existing Gmail filters, devices and notification settings. Select and provision the isolated Render environment before test interception.
+- [ ] **Test environment:** [exe.dev setup](docs/exe-phase-0-setup.md) passed initial synthetic hosted checks; owner browser access and hosted OAuth remain pending. Still document test identities, controlled fixtures, existing Gmail filters, devices and notification settings. Complete hosted checks on the isolated exe.dev environment before test interception.
 - [ ] **Authorization lifecycle:** [method/scope inventory](docs/phase-0-experiment-inventory.md) prepared; settle the dogfood authorization strategy; distinguish natural token expiry, revocation and refresh-token rotation. Inventory additional scopes before any mutation work.
 - [ ] **0.2 — Interception matrix:** prove primary address, aliases, forwarding, Bcc, lists, existing threads, unusual mail and filter conflicts; document unsupported cases.
 - [ ] **0.3 — Notification/badge matrix:** observe held arrival, bypass and release on actual devices; choose and prove the app alert behavior.
 - [ ] **Real finite release:** implement per-message progress and prove fixed membership through retries, partial success, lost responses, worker crashes and concurrent arrivals. The [synthetic journal](docs/evidence/phase-0/2026-09-04-release-journal.md) now covers claims, partial outcomes and stale workers; synthetic account recovery races now pass; live Gmail effects and provider recovery races remain unproven.
 - [ ] **0.4 — Panic and direct Gmail recovery:** [offline recovery card](docs/phase-0-offline-recovery-card.md) prepared but not filled/rehearsed; disable interception before restoring held mail, and rehearse with the app unavailable.
 - [ ] **Safe disconnect:** restore and verify held mail before revocation, including interrupted recovery. Current app sign-out only ends the browser session.
-- [ ] **Independent monitoring:** configure Sentry and Better Stack with redaction; test meaningful failed-work and missed-heartbeat alerts, including total Render outage.
-- [ ] **Backups and restore:** configure managed Render recovery and encrypted R2 exports; restore both into isolated environments with Gmail writes/jobs disabled and verify reconciliation and measured losses/recovery time.
+- [ ] **Independent monitoring:** configure Sentry and Better Stack with redaction; test meaningful failed-work and missed-heartbeat alerts, including total VM outage.
+- [ ] **Backups and restore:** configure independent encrypted PostgreSQL exports and R2 copies; restore both into isolated environments with Gmail writes/jobs disabled and verify reconciliation and measured losses/recovery time.
 - [ ] **Exit review:** review the recorded evidence and explicitly accept provider/device limitations and state semantics. Only then move to full product implementation.
 
 ### Remaining external decisions and proof
@@ -71,7 +72,7 @@ Checked items require their stated evidence; implementation alone does not pass 
 |---|---|
 | Arrival-time bypass support, including conversation rules | Live interception experiment; no unsupported promise may be activated |
 | Native read/unread and device notifications | Actual device matrix before policy changes |
-| Render region, service/database plans, budget and independent alert destination | Hosted provisioning |
+| Independent alert destination and off-VM backup retention/key custody | Operational proof before dogfood |
 | Retention, recovery-key custody and acceptable measured recovery loss/time | Backup/restore acceptance and dogfood |
 
 The state contract resolves implementation semantics under the autonomous-work instruction. Live-provider limitations and operational acceptance still require evidence; older recommendations in the proof plan are superseded only by the explicitly recorded contract defaults.

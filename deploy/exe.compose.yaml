@@ -1,0 +1,69 @@
+name: email-sucks-phase0
+
+x-app: &app
+  image: email-sucks:${APP_REVISION:?Set the deployed git revision}
+  build:
+    context: ..
+  init: true
+  restart: unless-stopped
+  stop_grace_period: 60s
+  env_file: ${APP_ENV_FILE:?Set the absolute private environment file path}
+  depends_on:
+    db:
+      condition: service_healthy
+  logging:
+    driver: local
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  db:
+    image: postgres:18.6-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set the database admin password}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:?Set the application database password}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./postgres-init.sh:/docker-entrypoint-initdb.d/10-email-sucks.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres -d postgres]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  web:
+    <<: *app
+    environment:
+      APP_ROLE: web
+      PHX_SERVER: "true"
+    ports: ["4000:4000"]
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, http://localhost:4000/health/ready]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    <<: *app
+    environment:
+      APP_ROLE: worker
+      PHX_SERVER: "false"
+
+  migrate:
+    <<: *app
+    profiles: [tools]
+    restart: "no"
+    environment:
+      RESTORE_MODE: "true"
+      PHX_SERVER: "false"
+    command: [/app/bin/email_sucks, eval, "EmailSucks.Release.migrate()"]
+
+volumes:
+  postgres_data:

@@ -1,0 +1,15 @@
+**
+!mix.exs
+!mix.lock
+!config/
+!config/**
+!lib/
+!lib/**
+!priv/
+!priv/**
+!assets/
+!assets/**
+assets/node_modules/
+assets/test-results/
+assets/playwright-report/
+priv/static/assets/

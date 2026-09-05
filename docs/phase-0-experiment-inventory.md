@@ -6,7 +6,7 @@ Date: 2026-09-04. Status: prepared; live interception/device experiments not run
 
 Record these privately, then publish only a sanitized evidence summary:
 
-- Environment name, git revision, Render web/worker/database IDs, actual runtime/database versions.
+- Environment name, git revision, exe.dev VM and web/worker/database container identifiers, actual runtime/database versions.
 - Allowed test identity, primary and send-as identities, other receiving aliases, plus-addresses and forwarding paths. Distinguish verified, unavailable and untested identities.
 - Exported existing filters and identified conflicts; Gmail categories, conversation-view setting and current app-owned label/filter IDs. Gmail filter configuration can contain private correspondents; keep the export outside git.
 - Google OAuth client mode, granted scope names, consent time and direct Gmail access verification. No client secrets or tokens in evidence.
@@ -63,4 +63,4 @@ For unsupported identities or account features, record Not applicable with a rea
 3. Prepare exact controlled filter proposal, rollback and filled offline recovery card. Obtain the required owner consent/account action for additional scopes and test activation.
 4. One-message intercept → direct Gmail discovery → disable filter → restore → new arrival. Record provider state before extending scope.
 5. Broader identity/filter and device matrix, then finite-release/recovery faults from the proof plan.
-6. Independent alert receipt and isolated Render/R2 restore rehearsals. No full Room or personal dogfood until exit review.
+6. Independent alert receipt and isolated off-VM export/R2 restore rehearsals. No full Room or personal dogfood until exit review.

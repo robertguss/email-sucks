@@ -1,5 +1,7 @@
 # ADR-0001: Elixir application on Render
 
+Hosting decision superseded by [ADR-0002](0002-exe-vm-hosting.md). The original rationale below is retained as history.
+
 ## Status
 
 Accepted stack decision, 2026-09-04. The operating defaults below are proposed starting points to validate in Phase 0; they are not completed infrastructure or proven reliability claims.
