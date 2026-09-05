@@ -837,7 +837,7 @@ The exact Gmail steps must be verified against the user’s actual Gmail interfa
 
 ## 13.1 Batch notification
 
-The product requires at most one app-controlled notification for a non-empty delivery batch.
+Batch notifications are optional and off by default (owner decision, 2026-09-05). Provide a clear on/off setting that the user can change at any time. When enabled, the product permits at most one app-controlled notification for a non-empty delivery batch. Disabling notifications does not change mail delivery or batch review.
 
 Example:
 
@@ -1906,7 +1906,8 @@ Implement finite, repeatable, observable scheduled and manual delivery.
 
 **Deliverables**
 
-- One notification for non-empty scheduled batches.
+- Optional batch notifications, off by default, with a persistent on/off setting.
+- At most one notification for non-empty scheduled batches when enabled.
 - Stable counts.
 - Doorstep deep link.
 - Permission-denied state.
@@ -1915,6 +1916,7 @@ Implement finite, repeatable, observable scheduled and manual delivery.
 
 **Acceptance criteria**
 
+- Disabled batch notifications produce no batch alerts; mail release still completes.
 - No per-message app notifications occur.
 - Notification counts match the batch.
 - Release succeeds even when notification fails.

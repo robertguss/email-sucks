@@ -81,6 +81,8 @@ For each applicable fixture above, inspect message-level label IDs before and af
 
 For each actual device used by the owner, observe held arrival, bypass, single-message release, multi-message release, and an arrival during release. Record banners, sounds, unread badges, category effects, and delayed Inbox notifications. Screenshots must use synthetic content.
 
+Owner baseline (2026-09-05): Gmail app on iPhone, with notifications, sounds and badges reported off. The owner chose optional app batch notifications, off by default, with an on/off setting. Keep those device settings unchanged unless the owner chooses an enabled-notification rehearsal. Verify disabled mode independently; enabled-mode device behavior remains untested.
+
 Do not assume Gmail emits one batch notification. Select a product notification mechanism based on device results. Its failure must not block mail release; tests must demonstrate at most one app batch alert under retries and uncertain delivery. Record any native Gmail alerts separately and obtain acceptance of remaining device limitations before exit.
 
 ## 4. Finite delivery and concurrency proof
