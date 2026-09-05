@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (bounded history recovery and isolated restore passed)
+Last updated: 2026-09-05 UTC (usable saved delivery deployed and verified)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -22,8 +22,12 @@ interception, continuous sync and sending remain disabled. Hosted read-only
 sign-in and preview have live evidence; the controlled app hold/release now also
 has live provider evidence, including recovery after a web restart.
 
-**Current status:** reviewed history recovery image `9ef7fe7` is live. All 218
-backend and 44 browser tests pass, plus compilation, formatting and TypeScript.
+**Current status:** reviewed saved delivery image `58e23a5` is live at `/batch`.
+All 229 backend and 53 browser tests pass, plus compilation, formatting and
+TypeScript. Hosted review/reload/undo passed with unchanged Gmail metadata and
+original recovery journals. [Delivery evidence](docs/evidence/phase-0/2026-09-05-batch-experience.md).
+
+The preceding history recovery proof also passed:
 The four saved fixtures passed initial/incremental reads, real Google rejection
 of a deliberately old cursor and automatic rescan, with zero mailbox writes. An
 injected provider failure preserved the checkpoint; authenticated rescan recovered
@@ -60,9 +64,9 @@ proof remains valid.
 Build the [usable controlled delivery experiment](tasks/plan.md), following its
 [task checklist](tasks/todo.md). The owner agreed to evaluate technical and product
 viability together: a real finite batch view, bounded test intake, visible next
-delivery, Check Now and review. The saved test batch view is implemented and reviewed locally (229 backend /
-53 browser tests), with hosted verification next;
-resolve durable Gmail scheduling before timed live intake. Retain all remaining
+delivery, Check Now and review. The saved test batch view is deployed and verified.
+The durable Gmail scheduling design is recorded in ADR 0003; implementation of
+bounded intake, scheduled execution and Check Now is underway. Retain all remaining
 Phase 0 gates before broader everyday-mailbox use. This supersedes diagnostic-by-
 diagnostic expansion as the immediate work order; it does not mark Phase 0 complete.
 

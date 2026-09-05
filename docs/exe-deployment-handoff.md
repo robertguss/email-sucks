@@ -12,7 +12,17 @@ with a real saved batch view. Phase 0 remains open; the experiment does not auth
 broad mailbox interception or waive operational/device gates. The history proof
 below is complete and no longer the next implementation milestone.
 
-## Current session update — history recovery and restore passed
+## Current session update — usable saved delivery verified
+
+Image `58e23a5` is live. `/batch` displays all three saved messages with persistent
+review/undo. Hosted authenticated review/reload/undo and a GET-only provider guard
+passed; Gmail metadata and all four old recovery journals are unchanged. Readiness
+and monitor check-only are healthy. Fresh 18:01 UTC backup is authenticated on the
+owner Mac. SSH signing worked for this deployment. No fixture is pending.
+Continue the durable trial backend and UI under ADR 0003; do not stop at the batch
+screen. [Evidence](evidence/phase-0/2026-09-05-batch-experience.md).
+
+## Previous session update — history recovery and restore passed
 
 Reviewed image `9ef7fe7` is deployed with the additive history journal migration.
 218 backend and 44 browser tests pass. Four fixed saved messages passed initial,

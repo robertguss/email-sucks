@@ -22,12 +22,20 @@ is visible; unavailable mail is distinct from pending delivery and gets appropri
 guidance. Other test gaps are recorded in the review receipt; no actionable
 finding remains unapplied. No claim of live usability feedback is made.
 
-Hosted validation pending. Fresh 18:01 UTC backup was copied to the owner Mac,
-checksum matched, full archive authenticated and archive catalog read. Deployment
-must preserve all existing journals, verify authenticated page/review/undo and
-confirm unchanged Gmail metadata through a GET-only guard. Check readiness and
-operational monitor after migration. If the new view fails, return to existing
-controls; do not reset journals or mutate Gmail to repair a presentation problem.
+Hosted image `58e23a5` passed migration, readiness and operational monitor checks.
+A fresh 18:01 UTC encrypted backup was copied to the owner Mac, checksum matched,
+full archive authenticated and archive catalog read. All four original recovery
+journal fingerprints match before/after deployment and validation.
+
+A GET-only provider guard loaded all three saved conversations, reviewed/reloaded/
+undid one, and verified unchanged Gmail metadata and the original batch row:
+18 reads, zero Gmail writes, three available conversations, zero pending.
+The authenticated Chrome page independently displayed all three messages; review
+persisted after reload and undo returned all three to unreviewed for the owner.
+This verifies the interaction, not the owner's product evaluation.
+
+If presentation fails, return to existing controls; do not reset journals or
+mutate Gmail to repair a presentation problem.
 
 Timed delivery, repeatable trial intake and owner evaluation remain subsequent
 experiment tasks. This screen does not pass the overall Phase 0 gate.

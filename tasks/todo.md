@@ -8,12 +8,13 @@ Plan: [plan.md](plan.md). These are implementation tasks, not completed evidence
 - [x] Clearly distinguish unavailable/pending content and do not pull new Inbox arrivals into the batch.
 Verification: focused query/review tests and authenticated browser flow, including reload,
 mobile layout and zero Gmail mutation requests. Local verification passed: 229 backend /
-53 browser tests; hosted validation pending. Dependencies: none.
+53 browser tests; hosted page/review/reload/undo and GET-only metadata validation passed.
+Original recovery journals unchanged. Dependencies: none.
 Likely scope: batch presentation/query and review persistence, page/controller and browser tests;
 split persistence and UI implementation if the change exceeds one small unit.
 
 ## 2. Connect durable execution to the controlled Gmail boundary
-- [ ] Select the smallest execution design that preserves account serialization and the existing credential boundary; document the decision.
+- [x] Select the smallest execution design that preserves account serialization and the existing credential boundary; document the decision.
 - [ ] Prove a persisted due request survives executor restart and uses frozen exact-message membership.
 - [ ] Prove failure/retry, concurrent manual execution and recovery preserve known/unknown outcomes.
 Verification: real independent-process tests with bounded provider fixtures; no live interception.
