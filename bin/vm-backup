@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""Daily encrypted export for the dedicated exe.dev PostgreSQL container."""
+import datetime
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import tempfile
+import uuid
+
+
+def sync_directory(directory):
+    descriptor = os.open(directory, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def backup():
+    os.umask(0o077)
+    directory = Path(os.environ.get('BACKUP_DIR', '/home/exedev/backups/email-sucks'))
+    recipient = Path(os.environ.get('BACKUP_AGE_RECIPIENT_FILE',
+                                   '/home/exedev/.config/email-sucks/backup-recipient.txt'))
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    with (directory / '.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+        name = f'email-sucks-{stamp}-{uuid.uuid4().hex[:8]}.dump.age'
+        with tempfile.TemporaryDirectory(prefix='.pending-', dir=directory) as temporary:
+            encrypted = Path(temporary) / name
+            with encrypted.open('wb') as output:
+                dump = subprocess.Popen([
+                    'docker', 'exec', 'email-sucks-phase0-db-1', 'pg_dump',
+                    '-U', 'postgres', '-d', 'email_sucks_phase0',
+                    '--format=custom', '--no-owner', '--no-privileges',
+                ], stdout=subprocess.PIPE)
+                try:
+                    result = subprocess.run(['age', '--encrypt', '--recipients-file', str(recipient)],
+                                            stdin=dump.stdout, stdout=output)
+                finally:
+                    dump.stdout.close()
+                dump_status = dump.wait()
+                if result.returncode or dump_status:
+                    raise RuntimeError('Export or encryption failed; previous backups retained')
+                output.flush()
+                os.fsync(output.fileno())
+            if encrypted.stat().st_size == 0:
+                raise RuntimeError('Empty encrypted archive')
+            with encrypted.open('rb') as source:
+                digest = hashlib.file_digest(source, 'sha256').hexdigest()
+            os.link(encrypted, directory / name)
+            sync_directory(directory)
+            # Only prune our complete archives, and only after a new successful export.
+            archives = sorted(p for p in directory.iterdir()
+                              if re.fullmatch(r'email-sucks-\d{8}T\d{6}Z-[0-9a-f]{8}\.dump\.age', p.name)
+                              and p.is_file() and not p.is_symlink())
+            for old in archives[:-14]:
+                old.unlink()
+            receipt = Path(temporary) / 'last-success.json'
+            with receipt.open('w') as output:
+                json.dump({'completed_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                           'archive': name, 'bytes': encrypted.stat().st_size,
+                           'sha256': digest, 'retained_archives': min(len(archives), 14)}, output)
+                output.write('\n')
+                output.flush()
+                os.fsync(output.fileno())
+            os.replace(receipt, directory / 'last-success.json')
+            sync_directory(directory)
+        print(f'Encrypted backup complete: {name}')
+
+
+if __name__ == '__main__':
+    backup()
