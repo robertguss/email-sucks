@@ -16,4 +16,4 @@ Take and authenticate an encrypted database backup before the additive migration
 
 Automated provider tests cover partial response loss, fixed membership with a later arrival outside the batch, unrelated-label preservation, external recovery, strict fixture validation and failed-member disconnect. A real-commit, independent-connection test kills the second release member after the simulated provider applied it: the first result survives, a competing operation is refused, and recovery releases all three with exactly one write per member.
 
-Live multi-message provider evidence is still required. The prior single-fixture live crash proof does not pass this batch gate. General interception, scheduled delivery, paging, production accounts and sending remain disabled.
+Live three-message hold and interrupted release recovery across a web restart now passed with no duplicate writes; [evidence](evidence/phase-0/2026-09-05-live-batch-recovery.md). Concurrent arrivals, hold crashes and held-batch disconnect still need live proof. General interception, scheduled delivery, paging, production accounts and sending remain disabled.
