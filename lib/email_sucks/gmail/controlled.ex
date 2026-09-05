@@ -9,12 +9,13 @@ defmodule EmailSucks.Gmail.Controlled do
     field :label_id, :string
     field :state, :string
     field :verified_at, :integer
+    field :repeat_revision, :integer, default: 0
   end
 
   def summary do
     case Repo.get(__MODULE__, "primary", log: false) do
       nil -> %{state: "not_started", verified_at: nil}
-      row -> Map.take(row, [:state, :verified_at])
+      row -> Map.take(row, [:state, :verified_at, :repeat_revision])
     end
   end
 
@@ -23,12 +24,33 @@ defmodule EmailSucks.Gmail.Controlled do
       with {:ok, row} <-
              intent(Repo.get(__MODULE__, "primary", log: false), action, config, token),
            {:ok, row} <- reconcile(row, config, token) do
-        {:ok, Map.take(row, [:state, :verified_at])}
+        {:ok, Map.take(row, [:state, :verified_at, :repeat_revision])}
       end
     end)
   end
 
   def run(_, _, _), do: {:error, :invalid_transition}
+
+  def repeat(config, token, expected_revision) do
+    exclusive(fn ->
+      with %{state: "released"} = row <- Repo.get(__MODULE__, "primary", log: false),
+           true <-
+             is_binary(expected_revision) and
+               expected_revision == Integer.to_string(row.repeat_revision),
+           {:ok, row} <- reconcile(row, config, token) do
+        row
+        |> save(state: "hold_pending", verified_at: nil, repeat_revision: row.repeat_revision + 1)
+        |> reconcile(config, token)
+        |> case do
+          {:ok, row} -> {:ok, Map.take(row, [:state, :verified_at, :repeat_revision])}
+          error -> error
+        end
+      else
+        {:error, _} = error -> error
+        _ -> {:error, :invalid_transition}
+      end
+    end)
+  end
 
   def restore_for_disconnect(config, token) do
     case Repo.get(__MODULE__, "primary", log: false) do

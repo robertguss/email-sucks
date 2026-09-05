@@ -9,7 +9,7 @@ type Props = {
   gmail_reconnect: boolean;
   gmail_checked: boolean;
   gmail_disconnect_phase?: 'restoring' | 'revoking' | null;
-  controlled?: { state: string; verified_at: number | null } | null;
+  controlled?: { state: string; verified_at: number | null; repeat_revision?: number } | null;
   csrf_token: string;
   notice: string | null;
 };
@@ -62,6 +62,17 @@ export default function PhaseZero({ gmail_configured, gmail_connected, gmail_ema
               <input type="hidden" name="_csrf_token" value={csrf_token} />
               <button type="submit">Recover / verify</button>
             </form>
+          )}
+          {controlled?.state === 'released' && controlled.repeat_revision !== undefined && (
+            <details className="connection-details">
+              <summary>Repeat the recovery test</summary>
+              <p>Hold the same saved fixture again, then use safe disconnect to test restoring it before access is revoked.</p>
+              <form method="post" action="/gmail/controlled/repeat">
+                <input type="hidden" name="_csrf_token" value={csrf_token} />
+                <input type="hidden" name="repeat_revision" value={controlled.repeat_revision} />
+                <button type="submit">Hold the same test message again</button>
+              </form>
+            </details>
           )}
           <form method="post" action="/auth/google">
             <input type="hidden" name="_csrf_token" value={csrf_token} />

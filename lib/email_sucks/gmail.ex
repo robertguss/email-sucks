@@ -240,9 +240,17 @@ defmodule EmailSucks.Gmail do
     if account(session), do: EmailSucks.Gmail.Controlled.summary(), else: nil
   end
 
-  def controlled(session, action) do
+  def controlled(session, action, expected_revision \\ nil) do
     with_access(session, fn account, tokens ->
-      result = EmailSucks.Gmail.Controlled.run(config(), tokens["access_token"], action)
+      result =
+        if action == "repeat",
+          do:
+            EmailSucks.Gmail.Controlled.repeat(
+              config(),
+              tokens["access_token"],
+              expected_revision
+            ),
+          else: EmailSucks.Gmail.Controlled.run(config(), tokens["access_token"], action)
 
       if result in [{:error, :missing_scope}, {:error, :reconnect_required}],
         do: update_current(account, status: "reconnect_required")

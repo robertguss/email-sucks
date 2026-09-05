@@ -217,10 +217,47 @@ defmodule EmailSucksWeb.GoogleControllerTest do
     refute html_response(home, 200) =~ "Label_private"
   end
 
+  test "repeat form passes its revision and uses only the saved message", %{conn: conn} do
+    {:ok, session} =
+      Gmail.connect(%{subject: "subject", email: "owner@gmail.com"}, %{
+        "access_token" => "private-access",
+        "refresh_token" => "private-refresh",
+        "expires_at" => System.system_time(:second) + 3600
+      })
+
+    EmailSucks.Repo.insert!(%EmailSucks.Gmail.Controlled{
+      id: "primary",
+      message_id: "saved",
+      label_id: "Label_saved",
+      state: "released"
+    })
+
+    Process.put(:repeat_labels, ["INBOX", "UNREAD"])
+
+    Req.Test.stub(__MODULE__, fn request ->
+      assert request.request_path in [
+               "/gmail/v1/users/me/messages/saved",
+               "/gmail/v1/users/me/messages/saved/modify"
+             ]
+
+      if request.method == "POST", do: Process.put(:repeat_labels, ["Label_saved", "UNREAD"])
+      Req.Test.json(request, %{"id" => "saved", "labelIds" => Process.get(:repeat_labels)})
+    end)
+
+    result =
+      conn
+      |> Plug.Test.init_test_session(gmail_session: session)
+      |> bypass_csrf()
+      |> post("/gmail/controlled/repeat", %{"repeat_revision" => "0", "message_id" => "arbitrary"})
+
+    assert result.assigns.flash["info"] =~ "held; verified"
+    assert EmailSucks.Repo.get!(EmailSucks.Gmail.Controlled, "primary").repeat_revision == 1
+  end
+
   test "controlled operations require CSRF and session, and ignore client message IDs", %{
     conn: conn
   } do
-    for action <- ["hold", "release", "recover"] do
+    for action <- ["hold", "release", "recover", "repeat"] do
       assert_raise Plug.CSRFProtection.InvalidCSRFTokenError, fn ->
         conn
         |> put_private(:plug_skip_csrf_protection, false)

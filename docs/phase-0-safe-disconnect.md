@@ -25,6 +25,10 @@ Automated tests cover ordered restore/read-back/revoke, failed recovery, unverif
 
 Do not mark the full Phase 0 safe-disconnect proof complete from these tests. The owner-authorized [live revoke-and-reconnect rehearsal](evidence/phase-0/2026-09-05-safe-disconnect.md) passed with the fixture already released: Google accepted revocation, local credentials/session were cleared, and reconnection plus Inbox/unread verification succeeded. Live restoration from held during disconnect and live mid-request crash recovery remain unproven. Future automatic interception requires disabling and verifying app-owned filters and recovering all held pages before using this flow.
 
+## Repeating the controlled rehearsal
+
+After release, **Repeat the recovery test** offers an explicit hold of the same frozen message and label. The app first verifies the released labels, then commits a new hold intent and advances a repeat revision before touching Gmail. Old or duplicate forms cannot start another hold, including after a later release. An ambiguous result uses the existing Recover / verify action. Ordinary Hold remains one-shot; no recovery record is deleted or reset. Repeat uses the same account lock and disconnect fence as other mailbox actions.
+
 ## Deployment and rollback
 
 The migration adds a nullable account field. Take an encrypted backup before migration and preserve both exe.dev Compose files. Older images do not enforce the disconnect fence: do not roll back while an account has `disconnect_phase` set. Finish recovery using the current release, or keep the app in restore mode until the pending operation can be resolved. Never clear the phase manually merely to make an old image start.

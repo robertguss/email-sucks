@@ -59,8 +59,8 @@ defmodule EmailSucksWeb.GoogleController do
     end
   end
 
-  def controlled(conn, %{"action" => action}) do
-    case Gmail.controlled(get_session(conn, :gmail_session), action) do
+  def controlled(conn, %{"action" => action} = params) do
+    case Gmail.controlled(get_session(conn, :gmail_session), action, params["repeat_revision"]) do
       {:ok, %{state: state}} ->
         conn
         |> put_flash(:info, "Controlled message #{state}; verified against Gmail just now.")

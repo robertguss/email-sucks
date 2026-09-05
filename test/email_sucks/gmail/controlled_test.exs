@@ -42,6 +42,45 @@ defmodule EmailSucks.Gmail.ControlledTest do
     assert Process.get(:writes) == 2
   end
 
+  test "explicit repeat holds the frozen fixture once and rejects stale forms", %{
+    session: session
+  } do
+    assert {:ok, _} = Gmail.controlled(session, "hold")
+    assert {:ok, _} = Gmail.controlled(session, "release")
+    original = Repo.one!(Controlled)
+    assert {:error, :invalid_transition} = Gmail.controlled(session, "repeat", nil)
+    assert {:ok, %{state: "held"}} = Gmail.controlled(session, "repeat", "0")
+    assert Repo.one!(Controlled).message_id == original.message_id
+    assert Repo.one!(Controlled).label_id == original.label_id
+    assert {:error, :invalid_transition} = Gmail.controlled(session, "repeat", "0")
+    assert {:ok, _} = Gmail.controlled(session, "release")
+    assert {:error, :invalid_transition} = Gmail.controlled(session, "repeat", "0")
+    assert Process.get(:writes) == 4
+    assert {:ok, %{state: "held"}} = Gmail.controlled(session, "repeat", "1")
+  end
+
+  test "repeat refuses external edits and preserves released intent", %{session: session} do
+    assert {:ok, _} = Gmail.controlled(session, "hold")
+    assert {:ok, _} = Gmail.controlled(session, "release")
+    Process.put(:labels, ["UNREAD"])
+    assert {:error, :verification_failed} = Gmail.controlled(session, "repeat", "0")
+    assert Repo.one!(Controlled).state == "released"
+    assert Process.get(:writes) == 2
+  end
+
+  test "ambiguous repeat remains recoverable without accepting the same form again", %{
+    session: session
+  } do
+    assert {:ok, _} = Gmail.controlled(session, "hold")
+    assert {:ok, _} = Gmail.controlled(session, "release")
+    Process.put(:ambiguous, true)
+    assert {:error, :provider_unavailable} = Gmail.controlled(session, "repeat", "0")
+    assert Repo.one!(Controlled).state == "hold_pending"
+    assert {:error, :invalid_transition} = Gmail.controlled(session, "repeat", "0")
+    assert {:ok, %{state: "held"}} = Gmail.controlled(session, "recover")
+    assert Process.get(:writes) == 3
+  end
+
   test "ambiguous provider write stays pending and recovery reads back without repeating it", %{
     session: session
   } do
