@@ -4,6 +4,14 @@ Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide
 describes the existing deployment, not instructions to provision a replacement
 VM. No secrets are stored here.
 
+## Current priority — usable controlled delivery experiment
+
+The owner agreed to combine product evaluation with remaining technical validation.
+Follow [the experiment plan](../tasks/plan.md) and [tasks](../tasks/todo.md), starting
+with a real saved batch view. Phase 0 remains open; the experiment does not authorize
+broad mailbox interception or waive operational/device gates. The history proof
+below is complete and no longer the next implementation milestone.
+
 ## Current session update — history recovery and restore passed
 
 Reviewed image `9ef7fe7` is deployed with the additive history journal migration.
