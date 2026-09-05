@@ -12,7 +12,7 @@ The owner explicitly selected same-VM backups for now. Installed age from the VM
 - Started the restored application with restore mode enabled and worker role selected. Assertions confirmed no Oban runner, no Gmail configuration, restored encrypted account credentials, no pending disconnect, and the expected released controlled record at repeat revision 2. The restore/startup assertions took approximately 0.8 seconds excluding download; this tiny-fixture result is not a recovery-time guarantee.
 - Removed the disposable database and temporary plaintext. Retained the encrypted archive alongside the existing off-VM copies; the private identity stayed on the Mac.
 - Deliberately ran the VM backup runner with a nonexistent recipient file. Encryption failed; it published nothing, pruned nothing and preserved the exact prior success receipt. The active timer configuration was unchanged.
-- Enabled the persistent daily timer. The first scheduled activation is 2026-09-05 03:07:43 UTC; daily schedule is 03:00 UTC with up to ten minutes jitter. The immediate service run is verified; an unattended scheduled activation has not yet been observed in this record.
+- Enabled the persistent daily timer. The first unattended scheduled activation completed at 2026-09-05 03:07:46 UTC with service result success and exit status 0. Its encrypted archive is 36,253 bytes and the receipt reports two retained archives. The daily schedule is 03:00 UTC with up to ten minutes jitter; the next activation is scheduled for September 6. This scheduled archive has not separately undergone a full restore; the earlier archive did.
 
 ## Limits
 
