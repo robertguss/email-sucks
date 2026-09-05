@@ -23,7 +23,7 @@ defmodule EmailSucksWeb.GoogleController do
         |> put_session(:gmail_session, session)
         |> put_flash(
           :info,
-          "Gmail connected with read-only access. You can now check the connection."
+          "Gmail connected. The controlled test can hold and release one fixture message."
         )
         |> redirect(to: ~p"/")
 
@@ -59,6 +59,18 @@ defmodule EmailSucksWeb.GoogleController do
     end
   end
 
+  def controlled(conn, %{"action" => action}) do
+    case Gmail.controlled(get_session(conn, :gmail_session), action) do
+      {:ok, %{state: state}} ->
+        conn
+        |> put_flash(:info, "Controlled message #{state}; verified against Gmail just now.")
+        |> redirect(to: ~p"/")
+
+      {:error, reason} ->
+        failure(conn, reason)
+    end
+  end
+
   def logout(conn, _params) do
     Gmail.logout(get_session(conn, :gmail_session))
     conn |> clear_session() |> configure_session(drop: true) |> redirect(to: ~p"/")
@@ -67,11 +79,32 @@ defmodule EmailSucksWeb.GoogleController do
   defp failure(conn, reason) do
     message =
       case reason do
+        :api_disabled ->
+          "The Gmail API is disabled in the Google project. Enable it before retrying."
+
+        :permission_denied ->
+          "Google denied this request. Check the Google project and account permissions."
+
+        :fixture_mismatch ->
+          "The controlled fixture did not match exactly, or is in Trash, Spam, or Drafts. Any saved experiment remains available for recovery."
+
+        :verification_failed ->
+          "Gmail labels do not match the saved intent. Success is unverified. Use Recover / verify or release to Inbox."
+
+        :not_found ->
+          "The saved message or label is unavailable in Gmail. The experiment is retained for recovery."
+
+        :operation_in_progress ->
+          "Another controlled operation is running. Wait for it to finish, then recover or verify."
+
+        :invalid_transition ->
+          "That action is unavailable for the saved experiment. Refresh this page."
+
         :wrong_account ->
           "That Google account is not allowed for this personal prototype."
 
         :missing_scope ->
-          "Gmail read-only permission is missing. Reconnect and allow that permission."
+          "Gmail modification permission is missing. Reconnect and allow that permission."
 
         :missing_refresh_token ->
           "Google did not grant offline access. Please reconnect and approve access."
@@ -80,7 +113,7 @@ defmodule EmailSucksWeb.GoogleController do
           "Google access has expired or been revoked. Please reconnect Gmail."
 
         :provider_unavailable ->
-          "Google could not be reached. Your connection is saved; please try again."
+          "Google could not confirm the operation. Any saved intent remains pending; use Recover / verify before assuming success."
 
         :refresh_in_progress ->
           "A connection check is already refreshing access. Please try again shortly."

@@ -13,6 +13,7 @@ defmodule EmailSucksWeb.PageController do
       gmail_email: account && account.email,
       gmail_reconnect: account != nil && account.status == "reconnect_required",
       gmail_checked: account != nil && account.checked_at != nil,
+      controlled: EmailSucks.Gmail.controlled_summary(get_session(conn, :gmail_session)),
       csrf_token: get_csrf_token(),
       notice: conn.assigns.flash["info"]
     })

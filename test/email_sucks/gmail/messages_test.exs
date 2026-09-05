@@ -64,10 +64,25 @@ defmodule EmailSucks.Gmail.MessagesTest do
     assert {:ok, []} = Google.recent_messages(@config, "token")
   end
 
+  test "disabled API is distinguished from missing consent" do
+    for {reason, expected} <- [
+          {"SERVICE_DISABLED", :api_disabled},
+          {"ACCESS_TOKEN_SCOPE_INSUFFICIENT", :missing_scope}
+        ] do
+      Req.Test.stub(__MODULE__, fn conn ->
+        conn
+        |> Plug.Conn.put_status(403)
+        |> Req.Test.json(%{"error" => %{"details" => [%{"reason" => reason}]}})
+      end)
+
+      assert {:error, ^expected} = Google.recent_messages(@config, "token")
+    end
+  end
+
   test "provider errors return safe codes, not bodies or a misleading empty list" do
     for {status, error} <- [
           {401, :reconnect_required},
-          {403, :missing_scope},
+          {403, :permission_denied},
           {429, :provider_unavailable},
           {503, :provider_unavailable}
         ] do

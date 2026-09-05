@@ -1,22 +1,20 @@
 # Project progress
 
-Last updated: 2026-09-04
+Last updated: 2026-09-05
 
 This is the current status and next-action tracker. The [product specification](docs/email-client-product-implementation-spec.md#26-phased-implementation-plan) defines scope and acceptance criteria; the [Phase 0 proof plan](docs/phase-0-gmail-reliability-proof.md) defines the detailed experiments. Evidence documents are dated records, not the current work queue.
 
 ## Current position
 
-**Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. The synthetic prototype is now deployed privately to exe.dev; hosted read-only sign-in, profile check and five-message preview now have live evidence.
+**Phase 0 is in progress; its exit gate has not passed.** The authenticated app previews five Inbox messages and now implements one controlled message hold/release with durable recovery. Automatic interception, continuous sync and sending remain disabled. Hosted read-only sign-in and preview have live evidence; the new modification flow still requires hosted consent and a live app run.
 
-**Active implementation:** local groundwork is verified through durable scheduling, release/notification probes, encrypted restore rehearsal and read-only identity/filter discovery. The next critical-path proof needs owner participation in a controlled live Gmail experiment. The owner selected a dedicated exe.dev VM; initial deployment passed the checks recorded under [ADR-0002](docs/decisions/0002-exe-vm-hosting.md).
-
-**Latest completed slice:** hosted read-only OAuth configuration and production startup fix. Linux release build, runtime identity/callback checks, read-only mounts and HTTP readiness passed. [Evidence](docs/evidence/phase-0/2026-09-04-hosted-oauth-setup.md). Hosted owner consent, profile check, preview and read-only inventory now have live evidence.
+**Latest implemented slice:** exact fixture matching, message-level label changes, independently committed pending intent, serialized operations, provider read-back and explicit recovery. The UI exposes saved state and last verification time honestly. See the [controlled app experiment](docs/phase-0-controlled-filter-experiment.md). Automated provider simulations include real-commit killed-request recovery; they do not replace live Gmail evidence.
 
 ## Next action
 
-**Rehearse creating and deleting the narrowly scoped label-only filter in Gmail, before any interception.** See the [controlled experiment](docs/phase-0-controlled-filter-experiment.md). The owner waived manual export for disposable mail; existing rules were inspected through read-only access and the private recovery card is prepared. Hosted sign-in, profile check, five-message preview including the synthetic fixture, and a read-only inventory passed; [live evidence](docs/evidence/phase-0/2026-09-04-hosted-oauth-setup.md). The three existing rules match unrelated senders and do not overlap the controlled sender. The owner supplied a controlled sender, sent `phase0-primary-001`, and confirmed ordinary Inbox arrival directly in Gmail. This is an [owner-reported baseline](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md), not interception or recovery proof.
+Deploy the controlled flow, reconnect through the app for Gmail modification permission, and run the hold/recover/release/verify sequence against the existing disposable fixture. The manual Gmail filter exercise is superseded and must not be repeated. The owner has authorized implementation, verification, pushing to main and deployment to the existing exe.dev VM. Group any human Google instructions into one manageable batch.
 
-The current grant remains read-only. The live experiment needs additional Google consent, an agreed controlled sender/message, and a verified offline recovery path. Native notification proof needs actual owner devices. These are empirical gates; more synthetic tests cannot pass them. Work through human setup one step at a time.
+The owner waived manual export of disposable test mail. Product-wide recovery requirements remain in force. Native notification proof needs actual owner devices, and full Phase 0 acceptance still needs empirical evidence.
 
 Render provisioning is superseded by the dedicated exe.dev VM. Hosted alert receipt, independent backup scheduling and total-VM-loss recovery still need evidence. Full Room, production mail mutations and personal dogfood remain gated on Phase 0 results.
 

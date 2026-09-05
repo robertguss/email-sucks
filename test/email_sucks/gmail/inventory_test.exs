@@ -84,7 +84,7 @@ defmodule EmailSucks.Gmail.InventoryTest do
   test "provider errors are sanitized" do
     for {code, reason} <- [
           {401, :reconnect_required},
-          {403, :missing_scope},
+          {403, :permission_denied},
           {429, :provider_unavailable}
         ] do
       Req.Test.stub(__MODULE__, fn conn -> Plug.Conn.send_resp(conn, code, "private-error") end)

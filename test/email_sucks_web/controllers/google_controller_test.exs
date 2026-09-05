@@ -126,7 +126,7 @@ defmodule EmailSucksWeb.GoogleControllerTest do
             "refresh_token" => "private-refresh",
             "expires_in" => 3600,
             "token_type" => "Bearer",
-            "scope" => "openid email https://www.googleapis.com/auth/gmail.readonly"
+            "scope" => "openid email https://www.googleapis.com/auth/gmail.modify"
           })
 
         "/oauth2/v3/certs" ->
@@ -179,6 +179,64 @@ defmodule EmailSucksWeb.GoogleControllerTest do
 
     assert json_response(revoked, 401) == %{"error" => "reconnect_required"}
     assert Gmail.account(session).status == "reconnect_required"
+  end
+
+  test "authenticated recovery exposes verified state without exposing provider IDs", %{
+    conn: conn
+  } do
+    {:ok, session} =
+      Gmail.connect(%{subject: "subject", email: "owner@gmail.com"}, %{
+        "access_token" => "private-access",
+        "refresh_token" => "private-refresh",
+        "expires_at" => System.system_time(:second) + 3600
+      })
+
+    EmailSucks.Repo.insert!(%EmailSucks.Gmail.Controlled{
+      id: "primary",
+      message_id: "private_message",
+      label_id: "Label_private",
+      state: "hold_pending"
+    })
+
+    Req.Test.stub(__MODULE__, fn conn ->
+      assert conn.method == "GET"
+      assert String.ends_with?(conn.request_path, "/private_message")
+      Req.Test.json(conn, %{"id" => "private_message", "labelIds" => ["Label_private", "UNREAD"]})
+    end)
+
+    result =
+      conn
+      |> Plug.Test.init_test_session(gmail_session: session)
+      |> bypass_csrf()
+      |> post("/gmail/controlled/recover", %{"message_id" => "arbitrary"})
+
+    assert result.assigns.flash["info"] =~ "held; verified"
+    home = result |> recycle() |> get("/")
+    assert Inertia.Testing.inertia_props(home).controlled.state == "held"
+    refute html_response(home, 200) =~ "private_message"
+    refute html_response(home, 200) =~ "Label_private"
+  end
+
+  test "controlled operations require CSRF and session, and ignore client message IDs", %{
+    conn: conn
+  } do
+    for action <- ["hold", "release", "recover"] do
+      assert_raise Plug.CSRFProtection.InvalidCSRFTokenError, fn ->
+        conn
+        |> put_private(:plug_skip_csrf_protection, false)
+        |> post("/gmail/controlled/#{action}")
+      end
+
+      Req.Test.stub(__MODULE__, fn _ -> flunk("unauthorized provider request") end)
+
+      denied =
+        conn
+        |> bypass_csrf()
+        |> post("/gmail/controlled/#{action}", %{"message_id" => "arbitrary"})
+
+      assert redirected_to(denied) == "/"
+      assert denied.assigns.flash["info"] =~ "Connect Gmail"
+    end
   end
 
   defp bypass_csrf(conn), do: Plug.Conn.put_private(conn, :plug_skip_csrf_protection, true)

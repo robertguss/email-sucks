@@ -30,14 +30,15 @@ defmodule EmailSucks.Gmail.GoogleTest do
     %{config: config, pem: pem, jwk: jwk, authorization: authorization, claims: claims}
   end
 
-  test "requests only identity and read-only Gmail, with fresh state, nonce and S256 PKCE", ctx do
+  test "requests identity and Gmail modification permission, with fresh state, nonce and S256 PKCE",
+       ctx do
     params = URI.decode_query(URI.parse(ctx.authorization.url).query)
     assert params["code_challenge_method"] == "S256"
     assert params["access_type"] == "offline"
     refute Map.has_key?(params, "login_hint")
 
     assert String.split(params["scope"]) |> Enum.sort() ==
-             Enum.sort(["openid", "email", "https://www.googleapis.com/auth/gmail.readonly"])
+             Enum.sort(["openid", "email", "https://www.googleapis.com/auth/gmail.modify"])
 
     assert byte_size(params["nonce"]) >= 32
     {:ok, other} = Google.authorize(ctx.config)
@@ -84,7 +85,7 @@ defmodule EmailSucks.Gmail.GoogleTest do
   end
 
   test "requires Gmail permission and sanitizes provider errors", ctx do
-    stub(ctx, %{"scope" => "openid email"})
+    stub(ctx, %{"scope" => "openid email https://www.googleapis.com/auth/gmail.readonly"})
     assert {:error, :missing_scope} = callback(ctx)
 
     Req.Test.stub(__MODULE__, fn conn ->
@@ -142,7 +143,7 @@ defmodule EmailSucks.Gmail.GoogleTest do
           "access_token" => "access-test",
           "refresh_token" => "refresh-test",
           "expires_in" => 3600,
-          "scope" => "openid email https://www.googleapis.com/auth/gmail.readonly",
+          "scope" => "openid email https://www.googleapis.com/auth/gmail.modify",
           "token_type" => "Bearer"
         },
         overrides

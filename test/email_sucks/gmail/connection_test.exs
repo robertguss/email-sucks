@@ -30,7 +30,9 @@ defmodule EmailSucks.Gmail.ConnectionTest do
     {:ok, session} = Gmail.connect(identity(), token())
 
     Req.Test.stub(__MODULE__, fn conn ->
-      Plug.Conn.send_resp(conn, 403, "private-provider-error")
+      conn
+      |> Plug.Conn.put_status(403)
+      |> Req.Test.json(%{"error" => %{"errors" => [%{"reason" => "insufficientPermissions"}]}})
     end)
 
     assert {:error, :missing_scope} = Gmail.inventory(session)

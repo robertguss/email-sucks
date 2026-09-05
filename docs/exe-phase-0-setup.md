@@ -32,11 +32,11 @@ After inert checks, explicitly set `RESTORE_MODE=false` in the private app envir
 
 ## Updates, rollback and recovery
 
-### Hosted read-only OAuth overlay
+### Hosted OAuth overlay
 
 After the initial smoke checks, use `deploy/exe.gmail.compose.yaml` in addition to the base Compose file. Only the web container mounts the hosted OAuth client and key files; the synthetic worker remains without Gmail configuration. Set `GMAIL_SECRET_DIR` in the private Compose environment to the absolute directory containing `google-oauth.json` and `keys.json`. Both files must be owned by UID 65534 (the image's `nobody` user), mode `0400`, in a private host directory. The bind mounts are read-only and refuse missing source files.
 
-Generate fresh hosted vault and session keys; retain private recovery copies outside the VM. Never reuse local development keys. Register the exact callback `https://cougar-cedar.exe.xyz/auth/google/callback` in a separate web OAuth client within the existing Google project. The app still requests only identity/email and Gmail read-only access.
+Generate fresh hosted vault and session keys; retain private recovery copies outside the VM. Never reuse local development keys. Register the exact callback `https://cougar-cedar.exe.xyz/auth/google/callback` in a separate web OAuth client within the existing Google project. The app now requests identity/email and Gmail modification access for the single controlled hold/release experiment. Existing read-only grants require reconnection.
 
 Use both Compose files for subsequent updates so the mounts remain present:
 
@@ -52,4 +52,4 @@ Deploy reviewed source and tag the image with its commit. Build before stopping 
 
 Maintain encrypted exports outside this VM and separately held decryption keys. The existing `bin/backup-export` and `bin/backup-restore` document the logical backup boundary. Scheduled R2 upload, missed-backup alerts, retention and total-VM-loss restoration still need implementation and evidence. Do not enable interception merely because web readiness passes.
 
-The private exe.dev proxy must be included in the hosted OAuth browser rehearsal. External monitoring needs an authenticated or deliberately exposed health route; a successful proxy login page is not an application health check. Keep setup with the owner to one action at a time.
+The private exe.dev proxy must be included in the hosted OAuth browser rehearsal. External monitoring needs an authenticated or deliberately exposed health route; a successful proxy login page is not an application health check. Group human consent instructions into a manageable batch.

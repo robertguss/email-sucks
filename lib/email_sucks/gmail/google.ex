@@ -1,6 +1,6 @@
 defmodule EmailSucks.Gmail.Google do
-  @moduledoc "Google's read-only OAuth boundary. Provider responses and credentials never become UI errors."
-  @scope "https://www.googleapis.com/auth/gmail.readonly"
+  @moduledoc "Google OAuth and message boundary. Provider responses and credentials never become UI errors."
+  @scope "https://www.googleapis.com/auth/gmail.modify"
   # Google's published discovery document, checked 2026-09-04. Only fixed Google endpoints.
   @discovery %{
     "issuer" => "https://accounts.google.com",
@@ -75,8 +75,8 @@ defmodule EmailSucks.Gmail.Google do
       {:ok, %{status: 401}} ->
         {:error, :reconnect_required}
 
-      {:ok, %{status: 403}} ->
-        {:error, :missing_scope}
+      {:ok, %{status: 403, body: body}} ->
+        forbidden(body)
 
       _ ->
         {:error, :provider_unavailable}
@@ -248,11 +248,160 @@ defmodule EmailSucks.Gmail.Google do
     case request(config, method: :get, url: url, headers: [{"authorization", "Bearer " <> token}]) do
       {:ok, %{status: 200, body: body}} when is_map(body) -> {:ok, body}
       {:ok, %{status: 401}} -> {:error, :reconnect_required}
-      {:ok, %{status: 403}} -> {:error, :missing_scope}
+      {:ok, %{status: 403, body: body}} -> forbidden(body)
       {:ok, %{status: 404}} -> {:error, :not_found}
       _ -> {:error, :provider_unavailable}
     end
   end
+
+  @fixture_subject "phase0-primary-001"
+  @fixture_sender "robertguss@gmail.com"
+  @controlled_label "Postman/Controlled-primary-001"
+
+  def controlled_fixture(config, token) do
+    with {:ok, body} <-
+           mail_get(config, token, "",
+             q: "in:inbox from:#{@fixture_sender} subject:#{@fixture_subject}",
+             maxResults: 2
+           ),
+         %{"messages" => [%{"id" => id}]} <- body,
+         false <- Map.has_key?(body, "nextPageToken"),
+         {:ok, message} <- controlled_message(config, token, id),
+         true <-
+           "INBOX" in message["labelIds"] and
+             not Enum.any?(["TRASH", "SPAM", "DRAFT"], &(&1 in message["labelIds"])),
+         true <-
+           header(message, "subject") == @fixture_subject and
+             mailbox?(header(message, "from"), @fixture_sender) and
+             mailbox?(header(message, "to"), config[:allowed_email]) do
+      {:ok, message}
+    else
+      {:error, _} = error -> error
+      _ -> {:error, :fixture_mismatch}
+    end
+  end
+
+  def controlled_message(config, token, id) do
+    if valid_id?(id) do
+      with {:ok, body} <-
+             mail_get(config, token, "/" <> id,
+               format: "metadata",
+               metadataHeaders: "From",
+               metadataHeaders: "To",
+               metadataHeaders: "Subject",
+               fields: "id,labelIds,payload/headers"
+             ),
+           %{"id" => ^id, "labelIds" => labels} when is_list(labels) <- body,
+           true <- Enum.all?(labels, &is_binary/1) do
+        {:ok, body}
+      else
+        {:error, _} = error -> error
+        _ -> {:error, :provider_unavailable}
+      end
+    else
+      {:error, :fixture_mismatch}
+    end
+  end
+
+  def controlled_label(config, token) do
+    with {:ok, body} <- api_get(config, token, "labels", fields: "labels(id,name)"),
+         {:ok, labels} <- items(body, "labels", &(is_binary(&1["id"]) and is_binary(&1["name"]))) do
+      case Enum.filter(labels, &(&1["name"] == @controlled_label)) do
+        [%{"id" => id}] ->
+          if valid_id?(id), do: {:ok, id}, else: {:error, :provider_unavailable}
+
+        [] ->
+          # If creation times out, the next attempt resolves the same name before creating.
+          with {:ok, %{"id" => id}} <-
+                 api_post(config, token, "labels", %{name: @controlled_label}),
+               true <- valid_id?(id) do
+            {:ok, id}
+          else
+            {:error, _} = error -> error
+            _ -> {:error, :provider_unavailable}
+          end
+
+        _ ->
+          {:error, :fixture_mismatch}
+      end
+    end
+  end
+
+  def modify_message(config, token, id, add, remove) do
+    if valid_id?(id),
+      do:
+        api_post(config, token, "messages/#{id}/modify", %{
+          addLabelIds: add,
+          removeLabelIds: remove
+        }),
+      else: {:error, :fixture_mismatch}
+  end
+
+  defp api_post(config, token, path, body) do
+    case request(config,
+           method: :post,
+           url: "https://gmail.googleapis.com/gmail/v1/users/me/" <> path,
+           headers: [{"authorization", "Bearer " <> token}],
+           json: body
+         ) do
+      {:ok, %{status: status, body: body}} when status in [200, 201] and is_map(body) ->
+        {:ok, body}
+
+      {:ok, %{status: 401}} ->
+        {:error, :reconnect_required}
+
+      {:ok, %{status: 403, body: body}} ->
+        forbidden(body)
+
+      {:ok, %{status: 404}} ->
+        {:error, :not_found}
+
+      _ ->
+        {:error, :provider_unavailable}
+    end
+  end
+
+  defp valid_id?(id), do: is_binary(id) and Regex.match?(~r/\A[a-zA-Z0-9_-]+\z/, id)
+
+  defp header(message, name) do
+    headers = get_in(message, ["payload", "headers"])
+
+    if is_list(headers) do
+      case Enum.filter(headers, fn
+             %{"name" => key} when is_binary(key) -> String.downcase(key) == name
+             _ -> false
+           end) do
+        [%{"value" => value}] when is_binary(value) -> String.trim(value)
+        _ -> nil
+      end
+    end
+  end
+
+  defp mailbox?(value, expected) when is_binary(value) and is_binary(expected) do
+    value = String.downcase(value)
+    value == expected or Regex.match?(~r/\A[^<>,]*<#{Regex.escape(expected)}>\z/, value)
+  end
+
+  defp mailbox?(_, _), do: false
+
+  defp forbidden(%{"error" => error}) when is_map(error) do
+    details = Map.get(error, "details", [])
+    errors = Map.get(error, "errors", [])
+    reasons = for row <- List.wrap(details) ++ List.wrap(errors), is_map(row), do: row["reason"]
+
+    cond do
+      Enum.any?(reasons, &(&1 in ["SERVICE_DISABLED", "accessNotConfigured"])) ->
+        {:error, :api_disabled}
+
+      Enum.any?(reasons, &(&1 in ["ACCESS_TOKEN_SCOPE_INSUFFICIENT", "insufficientPermissions"])) ->
+        {:error, :missing_scope}
+
+      true ->
+        {:error, :permission_denied}
+    end
+  end
+
+  defp forbidden(_), do: {:error, :permission_denied}
 
   def random, do: :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
 

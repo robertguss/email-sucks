@@ -1,5 +1,5 @@
 defmodule EmailSucks.Gmail do
-  @moduledoc "Personal read-only connection. Ecto records here are private authentication infrastructure."
+  @moduledoc "Personal Gmail connection. Ecto records here are private authentication infrastructure."
   import Ecto.Query
   alias EmailSucks.Repo
   alias EmailSucks.Gmail.{Account, Flow, Google, Vault}
@@ -149,6 +149,21 @@ defmodule EmailSucks.Gmail do
         )
 
     :ok
+  end
+
+  def controlled_summary(session) do
+    if account(session), do: EmailSucks.Gmail.Controlled.summary(), else: nil
+  end
+
+  def controlled(session, action) do
+    with_access(session, fn account, tokens ->
+      result = EmailSucks.Gmail.Controlled.run(config(), tokens["access_token"], action)
+
+      if result in [{:error, :missing_scope}, {:error, :reconnect_required}],
+        do: update_current(account, status: "reconnect_required")
+
+      result
+    end)
   end
 
   def check(session), do: with_access(session, &check_profile/2)

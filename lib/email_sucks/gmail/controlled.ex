@@ -1,0 +1,123 @@
+defmodule EmailSucks.Gmail.Controlled do
+  @moduledoc "One controlled message experiment. Intent commits before any message mutation."
+  use Ecto.Schema
+  alias EmailSucks.{Repo, Gmail.Google}
+  @primary_key {:id, :string, autogenerate: false}
+  @derive {Inspect, only: [:id, :state]}
+  schema "gmail_controlled" do
+    field :message_id, :string, redact: true
+    field :label_id, :string
+    field :state, :string
+    field :verified_at, :integer
+  end
+
+  def summary do
+    case Repo.get(__MODULE__, "primary", log: false) do
+      nil -> %{state: "not_started", verified_at: nil}
+      row -> Map.take(row, [:state, :verified_at])
+    end
+  end
+
+  def run(config, token, action) when action in ["hold", "release", "recover"] do
+    # A session lock, not an expiring lease: a slow hold must never race a release.
+    # checkout pins the connection while each intent write commits independently.
+    Repo.checkout(
+      fn ->
+        case Repo.query!("SELECT pg_try_advisory_lock(71403)", [], log: false).rows do
+          [[true]] ->
+            try do
+              with {:ok, row} <-
+                     intent(Repo.get(__MODULE__, "primary", log: false), action, config, token),
+                   {:ok, row} <- reconcile(row, config, token) do
+                {:ok, Map.take(row, [:state, :verified_at])}
+              end
+            after
+              Repo.query!("SELECT pg_advisory_unlock(71403)", [], log: false)
+            end
+
+          _ ->
+            {:error, :operation_in_progress}
+        end
+      end,
+      timeout: 120_000
+    )
+  end
+
+  def run(_, _, _), do: {:error, :invalid_transition}
+
+  defp intent(nil, "hold", config, token) do
+    with {:ok, message} <- Google.controlled_fixture(config, token),
+         {:ok, label} <- Google.controlled_label(config, token),
+         false <- label in message["labelIds"] do
+      {:ok,
+       Repo.insert!(
+         %__MODULE__{
+           id: "primary",
+           message_id: message["id"],
+           label_id: label,
+           state: "hold_pending"
+         },
+         log: false
+       )}
+    else
+      true -> {:error, :fixture_mismatch}
+      error -> error
+    end
+  end
+
+  defp intent(nil, _, _, _), do: {:error, :invalid_transition}
+
+  defp intent(%{state: state} = row, "release", _, _) when state in ["hold_pending", "held"] do
+    {:ok, save(row, state: "release_pending", verified_at: nil)}
+  end
+
+  defp intent(%{state: "released"}, "hold", _, _), do: {:error, :invalid_transition}
+  defp intent(%{state: "release_pending"}, "hold", _, _), do: {:error, :invalid_transition}
+  defp intent(row, _, _, _), do: {:ok, row}
+
+  defp reconcile(row, config, token) do
+    with {:ok, message} <- Google.controlled_message(config, token, row.message_id),
+         :ok <- usable(message) do
+      if matches?(row, message) do
+        {:ok, verified(row)}
+      else
+        if row.state in ["hold_pending", "release_pending"] do
+          {add, remove} =
+            if row.state == "hold_pending",
+              do: {[row.label_id], ["INBOX"]},
+              else: {["INBOX"], [row.label_id]}
+
+          with {:ok, _} <- Google.modify_message(config, token, row.message_id, add, remove),
+               {:ok, actual} <- Google.controlled_message(config, token, row.message_id),
+               :ok <- usable(actual),
+               true <- matches?(row, actual) do
+            {:ok, verified(row)}
+          else
+            false -> {:error, :verification_failed}
+            error -> error
+          end
+        else
+          {:error, :verification_failed}
+        end
+      end
+    end
+  end
+
+  defp usable(message) do
+    if Enum.any?(["TRASH", "SPAM", "DRAFT"], &(&1 in message["labelIds"])),
+      do: {:error, :fixture_mismatch},
+      else: :ok
+  end
+
+  defp matches?(row, message) do
+    held = row.state in ["hold_pending", "held"]
+    row.label_id in message["labelIds"] == held and "INBOX" in message["labelIds"] != held
+  end
+
+  defp verified(row) do
+    state = if row.state in ["hold_pending", "held"], do: "held", else: "released"
+    save(row, state: state, verified_at: System.system_time(:second))
+  end
+
+  defp save(row, fields), do: row |> Ecto.Changeset.change(fields) |> Repo.update!(log: false)
+end
