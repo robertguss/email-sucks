@@ -16,7 +16,7 @@ The Blueprint pins the existing verified Elixir 1.20.4, OTP 29.0.6 and Node 26.8
 
 Work through these one at a time with the owner; do not paste secrets into chat or git.
 
-1. In the Render dashboard, choose New → Blueprint, connect `robertguss/email-sucks`, and select branch `codex/phase-0-continuation` with Blueprint path `render.yaml`.
+1. In the Render dashboard, choose New → Blueprint, connect `robertguss/email-sucks`, and select branch `main` with Blueprint path `render.yaml`.
 2. Review the dashboard validation and resource preview in the intended workspace. Local validation against Render's published JSON Schema has passed; dashboard validation and workspace conflicts must still be checked before provisioning.
 3. Deploy the reviewed Blueprint. Review the concrete resource list and recurring price before creation. Supply a fresh private `SECRET_KEY_BASE` of at least 64 bytes (for example, `mix phx.gen.secret` generated locally). Keep a private copy. Do not use Render's 44-character generated value for this Phoenix secret.
 4. Wait for the web migration/build and both startups. Check `/health/ready`, the anonymous homepage, HTTPS, secure cookies after later sign-in, and runtime versions. Check the worker has no Oban process while restore mode is enabled. Record service IDs and sanitized revision evidence, never connection strings.

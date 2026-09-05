@@ -9,7 +9,7 @@ services:
     runtime: elixir
     plan: 0.5c-512mb
     region: virginia
-    branch: codex/phase-0-continuation
+    branch: main
     autoDeployTrigger: "off"
     buildCommand: bin/render-build
     preDeployCommand: _build/prod/rel/email_sucks/bin/email_sucks eval 'EmailSucks.Release.migrate()'
@@ -33,7 +33,7 @@ services:
     runtime: elixir
     plan: 0.5c-512mb
     region: virginia
-    branch: codex/phase-0-continuation
+    branch: main
     autoDeployTrigger: "off"
     buildCommand: bin/render-build
     startCommand: _build/prod/rel/email_sucks/bin/email_sucks start
