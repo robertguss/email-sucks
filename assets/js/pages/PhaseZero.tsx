@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import RecentMessages from '../components/RecentMessages';
+import GmailDisconnect from '../components/GmailDisconnect';
 
 type Props = {
   gmail_configured: boolean;
@@ -7,12 +8,13 @@ type Props = {
   gmail_email: string | null;
   gmail_reconnect: boolean;
   gmail_checked: boolean;
+  gmail_disconnect_phase?: 'restoring' | 'revoking' | null;
   controlled?: { state: string; verified_at: number | null } | null;
   csrf_token: string;
   notice: string | null;
 };
 
-export default function PhaseZero({ gmail_configured, gmail_connected, gmail_email, gmail_reconnect, gmail_checked, controlled, csrf_token, notice }: Props) {
+export default function PhaseZero({ gmail_configured, gmail_connected, gmail_email, gmail_reconnect, gmail_checked, gmail_disconnect_phase, controlled, csrf_token, notice }: Props) {
   return (
     <main className="preview">
       <Head title="Inbox preview · Deliberate email" />
@@ -25,7 +27,7 @@ export default function PhaseZero({ gmail_configured, gmail_connected, gmail_ema
         <p>A few recent messages, with room to breathe.</p>
       </div>
       {notice && <p className="feedback" role="status">{notice}</p>}
-      {gmail_connected ? <RecentMessages /> : (
+      {gmail_connected ? <RecentMessages /> : !gmail_disconnect_phase && (
         <section className="connect-prompt" aria-labelledby="connection-heading">
           <h2 id="connection-heading">{gmail_reconnect ? 'Reconnect your Gmail account' : 'No Gmail account connected'}</h2>
           <p>{gmail_reconnect ? 'Your Google access has expired or been revoked. Reconnect to continue.' : 'Connect Gmail to preview five recent Inbox messages. The controlled test can also hold and release one fixture message.'}</p>
@@ -68,9 +70,10 @@ export default function PhaseZero({ gmail_configured, gmail_connected, gmail_ema
           </form>
         </section>
       )}
+      {gmail_email && <GmailDisconnect phase={gmail_disconnect_phase ?? null} csrfToken={csrf_token} />}
       {gmail_email && (
         <details className="connection-details">
-          <summary>Connection <span className="connection-state">{gmail_reconnect ? 'Reconnect required' : gmail_checked ? 'Verified' : 'Connected'}</span></summary>
+          <summary>Connection <span className="connection-state">{gmail_disconnect_phase ? 'Disconnect pending' : gmail_reconnect ? 'Reconnect required' : gmail_checked ? 'Verified' : 'Connected'}</span></summary>
           <div className="connection-content">
             <h2>{gmail_connected ? 'Gmail account connected' : 'Saved Google account'}</h2>
             <p className="account-address">{gmail_email}</p>

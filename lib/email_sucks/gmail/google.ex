@@ -61,6 +61,22 @@ defmodule EmailSucks.Gmail.Google do
     end
   end
 
+  def revoke(config, refresh_token)
+      when is_binary(refresh_token) and byte_size(refresh_token) > 0 do
+    # Form body, never a URL parameter: avoid tokens in proxy/request URLs.
+    case request(config,
+           method: :post,
+           url: "https://oauth2.googleapis.com/revoke",
+           form: [token: refresh_token]
+         ) do
+      {:ok, %{status: 200}} -> {:ok, :revoked}
+      {:ok, %{status: 400, body: %{"error" => "invalid_token"}}} -> {:ok, :already_invalid}
+      _ -> {:error, :revocation_unconfirmed}
+    end
+  end
+
+  def revoke(_, _), do: {:error, :revocation_unconfirmed}
+
   def profile(config, access_token) do
     case request(config,
            method: :get,

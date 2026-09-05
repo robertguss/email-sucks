@@ -71,7 +71,7 @@ for (const scheme of ['light', 'dark'] as const) {
       expect(await page.evaluate(() => document.fonts.check('19px Newsreader'))).toBe(true);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.screenshot({ path: `../.local/desk-${width}-${scheme}.png`, fullPage: true });
-      await page.locator('.connection-details summary').click();
+      await page.locator('.connection-details summary').filter({ hasText: /^Connection / }).click();
       await expect(page.getByRole('button', { name: 'Check connection', exact: true })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Sign out of this app' })).toBeVisible();
       await page.keyboard.press('Tab');

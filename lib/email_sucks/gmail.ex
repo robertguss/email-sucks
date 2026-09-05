@@ -2,14 +2,16 @@ defmodule EmailSucks.Gmail do
   @moduledoc "Personal Gmail connection. Ecto records here are private authentication infrastructure."
   import Ecto.Query
   alias EmailSucks.Repo
-  alias EmailSucks.Gmail.{Account, Flow, Google, Vault}
+  alias EmailSucks.Gmail.{Account, Controlled, Flow, Google, Vault}
 
   def configured?, do: Application.get_env(:email_sucks, :gmail) != nil
   defp config, do: Application.fetch_env!(:email_sucks, :gmail)
   defp now, do: System.system_time(:second)
   defp digest(value), do: :crypto.hash(:sha256, value) |> Base.encode16(case: :lower)
 
-  def begin_connection do
+  def begin_connection, do: Controlled.exclusive(&begin_flow/0)
+
+  defp begin_flow do
     if configured?() do
       Repo.transaction(fn ->
         # Global cap is deliberate for this single-user proof; includes consumed attempts.
@@ -72,19 +74,42 @@ defmodule EmailSucks.Gmail do
   def consume_flow(_), do: {:error, :invalid_flow}
 
   def finish_connection(browser, params) do
-    with true <- configured?(),
-         {:ok, flow} <- consume_flow(browser),
-         {:ok, identity, credentials} <- Google.callback(config(), flow, params) do
-      connect(identity, credentials)
-    else
-      false -> {:error, :not_configured}
-      error -> error
-    end
+    Controlled.exclusive(fn ->
+      with true <- configured?(),
+           {:ok, flow} <- consume_flow(browser),
+           {:ok, identity, credentials} <- Google.callback(config(), flow, params) do
+        connect(identity, credentials)
+      else
+        false -> {:error, :not_configured}
+        error -> error
+      end
+    end)
   end
 
   @doc false
   # Called only with a Google-validated identity; not exposed as an API/action.
   def connect(identity, tokens) do
+    Controlled.exclusive(fn ->
+      previous = Repo.get(Account, "primary", log: false)
+
+      if previous && previous.disconnect_phase == "revoking" do
+        # A verified OAuth identity can resume an expired browser session's disconnect.
+        # Do not save the new grant: revoking the old token may also revoke new tokens.
+        if identity.email == config()[:allowed_email] and identity.subject == previous.subject do
+          case finish_disconnect(previous) do
+            {:ok, _} -> {:error, :disconnect_completed}
+            error -> error
+          end
+        else
+          {:error, :wrong_account}
+        end
+      else
+        connect_account(identity, tokens)
+      end
+    end)
+  end
+
+  defp connect_account(identity, tokens) do
     Repo.transaction(fn ->
       lock(71_402)
       # Serialize this read/write with refresh lease claims as well as other reconnects.
@@ -151,6 +176,66 @@ defmodule EmailSucks.Gmail do
     :ok
   end
 
+  def disconnect(session) do
+    Controlled.exclusive(fn ->
+      case account(session) do
+        nil ->
+          {:error, :unauthorized}
+
+        %Account{disconnect_phase: "revoking"} = account ->
+          finish_disconnect(account)
+
+        account ->
+          account
+          |> Ecto.Changeset.change(disconnect_phase: "restoring")
+          |> Repo.update!(log: false)
+
+          with_access(
+            session,
+            fn account, tokens ->
+              with :ok <- Controlled.restore_for_disconnect(config(), tokens["access_token"]) do
+                account =
+                  account
+                  |> Ecto.Changeset.change(disconnect_phase: "revoking")
+                  |> Repo.update!(log: false)
+
+                finish_disconnect(account)
+              end
+            end,
+            true
+          )
+      end
+    end)
+  end
+
+  defp finish_disconnect(account) do
+    with {:ok, tokens} <- Vault.open(account.credentials, "gmail-tokens"),
+         {:ok, outcome} <- Google.revoke(config(), tokens["refresh_token"]) do
+      {:ok, _} =
+        Repo.transaction(fn ->
+          account
+          |> Ecto.Changeset.change(
+            credentials: "",
+            status: "reconnect_required",
+            disconnect_phase: nil,
+            session_digest: nil,
+            session_expires_at: 0,
+            checked_at: nil,
+            refresh_until: 0,
+            revision: account.revision + 1
+          )
+          |> Repo.update!(log: false)
+
+          Repo.update_all(Flow, [set: [consumed: true, payload: ""]], log: false)
+        end)
+
+      {:ok, outcome}
+    else
+      {:error, :invalid_ciphertext} -> {:error, :reconnect_required}
+      error -> error
+    end
+  end
+
   def controlled_summary(session) do
     if account(session), do: EmailSucks.Gmail.Controlled.summary(), else: nil
   end
@@ -195,8 +280,15 @@ defmodule EmailSucks.Gmail do
     end)
   end
 
-  defp with_access(session, operation) do
+  defp with_access(session, operation, allow_disconnect \\ false) do
+    Controlled.exclusive(fn -> access_operation(session, operation, allow_disconnect) end)
+  end
+
+  defp access_operation(session, operation, allow_disconnect) do
     case account(session) do
+      %Account{disconnect_phase: phase} when not is_nil(phase) and not allow_disconnect ->
+        {:error, :disconnect_pending}
+
       %Account{status: "connected"} = account ->
         with {:ok, tokens} <- Vault.open(account.credentials, "gmail-tokens"),
              {:ok, account, tokens} <- access(account, tokens) do
@@ -285,6 +377,7 @@ defmodule EmailSucks.Gmail do
   end
 
   defp keep_refresh(tokens, nil), do: tokens
+  defp keep_refresh(tokens, %Account{credentials: ""}), do: tokens
 
   defp keep_refresh(%{"refresh_token" => refresh} = tokens, _)
        when is_binary(refresh) and byte_size(refresh) > 0, do: tokens

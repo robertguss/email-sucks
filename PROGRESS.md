@@ -8,11 +8,11 @@ This is the current status and next-action tracker. The [product specification](
 
 **Phase 0 is in progress; its exit gate has not passed.** The authenticated app previews five Inbox messages and now implements one controlled message hold/release with durable recovery. Automatic interception, continuous sync and sending remain disabled. Hosted read-only sign-in and preview have live evidence; the controlled app hold/release now also has live provider evidence, including recovery after a web restart.
 
-**Latest implemented slice:** exact fixture matching, message-level label changes, independently committed pending intent, serialized operations, provider read-back and explicit recovery. The UI exposes saved state and last verification time honestly. See the [controlled app experiment](docs/phase-0-controlled-filter-experiment.md). Automated provider simulations include real-commit killed-request recovery. The deployed app also held, verified after restart, released, and read back the live fixture with unread/unrelated labels preserved. [Evidence](docs/evidence/phase-0/2026-09-05-controlled-app-flow.md).
+**Latest implemented slice:** safe disconnect for the controlled experiment: durable restore-before-revoke ordering, paused mailbox actions, serialized OAuth/refresh/recovery, and explicit retry states. See the [safe disconnect contract](docs/phase-0-safe-disconnect.md). The preceding hold/restart/release flow retains [live provider and authenticated incognito evidence](docs/evidence/phase-0/2026-09-05-controlled-app-flow.md).
 
 ## Next action
 
-The controlled slice is deployed at `3e17d90`, and its live fixture is released back to Inbox. The saved grant already had modification permission; no further consent action is needed. Next assess the remaining Phase 0 proofs, including device notification behavior and independent recovery operations. The manual Gmail filter exercise is superseded and must not be repeated. The owner has authorized implementation, verification, pushing to main and deployment to the existing exe.dev VM. Group any human Google instructions into one manageable batch.
+The controlled slice is deployed at `3e17d90`, and its live fixture is released back to Inbox. The saved grant already had modification permission; no further consent action is needed. Safe disconnect is implemented and ready for deployment verification. The live Google grant stays connected until the owner selects the disconnect action. Next empirical gates include a chosen live disconnect/reconnect rehearsal, device notification behavior, and independent recovery operations. The manual Gmail filter exercise is superseded and must not be repeated. The owner has authorized implementation, verification, pushing to main and deployment to the existing exe.dev VM. Group any human Google instructions into one manageable batch.
 
 The owner waived manual export of disposable test mail. Product-wide recovery requirements remain in force. Native notification proof needs actual owner devices, and full Phase 0 acceptance still needs empirical evidence.
 
@@ -55,13 +55,13 @@ Checked items require their stated evidence; implementation alone does not pass 
 
 - [x] **0.1 — Written state and workflow contract:** [transition table and decisions](docs/phase-0-state-contract.md), with illegal states, calendar semantics and acceptance examples. Runtime implementation and provider experiments are separate gates; the static app page is not the full contract.
 - [ ] **Test environment:** [exe.dev setup](docs/exe-phase-0-setup.md) passed initial synthetic hosted checks; owner browser access is screenshot-confirmed; hosted sign-in/profile/preview and read-only inventory passed. Still document test identities, controlled fixtures, existing Gmail filters, devices and notification settings. Complete hosted checks on the isolated exe.dev environment before test interception.
-- [ ] **Provider error classification:** distinguish a disabled Gmail API from missing OAuth permission; the hosted setup exposed an incorrect blanket HTTP 403 mapping.
+- [x] **Provider error classification:** disabled API, insufficient scope and other permission errors are distinct; covered by automated tests in the controlled-flow slice.
 - [ ] **Authorization lifecycle:** [method/scope inventory](docs/phase-0-experiment-inventory.md) prepared; settle the dogfood authorization strategy; distinguish natural token expiry, revocation and refresh-token rotation. Inventory additional scopes before any mutation work.
 - [ ] **0.2 — Interception matrix:** prove primary address, aliases, forwarding, Bcc, lists, existing threads, unusual mail and filter conflicts; document unsupported cases.
 - [ ] **0.3 — Notification/badge matrix:** observe held arrival, bypass and release on actual devices; choose and prove the app alert behavior.
 - [ ] **Real finite release:** implement per-message progress and prove fixed membership through retries, partial success, lost responses, worker crashes and concurrent arrivals. The [synthetic journal](docs/evidence/phase-0/2026-09-04-release-journal.md) now covers claims, partial outcomes and stale workers; synthetic account recovery races now pass; live Gmail effects and provider recovery races remain unproven.
 - [ ] **0.4 — Panic and direct Gmail recovery:** [offline recovery card](docs/phase-0-offline-recovery-card.md) prepared but not filled/rehearsed; disable interception before restoring held mail, and rehearse with the app unavailable.
-- [ ] **Safe disconnect:** restore and verify held mail before revocation, including interrupted recovery. Current app sign-out only ends the browser session.
+- [ ] **Safe disconnect:** the [controlled flow](docs/phase-0-safe-disconnect.md) implements restore/verify before revoke with durable retries; live revoke/reconnect and future general interception recovery remain unproven. Browser sign-out remains separate.
 - [ ] **Independent monitoring:** configure Sentry and Better Stack with redaction; test meaningful failed-work and missed-heartbeat alerts, including total VM outage.
 - [ ] **Backups and restore:** configure independent encrypted PostgreSQL exports and R2 copies; restore both into isolated environments with Gmail writes/jobs disabled and verify reconciliation and measured losses/recovery time.
 - [ ] **Exit review:** review the recorded evidence and explicitly accept provider/device limitations and state semantics. Only then move to full product implementation.
@@ -96,7 +96,7 @@ The state contract resolves implementation semantics under the autonomous-work i
 2. Read this tracker at the start of a work session and check it against the current code and evidence.
 3. When a slice begins, name it under Current position; distinguish approved work from proposals. Do not mark something blocked merely because it has not started.
 4. At completion, update status, verification results, evidence links, remaining limitations and the next recommended action. Mark user-reported observations separately from independently verified results.
-5. End the user-facing completion message with one concrete next action and any decision the owner needs to make. Walk human setup steps one at a time.
+5. End the user-facing completion message with one concrete next action and any decision the owner needs to make. Group human setup into manageable batches.
 6. Use the mockups and `design` skill for UI work. Verify current compatible versions from official sources whenever adding or upgrading dependencies.
 7. Keep sensitive account information, messages, credentials and tokens out of this tracker. Do not use a percentage complete: implementation and real-world proof have different requirements.
 

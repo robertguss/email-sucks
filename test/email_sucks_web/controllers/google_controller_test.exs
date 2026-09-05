@@ -239,5 +239,47 @@ defmodule EmailSucksWeb.GoogleControllerTest do
     end
   end
 
+  test "disconnect requires CSRF, explicit intent and a current session", %{conn: conn} do
+    assert_raise Plug.CSRFProtection.InvalidCSRFTokenError, fn ->
+      conn
+      |> put_private(:plug_skip_csrf_protection, false)
+      |> post("/gmail/disconnect", %{confirm: "disconnect"})
+    end
+
+    Req.Test.stub(__MODULE__, fn _ -> flunk("unauthorized revoke") end)
+    denied = conn |> bypass_csrf() |> post("/gmail/disconnect", %{confirm: "disconnect"})
+    assert redirected_to(denied) == "/"
+    assert denied.assigns.flash["info"] =~ "Connect Gmail"
+    missing = conn |> bypass_csrf() |> post("/gmail/disconnect")
+    assert redirected_to(missing) == "/"
+    assert missing.assigns.flash["info"] =~ "Review"
+  end
+
+  test "disconnect completes through authenticated form and expires browser session", %{
+    conn: conn
+  } do
+    {:ok, session} =
+      Gmail.connect(%{subject: "subject", email: "owner@gmail.com"}, %{
+        "access_token" => "private-access",
+        "refresh_token" => "private-refresh",
+        "expires_at" => System.system_time(:second) + 3600
+      })
+
+    Req.Test.stub(__MODULE__, fn conn ->
+      assert conn.request_path == "/revoke"
+      Plug.Conn.send_resp(conn, 200, "")
+    end)
+
+    result =
+      conn
+      |> Plug.Test.init_test_session(gmail_session: session)
+      |> bypass_csrf()
+      |> post("/gmail/disconnect", %{confirm: "disconnect"})
+
+    assert result.assigns.flash["info"] =~ "accepted revocation"
+    assert get_session(result, :gmail_session) == nil
+    assert Gmail.account(session) == nil
+  end
+
   defp bypass_csrf(conn), do: Plug.Conn.put_private(conn, :plug_skip_csrf_protection, true)
 end

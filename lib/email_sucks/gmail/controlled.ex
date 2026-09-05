@@ -19,18 +19,40 @@ defmodule EmailSucks.Gmail.Controlled do
   end
 
   def run(config, token, action) when action in ["hold", "release", "recover"] do
-    # A session lock, not an expiring lease: a slow hold must never race a release.
-    # checkout pins the connection while each intent write commits independently.
+    exclusive(fn ->
+      with {:ok, row} <-
+             intent(Repo.get(__MODULE__, "primary", log: false), action, config, token),
+           {:ok, row} <- reconcile(row, config, token) do
+        {:ok, Map.take(row, [:state, :verified_at])}
+      end
+    end)
+  end
+
+  def run(_, _, _), do: {:error, :invalid_transition}
+
+  def restore_for_disconnect(config, token) do
+    case Repo.get(__MODULE__, "primary", log: false) do
+      nil ->
+        :ok
+
+      _ ->
+        case run(config, token, "release") do
+          {:ok, %{state: "released"}} -> :ok
+          error -> error
+        end
+    end
+  end
+
+  @doc false
+  def exclusive(operation) do
+    # One connection-scoped lock covers committed intent, remote calls and token changes.
+    # A crashed checkout disconnects; PostgreSQL releases the lock with the connection.
     Repo.checkout(
       fn ->
         case Repo.query!("SELECT pg_try_advisory_lock(71403)", [], log: false).rows do
           [[true]] ->
             try do
-              with {:ok, row} <-
-                     intent(Repo.get(__MODULE__, "primary", log: false), action, config, token),
-                   {:ok, row} <- reconcile(row, config, token) do
-                {:ok, Map.take(row, [:state, :verified_at])}
-              end
+              operation.()
             after
               Repo.query!("SELECT pg_advisory_unlock(71403)", [], log: false)
             end
@@ -42,8 +64,6 @@ defmodule EmailSucks.Gmail.Controlled do
       timeout: 120_000
     )
   end
-
-  def run(_, _, _), do: {:error, :invalid_transition}
 
   defp intent(nil, "hold", config, token) do
     with {:ok, message} <- Google.controlled_fixture(config, token),

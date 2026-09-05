@@ -7,6 +7,7 @@ defmodule EmailSucks.Gmail.Account do
     field :subject, :string, redact: true
     field :email, :string, redact: true
     field :credentials, :string, redact: true
+    field :disconnect_phase, :string
     field :status, :string, default: "connected"
     field :session_digest, :string, redact: true
     field :session_expires_at, :integer, default: 0

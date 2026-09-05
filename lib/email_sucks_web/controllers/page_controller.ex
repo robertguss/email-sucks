@@ -9,7 +9,9 @@ defmodule EmailSucksWeb.PageController do
     |> put_resp_header("referrer-policy", "no-referrer")
     |> render_inertia("PhaseZero", %{
       gmail_configured: EmailSucks.Gmail.configured?(),
-      gmail_connected: account != nil && account.status == "connected",
+      gmail_connected:
+        account != nil && account.status == "connected" && is_nil(account.disconnect_phase),
+      gmail_disconnect_phase: account && account.disconnect_phase,
       gmail_email: account && account.email,
       gmail_reconnect: account != nil && account.status == "reconnect_required",
       gmail_checked: account != nil && account.checked_at != nil,

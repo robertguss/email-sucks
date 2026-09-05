@@ -90,11 +90,74 @@ defmodule EmailSucks.Gmail.ControlledDurabilityTest do
     assert_receive :provider_applied, 3000
     assert Repo.one!(Controlled).state == "hold_pending"
     assert {:error, :operation_in_progress} = Gmail.controlled(session, "release")
+    assert {:error, :operation_in_progress} = Gmail.disconnect(session)
     Process.exit(pid, :kill)
     assert_receive {:DOWN, ^monitor, :process, ^pid, :killed}
     assert Repo.one!(Controlled).state == "hold_pending"
     assert {:ok, %{state: "held"}} = recover(session, 100)
     assert Agent.get(provider, & &1.writes) == 1
+  end
+
+  test "killed disconnect retains committed revocation intent across connections" do
+    {:ok, session} =
+      Gmail.connect(%{subject: "subject", email: "owner@gmail.com"}, %{
+        "access_token" => "test",
+        "refresh_token" => "test",
+        "expires_at" => System.system_time(:second) + 3600
+      })
+
+    parent = self()
+
+    Req.Test.stub(__MODULE__, fn conn ->
+      assert conn.request_path == "/revoke"
+      send(parent, :revoking)
+
+      receive do
+        :never_sent -> Plug.Conn.send_resp(conn, 200, "")
+      end
+    end)
+
+    {pid, monitor} =
+      spawn_monitor(fn ->
+        :ok = Sandbox.checkout(Repo, sandbox: false)
+
+        receive do
+          :start -> Gmail.disconnect(session)
+        end
+      end)
+
+    Req.Test.allow(__MODULE__, self(), pid)
+    send(pid, :start)
+    assert_receive :revoking, 3000
+    assert Repo.one!(Account).disconnect_phase == "revoking"
+
+    assert {:error, :operation_in_progress} =
+             Gmail.connect(%{subject: "subject", email: "owner@gmail.com"}, %{})
+
+    Process.exit(pid, :kill)
+    assert_receive {:DOWN, ^monitor, :process, ^pid, :killed}
+    assert Repo.one!(Account).credentials != ""
+
+    Req.Test.stub(__MODULE__, fn conn ->
+      assert conn.request_path == "/revoke"
+      conn |> Plug.Conn.put_status(400) |> Req.Test.json(%{"error" => "invalid_token"})
+    end)
+
+    assert {:ok, :already_invalid} = retry_disconnect(session, 100)
+    assert Repo.one!(Account).credentials == ""
+  end
+
+  defp retry_disconnect(session, retries) do
+    case Gmail.disconnect(session) do
+      {:error, :operation_in_progress} when retries > 0 ->
+        receive do
+        after
+          10 -> retry_disconnect(session, retries - 1)
+        end
+
+      result ->
+        result
+    end
   end
 
   defp recover(session, retries) do

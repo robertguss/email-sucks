@@ -71,6 +71,33 @@ defmodule EmailSucksWeb.GoogleController do
     end
   end
 
+  def disconnect(conn, %{"confirm" => "disconnect"}) do
+    case Gmail.disconnect(get_session(conn, :gmail_session)) do
+      {:ok, outcome} ->
+        message =
+          if outcome == :revoked,
+            do:
+              "Controlled mail recovery checked. Google accepted revocation; saved credentials and browser access were removed. Google may take time to apply revocation.",
+            else:
+              "Controlled mail recovery checked. Google reported the saved token was already invalid. Saved credentials were removed; review Google Account permissions for any remaining project access."
+
+        conn
+        |> clear_session()
+        |> configure_session(renew: true)
+        |> put_flash(:info, message)
+        |> redirect(to: ~p"/")
+
+      {:error, reason} ->
+        failure(conn, reason)
+    end
+  end
+
+  def disconnect(conn, _params) do
+    conn
+    |> put_flash(:info, "Review the safe disconnect panel before confirming.")
+    |> redirect(to: ~p"/")
+  end
+
   def logout(conn, _params) do
     Gmail.logout(get_session(conn, :gmail_session))
     conn |> clear_session() |> configure_session(drop: true) |> redirect(to: ~p"/")
@@ -79,6 +106,15 @@ defmodule EmailSucksWeb.GoogleController do
   defp failure(conn, reason) do
     message =
       case reason do
+        :disconnect_pending ->
+          "Disconnect is pending. Resume safe disconnect to complete recovery and remove access."
+
+        :revocation_unconfirmed ->
+          "Mail recovery was verified, but Google has not confirmed revocation. Resume disconnect; saved credentials remain until the outcome is known."
+
+        :disconnect_completed ->
+          "The earlier disconnect is complete. Connect Gmail again if you want to resume using this app."
+
         :api_disabled ->
           "The Gmail API is disabled in the Google project. Enable it before retrying."
 
