@@ -8,17 +8,17 @@ This is the current status and next-action tracker. The [product specification](
 
 **Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. Nothing is deployed to Render yet.
 
-**Active implementation:** local groundwork is verified through durable scheduling, release/notification probes, encrypted restore rehearsal and read-only identity/filter discovery. The next critical-path proof needs owner participation in a controlled live Gmail experiment. Render deployment remains deferred by the owner.
+**Active implementation:** local groundwork is verified through durable scheduling, release/notification probes, encrypted restore rehearsal and read-only identity/filter discovery. The next critical-path proof needs owner participation in a controlled live Gmail experiment. The owner has resumed Render setup and will deploy the prepared Blueprint through the dashboard.
 
 **Latest completed slice:** read-only Gmail inventory boundary. All 98 backend and seven browser tests pass; current production build and encrypted local restore rehearsal pass. [Evidence](docs/evidence/phase-0/2026-09-04-read-only-inventory.md).
 
 ## Next action
 
-**Reconcile the Render deployment deferral with the hosted prerequisites before the controlled interception experiment.** The owner supplied a controlled sender, sent `phase0-primary-001`, and confirmed ordinary Inbox arrival directly in Gmail. This is an [owner-reported baseline](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md), not interception or recovery proof.
+**Owner deploys the prepared Blueprint from `codex/phase-0-continuation`; then verify hosted smoke checks before the controlled interception experiment.** The owner supplied a controlled sender, sent `phase0-primary-001`, and confirmed ordinary Inbox arrival directly in Gmail. This is an [owner-reported baseline](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md), not interception or recovery proof.
 
 The current grant remains read-only. The live experiment needs additional Google consent, an agreed controlled sender/message, and a verified offline recovery path. Native notification proof needs actual owner devices. These are empirical gates; more synthetic tests cannot pass them. Work through human setup one step at a time.
 
-Render deployment stays deferred. Hosted alert receipt and R2/Render recovery cannot be verified locally. Full Room, production mail mutations and personal dogfood remain gated on Phase 0 results.
+The owner will perform Render deployment through the dashboard, one setup step at a time. Hosted alert receipt and R2/Render recovery cannot be verified locally. Full Room, production mail mutations and personal dogfood remain gated on Phase 0 results.
 
 Autonomous work, verified commits and regular pushes remain authorized. Resume independent work when new information or the live results establish the next supported implementation step; no routine reapproval is needed.
 

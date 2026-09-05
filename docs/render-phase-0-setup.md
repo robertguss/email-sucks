@@ -1,6 +1,6 @@
 # Render Phase 0 setup
 
-Date: 2026-09-04. Status: configuration and local release checks prepared; no hosted resources created. CLI account access currently returns unauthorized.
+Date: 2026-09-04. Status: configuration and local release checks prepared; no hosted resources created. The owner will deploy through the Render dashboard; CLI login is not required for this path.
 
 ## Prepared deployment
 
@@ -16,9 +16,9 @@ The Blueprint pins the existing verified Elixir 1.20.4, OTP 29.0.6 and Node 26.8
 
 Work through these one at a time with the owner; do not paste secrets into chat or git.
 
-1. Authenticate the installed CLI using `render login`. Check `render whoami` and identify the intended workspace; do not repurpose unrelated services.
-2. Run `render blueprints validate render.yaml --output json`. Local validation against Render's published JSON Schema has passed; this authenticated check also tests workspace conflicts. Resolve failures before provisioning.
-3. In Render, create a Blueprint from `robertguss/email-sucks`, branch `codex/phase-0-foundation`, using `render.yaml`. Review the concrete resource list and recurring price before creation. Supply a fresh private `SECRET_KEY_BASE` of at least 64 bytes (for example, `mix phx.gen.secret` generated locally). Keep a private copy. Do not use Render's 44-character generated value for this Phoenix secret.
+1. In the Render dashboard, choose New → Blueprint, connect `robertguss/email-sucks`, and select branch `codex/phase-0-continuation` with Blueprint path `render.yaml`.
+2. Review the dashboard validation and resource preview in the intended workspace. Local validation against Render's published JSON Schema has passed; dashboard validation and workspace conflicts must still be checked before provisioning.
+3. Deploy the reviewed Blueprint. Review the concrete resource list and recurring price before creation. Supply a fresh private `SECRET_KEY_BASE` of at least 64 bytes (for example, `mix phx.gen.secret` generated locally). Keep a private copy. Do not use Render's 44-character generated value for this Phoenix secret.
 4. Wait for the web migration/build and both startups. Check `/health/ready`, the anonymous homepage, HTTPS, secure cookies after later sign-in, and runtime versions. Check the worker has no Oban process while restore mode is enabled. Record service IDs and sanitized revision evidence, never connection strings.
 5. After migrations succeed, change the Blueprint's `RESTORE_MODE` to `"false"`, commit/push, sync, and deploy both services. Execute one synthetic snapshot on the dedicated database and verify the separate worker processes it. This enables only the synthetic queue, not Gmail interception.
 6. Prepare a separate hosted OAuth client with the actual HTTPS callback and separate hosted vault/session keys. Mount the private JSON files as Render secret files. Set `GMAIL_OAUTH_FILE`, `GMAIL_KEYS_FILE`, and `GMAIL_REDIRECT_URI` only after those files and the allowed test identity are ready. The keys JSON format is documented in [local setup](phase-0-test-account-setup.md); use new hosted values, never upload the local database or local keys. The Google session secret must remain stable across web deployments; the separate vault key must remain recoverable outside Render.
@@ -34,7 +34,7 @@ Do not attach a restored environment to the normal runtime environment group: th
 
 ## Outstanding hosted evidence
 
-- Authenticated Blueprint validation and actual Linux runtime availability/build.
+- Dashboard Blueprint validation and actual Linux runtime availability/build.
 - Managed Postgres patch, migration result, HTTPS/readiness and independent worker execution.
 - Private hosted OAuth files, owner consent, real token refresh and recovery behavior.
 - Sentry/Better Stack configuration and received external alerts.
