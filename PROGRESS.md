@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (filter inventory and natural access-token refresh verified at 12:52 UTC)
+Last updated: 2026-09-05 UTC (bounded filter lifecycle deployed; monitoring implementation under review)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -22,14 +22,18 @@ interception, continuous sync and sending remain disabled. Hosted read-only
 sign-in and preview have live evidence; the controlled app hold/release now also
 has live provider evidence, including recovery after a web restart.
 
-**Current status:** the opt-in filter lifecycle and settings consent are implemented
-and verified locally: 175 backend and 33 browser tests pass. Independent review
-found and prompted fixes for unrelated-filter cleanup blocking and false drift
-reports during unfinished work; independent revalidation is complete with no open
-actionable findings. This slice
-is not yet deployed or activated. The live app remains `ed8756f`, with the
-three-message batch released at revision three and no pending errors.
-[Implementation evidence](docs/evidence/phase-0/2026-09-05-filter-lifecycle.md).
+**Current status:** the reviewed opt-in filter lifecycle and settings consent are
+live at `9e39454`. All 175 backend and 33 browser tests passed before deployment;
+backup authentication, additive migrations, readiness and saved-state checks
+passed. No filter experiment is active. The batch remains released at revision
+three with no pending errors. Owner settings consent has been requested through
+the deployed form; no message send is authorized.
+[Implementation/deployment evidence](docs/evidence/phase-0/2026-09-05-filter-lifecycle.md).
+
+Independent work continues: the local operational monitor implementation is under
+review. It withholds an external heartbeat for unavailable web/worker, saved failed
+recovery or stale backup; external workspace/destination and actual alert receipt
+remain unconfigured and unproven.
 
 **Latest verified result:** the three existing sender filters are configured to route matches
 to Trash and do not overlap the five controlled fixtures. A private full snapshot
@@ -40,8 +44,8 @@ Earlier [hold recovery](docs/evidence/phase-0/2026-09-05-live-hold-recovery.md)
 and [arrival recovery](docs/evidence/phase-0/2026-09-05-live-arrival-recovery.md)
 proved restart recovery without duplicate writes or expanded membership.
 
-**Latest implemented slice:** revision-guarded repeat of the same frozen batch,
-deployed at `ed8756f`. Every member is verified released before new hold intent;
+**Previous implemented slice:** revision-guarded repeat of the same frozen batch,
+first deployed at `ed8756f`. Every member is verified released before new hold intent;
 stale forms cannot re-hold mail after a subsequent release. No recovery record
 is reset. All 138 backend and 23 browser tests passed, plus TypeScript,
 compilation and formatting checks. Earlier
@@ -51,13 +55,13 @@ proof remains valid.
 
 ## Next action
 
-Push and deploy the reviewed bounded filter lifecycle.
-Then group owner settings consent and the synthetic arrival instructions around
-the [bounded filter-overlap experiment](docs/phase-0-filter-compatibility.md).
-No filters are active and no message send is authorized. Broader arrival cases,
-independently executing worker races, independent alerts and actual-device
-notification proof remain open. Monitoring workspace/destination details have been
-requested; external storage remains deferred unless the owner changes that choice.
+Complete monitoring review and local/live dry-run verification while owner settings
+consent is pending. After consent, activate and verify the tracked filters before
+requesting the synthetic arrival for the
+[bounded filter-overlap experiment](docs/phase-0-filter-compatibility.md).
+Broader arrival cases, independently executing worker races, independent alerts
+and actual-device notification proof remain open. External storage remains
+deferred unless the owner changes that choice.
 
 The owner uses the Gmail app on iPhone and reports all Gmail notifications,
 sounds and badges disabled. Batch notifications are optional and off by default

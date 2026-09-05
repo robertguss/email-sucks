@@ -51,3 +51,19 @@ Review receipt: `20260905-091853-29134d0a`, eight local lenses and independent
 Claude Opus 5 review; both confirmed findings independently revalidated as fixed,
 with no remaining actionable findings. Optional deeper Spam/Draft parameterization
 and killed-delete/restore coverage remain follow-up coverage, not live proof.
+
+## Hosted deployment
+
+Reviewed source `9e39454` was pushed to main and deployed to the existing exe.dev
+VM at approximately 13:37 UTC. The pre-migration encrypted backup completed at
+13:33:36 UTC; its owner-Mac copy matched SHA-256
+`11436cf8a9e90bd24f71e9b5ca02e909ef08fde2e5d7f5961d32efef10909202`
+and passed full age authentication plus PostgreSQL archive listing. This check
+was not a new full restore drill.
+
+Both additive migrations succeeded. Web and worker run `email-sucks:9e39454`;
+readiness returns status ok. Sanitized read-back confirmed connected account,
+no disconnect, filter state not_started, single fixture released and batch
+released at revision three, three released members and zero pending/errors.
+The current grant lacks filter settings permission; owner consent was requested
+through the deployed form. No filter activation or arrival test has occurred.
