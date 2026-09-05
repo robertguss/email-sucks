@@ -6,15 +6,15 @@ This is the current status and next-action tracker. The [product specification](
 
 ## Current position
 
-**Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. The synthetic prototype is now deployed privately to exe.dev; hosted Gmail is not configured.
+**Phase 0 is in progress; its exit gate has not passed.** A local, authenticated, read-only Gmail prototype works. It can connect the approved account, refresh access, detect revoked access, reconnect, and display metadata for five Inbox messages. It cannot intercept, release, synchronize continuously, or send mail. The synthetic prototype is now deployed privately to exe.dev; hosted read-only OAuth is configured and awaiting owner consent.
 
 **Active implementation:** local groundwork is verified through durable scheduling, release/notification probes, encrypted restore rehearsal and read-only identity/filter discovery. The next critical-path proof needs owner participation in a controlled live Gmail experiment. The owner selected a dedicated exe.dev VM; initial deployment passed the checks recorded under [ADR-0002](docs/decisions/0002-exe-vm-hosting.md).
 
-**Latest completed slice:** dedicated exe.dev deployment: Linux release, migrations, readiness/assets, separate synthetic worker, container restart and encrypted off-VM export/isolated restore passed. [Evidence](docs/evidence/phase-0/2026-09-04-exe-deployment.md). Application code is unchanged from the previous 98 backend/seven browser checks.
+**Latest completed slice:** hosted read-only OAuth configuration and production startup fix. Linux release build, runtime identity/callback checks, read-only mounts and HTTP readiness passed. [Evidence](docs/evidence/phase-0/2026-09-04-hosted-oauth-setup.md). Owner consent remains pending.
 
 ## Next action
 
-**Create a separate hosted read-only OAuth client in the existing Google project, one human setup step at a time.** The owner supplied a screenshot confirming the private exe.dev app loads and correctly reports Google setup is not configured. The owner supplied a controlled sender, sent `phase0-primary-001`, and confirmed ordinary Inbox arrival directly in Gmail. This is an [owner-reported baseline](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md), not interception or recovery proof.
+**Owner refreshes the private app, connects the approved Gmail account, and uses Check connection.** A separate hosted client and fresh keys are configured; [configuration evidence](docs/evidence/phase-0/2026-09-04-hosted-oauth-setup.md). Hosted consent and live connection checks remain pending. The owner supplied a controlled sender, sent `phase0-primary-001`, and confirmed ordinary Inbox arrival directly in Gmail. This is an [owner-reported baseline](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md), not interception or recovery proof.
 
 The current grant remains read-only. The live experiment needs additional Google consent, an agreed controlled sender/message, and a verified offline recovery path. Native notification proof needs actual owner devices. These are empirical gates; more synthetic tests cannot pass them. Work through human setup one step at a time.
 
@@ -48,6 +48,7 @@ Autonomous work, verified commits and regular pushes remain authorized. Resume i
 | Read-only identity/filter inventory | Implemented and tested with fixtures | [Evidence](docs/evidence/phase-0/2026-09-04-read-only-inventory.md); authenticated internal API, no new scopes/UI or live inventory proof. |
 | Primary-address ordinary arrival | Owner-reported live baseline | [Evidence](docs/evidence/phase-0/2026-09-04-primary-arrival-baseline.md); synthetic message visible in Inbox through direct Gmail access. Interception and recovery remain untested. |
 | Dedicated exe.dev deployment | Verified with synthetic data | [Evidence](docs/evidence/phase-0/2026-09-04-exe-deployment.md): Linux build, migrations, web readiness, separate worker, restart and one-off encrypted restore. Hosted OAuth, R2 scheduling and outage alerts pending. |
+| Hosted read-only OAuth configuration | Startup verified; consent pending | [Evidence](docs/evidence/phase-0/2026-09-04-hosted-oauth-setup.md): separate client/keys, web-only read-only mounts and corrected production compile setting. |
 | Shared progress tracking | Complete | This document is linked from README and the Phase 0 plan. |
 
 ## Phase 0 work remaining
@@ -55,7 +56,7 @@ Autonomous work, verified commits and regular pushes remain authorized. Resume i
 Checked items require their stated evidence; implementation alone does not pass a proof gate.
 
 - [x] **0.1 — Written state and workflow contract:** [transition table and decisions](docs/phase-0-state-contract.md), with illegal states, calendar semantics and acceptance examples. Runtime implementation and provider experiments are separate gates; the static app page is not the full contract.
-- [ ] **Test environment:** [exe.dev setup](docs/exe-phase-0-setup.md) passed initial synthetic hosted checks; owner browser access is screenshot-confirmed; hosted OAuth remains pending. Still document test identities, controlled fixtures, existing Gmail filters, devices and notification settings. Complete hosted checks on the isolated exe.dev environment before test interception.
+- [ ] **Test environment:** [exe.dev setup](docs/exe-phase-0-setup.md) passed initial synthetic hosted checks; owner browser access is screenshot-confirmed; hosted OAuth is configured; owner consent remains pending. Still document test identities, controlled fixtures, existing Gmail filters, devices and notification settings. Complete hosted checks on the isolated exe.dev environment before test interception.
 - [ ] **Authorization lifecycle:** [method/scope inventory](docs/phase-0-experiment-inventory.md) prepared; settle the dogfood authorization strategy; distinguish natural token expiry, revocation and refresh-token rotation. Inventory additional scopes before any mutation work.
 - [ ] **0.2 — Interception matrix:** prove primary address, aliases, forwarding, Bcc, lists, existing threads, unusual mail and filter conflicts; document unsupported cases.
 - [ ] **0.3 — Notification/badge matrix:** observe held arrival, bypass and release on actual devices; choose and prove the app alert behavior.

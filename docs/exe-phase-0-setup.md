@@ -32,6 +32,22 @@ After inert checks, explicitly set `RESTORE_MODE=false` in the private app envir
 
 ## Updates, rollback and recovery
 
+### Hosted read-only OAuth overlay
+
+After the initial smoke checks, use `deploy/exe.gmail.compose.yaml` in addition to the base Compose file. Only the web container mounts the hosted OAuth client and key files; the synthetic worker remains without Gmail configuration. Set `GMAIL_SECRET_DIR` in the private Compose environment to the absolute directory containing `google-oauth.json` and `keys.json`. Both files must be owned by UID 65534 (the image's `nobody` user), mode `0400`, in a private host directory. The bind mounts are read-only and refuse missing source files.
+
+Generate fresh hosted vault and session keys; retain private recovery copies outside the VM. Never reuse local development keys. Register the exact callback `https://cougar-cedar.exe.xyz/auth/google/callback` in a separate web OAuth client within the existing Google project. The app still requests only identity/email and Gmail read-only access.
+
+Use both Compose files for subsequent updates so the mounts remain present:
+
+```bash
+docker compose --env-file /home/exedev/.config/email-sucks/compose.env -f deploy/exe.compose.yaml -f deploy/exe.gmail.compose.yaml up -d --no-build --wait web worker
+```
+
+Using the base file alone recreates the web container without Google configuration. Keep restore rehearsals on the base configuration with `RESTORE_MODE=true`. Production `debug_errors=false` must be present at compile time as well as in runtime OAuth configuration; Phoenix release validation rejects a mismatch.
+
+### Application and database updates
+
 Deploy reviewed source and tag the image with its commit. Build before stopping a running service. Before a database-changing update, take and verify an encrypted backup. Stop the worker before migrations; keep the web stopped too if the migration is incompatible with its running version. Run migrations once, then recreate web/worker. Retain the previous image for rollback. An image rollback does not undo migrations: confirm schema compatibility or perform an isolated restore with jobs and Gmail disabled.
 
 Maintain encrypted exports outside this VM and separately held decryption keys. The existing `bin/backup-export` and `bin/backup-restore` document the logical backup boundary. Scheduled R2 upload, missed-backup alerts, retention and total-VM-loss restoration still need implementation and evidence. Do not enable interception merely because web readiness passes.

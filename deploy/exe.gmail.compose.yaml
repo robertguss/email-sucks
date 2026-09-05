@@ -1,0 +1,20 @@
+# Optional hosted read-only OAuth configuration. Apply after the initial smoke checks.
+services:
+  web:
+    environment:
+      GMAIL_OAUTH_FILE: /run/secrets/google-oauth.json
+      GMAIL_KEYS_FILE: /run/secrets/gmail-keys.json
+      GMAIL_REDIRECT_URI: https://cougar-cedar.exe.xyz/auth/google/callback
+    volumes:
+      - type: bind
+        source: ${GMAIL_SECRET_DIR:?Set the absolute private Gmail directory}/google-oauth.json
+        target: /run/secrets/google-oauth.json
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${GMAIL_SECRET_DIR:?Set the absolute private Gmail directory}/keys.json
+        target: /run/secrets/gmail-keys.json
+        read_only: true
+        bind:
+          create_host_path: false
