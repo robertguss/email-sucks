@@ -1,6 +1,6 @@
 # Phase 0 experiment inventory
 
-Date: 2026-09-04. Status: prepared; live interception/device experiments not run. This is an execution checklist, not evidence of passes. Follow the [proof plan](phase-0-gmail-reliability-proof.md) and use the [offline recovery card](phase-0-offline-recovery-card.md) before activation.
+Updated: 2026-09-05. Status: live controlled recovery and read-only filter inventory have evidence; overlapping interception/device experiments not run. This is an execution checklist, not evidence of passes. Follow the [proof plan](phase-0-gmail-reliability-proof.md) and use the [offline recovery card](phase-0-offline-recovery-card.md) before activation.
 
 ## Environment record
 
@@ -21,16 +21,16 @@ Verified against Google's current [Gmail scope reference](https://developers.goo
 |---|---|---|
 | OIDC identity + verified email | `openid`, `email` | Implemented |
 | Profile, messages list/get | `gmail.readonly` | Implemented; live proof exists |
-| Filters list, send-as list, labels list | `gmail.readonly` | Internal read-only inventory implemented and fixture-tested; live discovery pending |
+| Filters list, send-as list, labels list | `gmail.readonly` | Implemented and verified live; [full private filter inspection](evidence/phase-0/2026-09-05-filter-compatibility-inventory.md) completed |
 | History list | `gmail.readonly` | Sync implementation pending |
-| Labels create | `gmail.modify` (also supports narrower `gmail.labels`) | Planned alongside message release |
-| Exact message label modification / restore | `gmail.modify` | Not requested or implemented |
+| Labels create | `gmail.modify` (also supports narrower `gmail.labels`) | Implemented for controlled fixtures |
+| Exact message label modification / restore | `gmail.modify` | Implemented and live-verified for single/fixed-batch fixtures |
 | Filters create/delete | `gmail.settings.basic` | Not requested or implemented; `gmail.modify` alone cannot disable interception filters |
 | Message send | Later compose phase | Not implemented; no test sends authorized by this checklist |
 
-The mutation experiment would require `gmail.modify` plus `gmail.settings.basic` in addition to identity scopes. `gmail.modify` includes sending capabilities even when the app exposes only label changes; it is not a label-only grant. Do not request `mail.google.com` or administrative `gmail.settings.sharing`. Maintain separate application capability/activation guards when adding broad provider scopes. [Message modification](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/modify), [filter creation](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/create), [filter deletion](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/delete)
+The proposed filter-overlap experiment requires `gmail.modify` plus `gmail.settings.basic` in addition to identity scopes. `gmail.modify` includes sending capabilities even when the app exposes only label changes; it is not a label-only grant. Do not request `mail.google.com` or administrative `gmail.settings.sharing`. Maintain separate application capability/activation guards when adding broad provider scopes. [Message modification](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/modify), [filter creation](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/create), [filter deletion](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/delete)
 
-External Testing authorization remains suitable for short read-only experiments. Before the two-week dogfood, choose a publishing/reauthorization strategy and rehearse expiry while interception exists; do not assume refresh tokens remain valid for the whole trial. Natural expiry and refresh-token rotation remain separate from the simulated local-expiry proof. [Google token expiration](https://developers.google.com/identity/protocols/oauth2#expiration)
+External Testing authorization remains suitable for short read-only experiments. Before the two-week dogfood, choose a publishing/reauthorization strategy and rehearse expiry while interception exists; do not assume refresh tokens remain valid for the whole trial. Natural access-token expiry now has [live refresh evidence](evidence/phase-0/2026-09-05-filter-compatibility-inventory.md); refresh-token rotation and long-lived authorization remain separate. [Google token expiration](https://developers.google.com/identity/protocols/oauth2#expiration)
 
 ## Controlled fixtures
 
@@ -49,8 +49,8 @@ Use unique synthetic tokens such as `phase0-primary-001`, never actual bank code
 | Authentication-code-like | Synthetic code text only; emergency peek must not release | Not run |
 | Attachment | Harmless text file; metadata/body boundaries observed | Not run |
 | Existing thread | Older released message plus new held reply; inspect exact message labels | Not run |
-| Filter conflict | Known user filter overlap, then documented supported configuration | Not run |
-| Concurrent arrival | Freeze A/B, then receive C during retry; C remains outside batch | Not run |
+| Filter conflict | Known user filter overlap, then documented supported configuration | [Inspection passed for current fixtures](evidence/phase-0/2026-09-05-filter-compatibility-inventory.md); [overlap experiment prepared](phase-0-filter-compatibility.md), not run |
+| Concurrent arrival | Freeze A/B, then receive C during retry; C remains outside batch | [Arrival between interrupted release and recovery passed](evidence/phase-0/2026-09-05-live-arrival-recovery.md); continuous-worker race not run |
 | Spam/Trash exclusion | Controlled existing fixture moved by owner; no automatic resurrection | Not run |
 | Explicit bypass | Each claimed rule tested at arrival, including conversation mechanism | Not run |
 

@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (live interrupted hold recovery completed at 12:42 UTC)
+Last updated: 2026-09-05 UTC (filter inventory and natural access-token refresh verified at 12:52 UTC)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -28,12 +28,14 @@ three, all unread in Inbox, with zero pending/errors and no pending disconnect.
 The newcomer remains outside membership with unchanged labels. Temporary
 diagnostics were removed and web restarted; readiness and cleanup passed.
 
-**Latest verified result:** after Google accepted the second hold and the request
-was killed, durable pending intent survived a web restart. Guarded recovery
-modified only the third member, verified all three held/unread, then ordinary
-release returned all three to Inbox. [Hold recovery evidence](docs/evidence/phase-0/2026-09-05-live-hold-recovery.md).
-The earlier [arrival evidence](docs/evidence/phase-0/2026-09-05-live-arrival-recovery.md)
-proved that a new arrival during interrupted release stays outside membership.
+**Latest verified result:** the three existing sender filters are configured to route matches
+to Trash and do not overlap the five controlled fixtures. A private full snapshot
+was preserved and a final read confirmed the filters unchanged. The app also
+successfully refreshed after observed natural access-token expiry without another
+sign-in. [Inventory and refresh evidence](docs/evidence/phase-0/2026-09-05-filter-compatibility-inventory.md).
+Earlier [hold recovery](docs/evidence/phase-0/2026-09-05-live-hold-recovery.md)
+and [arrival recovery](docs/evidence/phase-0/2026-09-05-live-arrival-recovery.md)
+proved restart recovery without duplicate writes or expanded membership.
 
 **Latest implemented slice:** revision-guarded repeat of the same frozen batch,
 deployed at `ed8756f`. Every member is verified released before new hold intent;
@@ -46,13 +48,15 @@ proof remains valid.
 
 ## Next action
 
-Continue the broader Phase 0 arrival/interception and existing-filter cases,
-with explicit bounded fixtures and evidence before enabling automatic behavior.
-Interrupted fixed-batch hold and release now have live restart/recovery proof;
-continuously executing worker races remain unproven. Independent alerts and
-actual-device notification proof remain open. Use explicit revision-guarded
-repeat controls; do not reset durable records or repeat the superseded manual
-Gmail filter exercise. No owner authentication or send action is pending.
+Implement the durable, opt-in filter lifecycle required by the prepared
+[bounded filter-overlap experiment](docs/phase-0-filter-compatibility.md), including
+ownership, ambiguous-create reconciliation and disable-before-restore recovery.
+The existing prototype has no filter lifecycle; do not activate temporary filters
+through an untracked workaround. Request settings consent and the new synthetic
+arrival only after the implementation and exact activation are reviewable.
+Current filters are unchanged and no owner authentication or send is pending.
+Broader arrival cases, independently executing worker races, independent alerts
+and actual-device notification proof remain open.
 
 The owner uses the Gmail app on iPhone and reports all Gmail notifications,
 sounds and badges disabled. Batch notifications are optional and off by default
@@ -89,7 +93,7 @@ supported implementation step; no routine reapproval is needed.
 | Immutable snapshots and atomic job enqueue         | Verified with synthetic data              | Foundation evidence: concurrency, rollback, membership invariants, duplicate execution and separate worker. This synthetic scheduler is not wired to Gmail; separate controlled Gmail release now has live proof below.                                                                                                                        |
 | Restricted Google OAuth and encrypted credentials  | Implemented; live sign-in verified        | [Connection evidence](docs/evidence/phase-0/2026-09-04-google-connection.md). Tests cover state/nonce/PKCE, signed identity, allowed account, replay and session controls.                                                                                                                                                                     |
 | Gmail profile check                                | Verified live                             | Owner completed sign-in; browser and database showed successful verification.                                                                                                                                                                                                                                                                  |
-| Automatic token refresh                            | Verified live with simulated local expiry | Connection evidence: real Google refresh and profile check, same browser session, valid future expiry, released lease. Natural expiry and provider refresh-token rotation remain unproven.                                                                                                                                                     |
+| Automatic token refresh                            | Verified live after simulated and natural access-token expiry | Connection evidence: real Google refresh and profile check, same browser session, valid future expiry, released lease. [Natural access-token expiry now passed](docs/evidence/phase-0/2026-09-05-filter-compatibility-inventory.md); provider refresh-token rotation remains unproven.                                                                                                                                                     |
 | Revocation detection and reconnection              | Owner-reported live pass                  | Owner removed the Google grant, observed the reconnect message, reauthorized, and reported “connection verified.” This did not exercise held-mail recovery.                                                                                                                                                                                    |
 | Five-message Inbox metadata preview                | Implemented and verified live             | [Listing evidence](docs/evidence/phase-0/2026-09-04-read-only-message-list.md). No bodies/attachments, database persistence of email metadata, or Gmail mutations.                                                                                                                                                                             |
 | Desk-inspired preview design                       | Implemented and visually verified         | [Design evidence](docs/evidence/phase-0/2026-09-04-desk-preview-design.md): local Newsreader, responsive whitespace-led layout, light/dark themes, connection disclosure and interaction states. Full Room design implementation remains later work.                                                                                           |
@@ -127,8 +131,9 @@ a proof gate.
       screenshot-confirmed; hosted sign-in/profile/preview and read-only
       inventory passed. Configured identities and single/three-message fixtures
       were validated in live rehearsals; the existing-filter inventory and
-      owner-reported iPhone settings are recorded. Remaining work: filter
-      compatibility, broader fixture coverage and measured device behavior
+      owner-reported iPhone settings are recorded. Read-only existing-filter
+      overlap inspection now passed for current fixtures. Remaining work: live
+      filter-conflict behavior, broader fixture coverage and measured device behavior
       before automatic interception.
 - [x] **Provider error classification:** disabled API, insufficient scope and
       other permission errors are distinct; covered by automated tests in the
@@ -137,9 +142,9 @@ a proof gate.
       [method/scope inventory](docs/phase-0-experiment-inventory.md) prepared;
       controlled Gmail modification consent, revoke/reconnect and
       accepted-revocation crash recovery have live proof. Settle the dogfood
-      authorization strategy and verify natural token expiry and refresh-token
-      rotation. Inventory any further scopes before expanding the controlled
-      boundary.
+      authorization strategy and verify refresh-token rotation and authorization
+      lifetime; natural access-token expiry now has live refresh evidence. Inventory
+      any further scopes before expanding the controlled boundary.
 - [ ] **0.2 — Interception matrix:** prove primary address, aliases, forwarding,
       Bcc, lists, existing threads, unusual mail and filter conflicts; document
       unsupported cases.
@@ -239,6 +244,7 @@ explicitly recorded contract defaults.
 
 | Date       | Result                                                                                           | Reference                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-05 | Existing filters inspected; natural access-token expiry refreshed successfully | [Evidence](docs/evidence/phase-0/2026-09-05-filter-compatibility-inventory.md); three Trash filters, zero current-fixture overlap, unchanged filters |
 | 2026-09-05 | Interrupted three-message hold survived restart and recovered without duplicate writes | [Evidence](docs/evidence/phase-0/2026-09-05-live-hold-recovery.md); all three restored unread to Inbox at repeat revision three |
 | 2026-09-05 | New arrival stayed outside interrupted batch; recovery left its labels unchanged | [Evidence](docs/evidence/phase-0/2026-09-05-live-arrival-recovery.md); one remaining write, originals and newcomer unread in Inbox |
 | 2026-09-05 | Safe disconnect restored all three held messages before revocation; reconnect passed             | [Evidence](docs/evidence/phase-0/2026-09-05-held-batch-disconnect.md); guarded repeat deployed, 138 backend / 23 browser tests                     |

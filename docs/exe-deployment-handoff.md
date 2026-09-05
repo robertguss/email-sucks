@@ -4,7 +4,7 @@ Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide
 describes the existing deployment, not instructions to provision a replacement
 VM. No secrets are stored here.
 
-## Current session update — 12:42 UTC
+## Current session update — 12:52 UTC
 
 The interrupted three-message hold rehearsal passed on the configured Mac. SSH
 works again and the authenticated incognito app remains connected. The batch is
@@ -16,6 +16,14 @@ diagnostics were removed and web restarted; readiness and cleanup passed.
 No owner send or authentication action is pending. See the
 [live hold evidence](evidence/phase-0/2026-09-05-live-hold-recovery.md) and
 [earlier arrival evidence](evidence/phase-0/2026-09-05-live-arrival-recovery.md).
+
+Read-only filter inspection subsequently found three sender-specific Trash
+filters with no overlap against the five current fixtures. Full JSON is private
+on the owner Mac at `~/.config/email-sucks/hosted-cougar-cedar/filter-inventory/2026-09-05-124751.json`;
+mode 0600, directory mode 0700. Final provider comparison found filters unchanged.
+The access token naturally expired during inspection; ordinary Check connection
+refreshed it successfully without sign-in. No message/filter mutations occurred.
+[Evidence](evidence/phase-0/2026-09-05-filter-compatibility-inventory.md).
 
 ## Where the app runs
 
@@ -244,13 +252,18 @@ adapter is installed and no mailbox operation is pending. The final verified
 state is the released revision-three batch described above. The app image is
 still `ed8756f`; these evidence-only changes require no deployment.
 
-Next work is broader Phase 0 arrival/interception and existing-filter coverage,
-plus independent alerts and actual-device notification evidence. Automatic
+Next implement the bounded durable filter lifecycle described in the
+[prepared overlap experiment](phase-0-filter-compatibility.md), before any
+settings consent or filter activation. Independent alerts and actual-device
+notification evidence also remain open. Automatic
 interception and real scheduled Gmail delivery remain disabled. Prepare bounded
 experiments before requesting any additional owner-sent fixtures. Preserve all
 durable recovery rows and use revision-guarded repeat forms.
 
-The original checkout is `/Users/robertguss/.codex/worktrees/1373/email-sucks`.
+The historical checkout was `/Users/robertguss/.codex/worktrees/1373/email-sucks`;
+its ignored helpers were unavailable at the latest check. The current isolated
+checkout is `/Users/robertguss/.codex/worktrees/e245/email-sucks`. Do not rely on
+ignored helpers surviving a worktree cleanup.
 Another saved checkout has unrelated changes; do not overwrite them. All durable
 changes from this task are pushed to `main`; ignored local scripts, private
 material, browser sessions and 1Password authorization do not follow the Git
