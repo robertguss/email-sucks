@@ -55,9 +55,11 @@ proof remains valid.
 
 ## Next action
 
-Continue the bounded read-only history-cursor recovery proof over already saved
-controlled message IDs. Verify expired-cursor rescan, changes during catch-up,
-atomic checkpoints and unchanged frozen batch membership before claiming a pass.
+The bounded read-only history-cursor probe is implemented locally over four saved
+controlled IDs. All 218 backend and 44 browser tests pass; simplification and independent review
+are complete, including both connection-state fixes. Next, commit, migrate and
+deploy from an authenticated fresh backup, then perform guarded live reads.
+[History proof plan](docs/phase-0-history-recovery.md).
 No new owner email is pending. Both filter experiments are disabled; ordinary mail
 is restored unread to Inbox and the earlier deliberate Trash fixture stays excluded.
 Agent sending remains unauthorized. SSH access is restored.

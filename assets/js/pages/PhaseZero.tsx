@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import RecentMessages from '../components/RecentMessages';
 import GmailBatch, { type BatchStatus } from '../components/GmailBatch';
+import GmailHistory, { type HistoryStatus } from '../components/GmailHistory';
 import GmailDisconnect from '../components/GmailDisconnect';
 import GmailFilters, { type FilterStatus } from '../components/GmailFilters';
 
@@ -15,13 +16,14 @@ type Props = {
   batch?: BatchStatus | null;
   filters?: FilterStatus | null;
   arrival_filters?: FilterStatus | null;
+  history?: HistoryStatus | null;
   gmail_filter_recovery?: boolean;
   gmail_filter_settings?: boolean;
   csrf_token: string;
   notice: string | null;
 };
 
-export default function PhaseZero({ gmail_configured, gmail_connected, gmail_email, gmail_reconnect, gmail_checked, gmail_disconnect_phase, controlled, batch, filters, arrival_filters, gmail_filter_recovery, gmail_filter_settings, csrf_token, notice }: Props) {
+export default function PhaseZero({ gmail_configured, gmail_connected, gmail_email, gmail_reconnect, gmail_checked, gmail_disconnect_phase, controlled, batch, filters, arrival_filters, history, gmail_filter_recovery, gmail_filter_settings, csrf_token, notice }: Props) {
   return (
     <main className="preview">
       <Head title="Inbox preview · Deliberate email" />
@@ -91,6 +93,7 @@ export default function PhaseZero({ gmail_configured, gmail_connected, gmail_ema
       {gmail_connected && <GmailBatch batch={batch ?? null} csrfToken={csrf_token} />}
       {gmail_connected && <GmailFilters experiment={filters ?? null} settingsAccess={gmail_filter_settings ?? false} email={gmail_email ?? 'this account'} csrfToken={csrf_token} />}
       {gmail_connected && <GmailFilters arrival experiment={arrival_filters ?? null} startAllowed={filters?.state === 'disabled'} settingsAccess={gmail_filter_settings ?? false} email={gmail_email ?? 'this account'} csrfToken={csrf_token} />}
+      {gmail_connected && <GmailHistory history={history ?? null} csrfToken={csrf_token} />}
       {gmail_email && <GmailDisconnect phase={gmail_disconnect_phase ?? null} filterRecovery={gmail_filter_recovery ?? false} csrfToken={csrf_token} />}
       {gmail_email && (
         <details className="connection-details">

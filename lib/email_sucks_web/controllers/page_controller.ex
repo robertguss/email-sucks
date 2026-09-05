@@ -17,6 +17,7 @@ defmodule EmailSucksWeb.PageController do
       gmail_checked: account != nil && account.checked_at != nil,
       controlled: EmailSucks.Gmail.controlled_summary(get_session(conn, :gmail_session)),
       batch: EmailSucks.Gmail.batch_summary(get_session(conn, :gmail_session)),
+      history: if(account, do: EmailSucks.Gmail.HistoryProbe.summary(), else: nil),
       filters: EmailSucks.Gmail.filter_summary(get_session(conn, :gmail_session)),
       arrival_filters:
         EmailSucks.Gmail.filter_summary(get_session(conn, :gmail_session), "arrival-primary-v1"),

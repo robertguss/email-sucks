@@ -7,6 +7,7 @@ defmodule EmailSucks.OperationalHealth do
   def check do
     controlled = Controlled.summary()
     batch = Batch.summary()
+    history = EmailSucks.Gmail.HistoryProbe.summary()
     filters = FilterExperiment.summaries() |> Map.values()
     known_profiles = FilterProfile.ids()
 
@@ -46,8 +47,14 @@ defmodule EmailSucks.OperationalHealth do
       mail_at_risk and
         (account == nil or account.status != "connected" or account.credentials == "")
 
+    disconnected =
+      match?(
+        %Account{status: "reconnect_required", credentials: "", disconnect_phase: nil},
+        account
+      )
+
     failed =
-      unsupported_filters or batch.errors > 0 or
+      unsupported_filters or (history.error != nil and not disconnected) or batch.errors > 0 or
         Enum.any?(filters, &(&1.error not in [nil, "invalid_transition"]))
 
     failures =

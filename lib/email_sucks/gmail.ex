@@ -261,6 +261,19 @@ defmodule EmailSucks.Gmail do
     end
   end
 
+  def history(session, action) when action in ["sync", "rescan"] do
+    with_access(session, fn account, tokens ->
+      result = EmailSucks.Gmail.HistoryProbe.run(config(), tokens["access_token"], action)
+
+      if result in [{:error, :missing_scope}, {:error, :reconnect_required}],
+        do: update_current(account, status: "reconnect_required")
+
+      result
+    end)
+  end
+
+  def history(_, _), do: {:error, :invalid_transition}
+
   def filter_experiment(session, action, profile \\ "primary") do
     with_access(session, fn account, tokens ->
       result =

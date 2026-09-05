@@ -144,6 +144,77 @@ defmodule EmailSucks.OperationalHealthTest do
     refute Jason.encode!(result) =~ "private"
   end
 
+  test "persisted read-only history failure is visible without exposing cursor or message IDs" do
+    Repo.insert!(%EmailSucks.Gmail.HistoryProbe{
+      id: "primary",
+      message_ids: ["private-message"],
+      cursor: "private-cursor",
+      error: "provider_unavailable"
+    })
+
+    result = OperationalHealth.check()
+    assert :gmail_operation_failed in result.failures
+    refute Jason.encode!(result) =~ "private"
+  end
+
+  test "completed disconnect retires history failure from health while preserving its checkpoint" do
+    old = Application.get_env(:email_sucks, :gmail)
+
+    Application.put_env(:email_sucks, :gmail,
+      allowed_email: "owner@example.test",
+      vault_key: String.duplicate("k", 64),
+      http_options: [plug: {Req.Test, __MODULE__}]
+    )
+
+    on_exit(fn ->
+      if old,
+        do: Application.put_env(:email_sucks, :gmail, old),
+        else: Application.delete_env(:email_sucks, :gmail)
+    end)
+
+    {:ok, session} =
+      EmailSucks.Gmail.connect(%{subject: "subject", email: "owner@example.test"}, %{
+        "access_token" => "private-access",
+        "refresh_token" => "private-refresh",
+        "expires_at" => System.system_time(:second) + 3600
+      })
+
+    checkpoint =
+      Repo.insert!(%EmailSucks.Gmail.HistoryProbe{
+        id: "primary",
+        message_ids: ["private-message"],
+        cursor: "private-cursor",
+        observations: %{"private-message" => %{"available" => true, "label_ids" => ["INBOX"]}},
+        checked_at: System.system_time(:second),
+        revision: 2,
+        mode: "incremental",
+        error: "provider_unavailable"
+      })
+
+    for {status, phase} <- [
+          {"connected", nil},
+          {"reconnect_required", nil},
+          {"connected", "restoring"},
+          {"connected", "revoking"}
+        ] do
+      Repo.get!(Account, "primary")
+      |> Ecto.Changeset.change(status: status, disconnect_phase: phase)
+      |> Repo.update!()
+
+      assert :gmail_operation_failed in OperationalHealth.check().failures
+    end
+
+    Req.Test.stub(__MODULE__, fn conn ->
+      assert conn.request_path == "/revoke"
+      Plug.Conn.send_resp(conn, 200, "")
+    end)
+
+    assert {:ok, _} = EmailSucks.Gmail.disconnect(session)
+    assert %{credentials: "", disconnect_phase: nil} = Repo.get!(Account, "primary")
+    assert OperationalHealth.check().failures == [:worker_queue_unavailable]
+    assert Repo.get!(EmailSucks.Gmail.HistoryProbe, "primary") == checkpoint
+  end
+
   for state <- ~w(available scheduled retryable executing discarded) do
     test "#{state} jobs distinguish overdue work from future work" do
       now = DateTime.utc_now()

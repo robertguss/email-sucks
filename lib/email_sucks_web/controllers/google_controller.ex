@@ -61,6 +61,42 @@ defmodule EmailSucksWeb.GoogleController do
     end
   end
 
+  def history(conn, %{"action" => action}) do
+    case Gmail.history(get_session(conn, :gmail_session), action) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:info, "Saved message history checked. Gmail messages were not changed.")
+        |> redirect(to: ~p"/")
+
+      {:error, reason}
+      when reason in [
+             :fixture_mismatch,
+             :missing_scope,
+             :history_expired,
+             :history_limit_exceeded
+           ] ->
+        message =
+          case reason do
+            :fixture_mismatch ->
+              "The history test needs the saved single-message and three-message fixtures. Its saved membership must remain valid."
+
+            :missing_scope ->
+              "Gmail read access is missing. Reconnect before checking history."
+
+            :history_expired ->
+              "Gmail history expired before this check could complete. Retry the saved-message scan."
+
+            :history_limit_exceeded ->
+              "The history check reached its page limit. Rescan the saved messages to begin from recent history."
+          end
+
+        conn |> put_flash(:info, message) |> redirect(to: ~p"/")
+
+      {:error, reason} ->
+        failure(conn, reason)
+    end
+  end
+
   def filters(conn, %{"action" => action}), do: filter_action(conn, action, "primary")
 
   def arrival_filters(conn, %{"action" => action}),
