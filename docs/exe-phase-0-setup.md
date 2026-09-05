@@ -1,5 +1,7 @@
 # Phase 0 on exe.dev
 
+**For the existing live VM, start with the [deployment and session handoff](exe-deployment-handoff.md).** It contains the exact host, current release, access blocker and repeatable deployment commands. The initial-deployment section below is historical bootstrap guidance; do not repeat it or regenerate secrets on the current VM.
+
 The selected deployment is one dedicated VM, per [ADR-0002](decisions/0002-exe-vm-hosting.md). Docker Compose runs web, worker and PostgreSQL separately on that VM. No Render resources are needed. Initial deployment results and remaining limits are recorded in [evidence](evidence/phase-0/2026-09-04-exe-deployment.md).
 
 ## Layout and secrets
@@ -22,7 +24,7 @@ Run these separately from the source directory, checking each result:
 docker compose --env-file /home/exedev/.config/email-sucks/compose.env -f deploy/exe.compose.yaml config --quiet
 docker compose --env-file /home/exedev/.config/email-sucks/compose.env -f deploy/exe.compose.yaml build web
 docker compose --env-file /home/exedev/.config/email-sucks/compose.env -f deploy/exe.compose.yaml up -d --wait db
-docker compose --env-file /home/exedev/.config/email-sucks/compose.env -f deploy/exe.compose.yaml run --rm migrate
+docker compose --env-file /home/exedev/.config/email-sucks/compose.env -f deploy/exe.compose.yaml run --rm -T migrate </dev/null
 docker compose --env-file /home/exedev/.config/email-sucks/compose.env -f deploy/exe.compose.yaml up -d --wait web worker
 ```
 
@@ -36,7 +38,7 @@ After inert checks, explicitly set `RESTORE_MODE=false` in the private app envir
 
 After the initial smoke checks, use `deploy/exe.gmail.compose.yaml` in addition to the base Compose file. Only the web container mounts the hosted OAuth client and key files; the synthetic worker remains without Gmail configuration. Set `GMAIL_SECRET_DIR` in the private Compose environment to the absolute directory containing `google-oauth.json` and `keys.json`. Both files must be owned by UID 65534 (the image's `nobody` user), mode `0400`, in a private host directory. The bind mounts are read-only and refuse missing source files.
 
-Generate fresh hosted vault and session keys; retain private recovery copies outside the VM. Never reuse local development keys. Register the exact callback `https://cougar-cedar.exe.xyz/auth/google/callback` in a separate web OAuth client within the existing Google project. The app now requests identity/email and Gmail modification access for the single controlled hold/release experiment. Existing read-only grants require reconnection.
+Generate fresh hosted vault and session keys; retain private recovery copies outside the VM. Never reuse local development keys. Register the exact callback `https://cougar-cedar.exe.xyz/auth/google/callback` in a separate web OAuth client within the existing Google project. The app now requests identity/email and Gmail modification access for the single-message and three-message controlled hold/release experiments. Existing read-only grants require reconnection.
 
 Use both Compose files for subsequent updates so the mounts remain present:
 

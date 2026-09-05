@@ -1,8 +1,8 @@
 # Deliberate email
 
-**Start here:** [Project progress and next action](PROGRESS.md) — current status, verified results, remaining work, and decisions to discuss. Update it when completing each implementation slice.
+**Start here:** [Project progress and next action](PROGRESS.md) — current status, verified results, remaining work, and decisions to discuss. Update it when completing each implementation slice. For hosting and deployment from another app, read the [exe.dev deployment and session handoff](docs/exe-deployment-handoff.md).
 
-A personal Gmail client in Phase 0: prove delivery and recovery before building the full Room. This repository currently has a Phoenix/Ash/PostgreSQL/Oban foundation with a React/TypeScript/Inertia browser shell. It supports a restricted, read-only Google connection, a profile check, and a five-message Inbox preview. No mail can be intercepted or sent.
+A personal Gmail client in Phase 0: prove delivery and recovery before building the full Room. This repository currently has a Phoenix/Ash/PostgreSQL/Oban foundation with a React/TypeScript/Inertia browser shell. It supports a restricted Google connection, a five-message Inbox preview, and controlled single-message/three-message hold, release and safe disconnect with live recovery proof. Automatic interception and sending are disabled.
 
 ## Requirements
 
@@ -36,7 +36,7 @@ mise exec -- mix phx.server
 
 Open [localhost:4000](http://localhost:4000). During frontend work, run `mise exec -- npm run watch` from `assets/` in another terminal.
 
-## Read-only Gmail connection
+## Gmail connection and read-only preview
 
 The local callback is `http://localhost:4000/auth/google/callback`. After preparing the private files described in [Google setup](docs/phase-0-test-account-setup.md), run:
 
@@ -78,7 +78,7 @@ The browser test builds assets and starts its own Phoenix process at port 4010; 
 
 ## Backup rehearsal
 
-[Encrypted local export/restore tooling](docs/local-backup-restore.md) is implemented and tested with disposable databases. R2 upload, hosted recovery and backup monitoring remain unconfigured.
+[Encrypted local export/restore tooling](docs/local-backup-restore.md) is implemented and tested with disposable databases. Hosted encrypted exports and isolated restore rehearsals passed; daily same-VM encrypted backups are enabled. R2/off-VM scheduling and independent backup monitoring remain deferred or unconfigured. See the [VM backup runbook](docs/vm-backups.md).
 
 ## Project documents
 
@@ -86,4 +86,4 @@ The browser test builds assets and starts its own Phoenix process at port 4010; 
 - [Architecture decision](docs/decisions/0001-application-architecture.md)
 - [Phase 0 plan and exit gates](docs/phase-0-gmail-reliability-proof.md)
 
-A [dedicated exe.dev deployment](docs/exe-phase-0-setup.md) now replaces Render as the selected host; see [ADR-0002](docs/decisions/0002-exe-vm-hosting.md). `RESTORE_MODE=true` disables Oban startup and Google credential loading for isolated restore checks. Initial synthetic deployment and an encrypted off-VM export/isolated restore passed ([evidence](docs/evidence/phase-0/2026-09-04-exe-deployment.md)). Hosted OAuth, Sentry, Better Stack, scheduled R2 backups, and real Gmail/device/recovery experiments are not completed. The authenticated connection shell is available; the full mail client is not implemented.
+A [dedicated exe.dev deployment](docs/exe-phase-0-setup.md) now replaces Render as the selected host; see [ADR-0002](docs/decisions/0002-exe-vm-hosting.md). `RESTORE_MODE=true` disables Oban startup and Google credential loading for isolated restore checks. Initial synthetic deployment and an encrypted off-VM export/isolated restore passed ([evidence](docs/evidence/phase-0/2026-09-04-exe-deployment.md)). Hosted OAuth and bounded live Gmail hold/release, crash recovery and safe disconnect have passed. Sentry, Better Stack, scheduled R2 backups, broader interception and actual-device proof remain open or deferred. See the current tracker for scope and evidence; the full mail client is not implemented.
