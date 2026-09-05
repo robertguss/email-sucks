@@ -4,16 +4,18 @@ Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide
 describes the existing deployment, not instructions to provision a replacement
 VM. No secrets are stored here.
 
-## Current session update — 11:56 UTC
+## Current session update — 12:42 UTC
 
-The owner continues on the configured Mac; SSH and the correct Gmail session
-are restored. The new-arrival rehearsal passed: the three original members are
-released at repeat revision two, with zero pending/errors; the separate newcomer
-stayed outside membership, unread in Inbox with unchanged labels. Temporary
-diagnostics were removed and web restarted. No owner send or recovery action is
-pending. Historical orb access checks and stopping-point details below are
-superseded by this update and PROGRESS.md. See the
-[live evidence](evidence/phase-0/2026-09-05-live-arrival-recovery.md).
+The interrupted three-message hold rehearsal passed on the configured Mac. SSH
+works again and the authenticated incognito app remains connected. The batch is
+released at repeat revision three, all three members unread in Inbox, zero
+pending/errors and no pending disconnect. Recovery after restart changed only
+the third saved member; the first two already held by Google were not rewritten.
+The newcomer stayed outside membership with unchanged labels. Temporary
+diagnostics were removed and web restarted; readiness and cleanup passed.
+No owner send or authentication action is pending. See the
+[live hold evidence](evidence/phase-0/2026-09-05-live-hold-recovery.md) and
+[earlier arrival evidence](evidence/phase-0/2026-09-05-live-arrival-recovery.md).
 
 ## Where the app runs
 
@@ -39,7 +41,7 @@ serves Phoenix/React/Inertia; the separate Oban worker handles synthetic jobs
 only. Real Gmail operations currently run through authenticated web requests.
 Automatic interception, scheduled Gmail delivery and sending are disabled.
 
-## Access and current blocker
+## Access and historical blockers
 
 On the original Mac, `ssh cougar-cedar.exe.xyz` resolves to SSH user
 `robertguss`, port 22, with `IdentitiesOnly yes`, public identity file
@@ -49,12 +51,12 @@ The public file selects the matching private key in 1Password; it is not itself
 a private key. Remote commands use the existing `/home/exedev` paths. Do not
 assume a new machine has this SSH configuration.
 
-At the latest attempt (11:31 UTC), the server accepted the public key but the
+At a historical attempt (11:31 UTC), the server accepted the public key but the
 local agent could not sign. The previous Chrome incognito window had closed. A
 new incognito window was opened at exe.dev sign-in and showed Unlock 1Password.
-The owner needs to unlock/authorize the SSH agent and sign in to exe.dev; Gmail
-sign-in may also be needed. Do not generate replacement credentials or weaken
-proxy visibility to work around this. On another machine, arrange access to the
+That attempt required the owner to unlock/authorize the SSH agent and sign in.
+Access has since been restored; do not request sign-in again without a new
+failure. Do not generate replacement credentials or weaken proxy visibility to work around this. On another machine, arrange access to the
 existing authorized SSH key through the owner's normal secure process.
 
 Orb resumption check (11:41 UTC): the clean checkout and fetched `origin/main`
@@ -237,21 +239,16 @@ independent failed/missed-backup alerts are not configured. See
 
 ## Exact stopping point for the next app
 
-No concurrent-arrival rehearsal has started and no mail was changed during the
-blocked setup attempt. No fault adapter was installed in that attempt. The most
-recent completed rehearsal left all three saved messages released and unread in
-Inbox, batch repeat revision one, connected account, no pending disconnect.
-Those provider observations are historical; recheck after restoring access.
+The interrupted hold and earlier new-arrival rehearsals are complete. No fault
+adapter is installed and no mailbox operation is pending. The final verified
+state is the released revision-three batch described above. The app image is
+still `ed8756f`; these evidence-only changes require no deployment.
 
-Next: prepare the saved batch's repeat hold, interrupt release after partial
-progress using a narrowly scoped temporary diagnostic, verify durable pending
-state, then ask the owner for one new synthetic email. Only after it arrives
-should recovery run and prove the newcomer is outside the original membership.
-Do not ask for the message before the pause is ready. Record provider evidence
-and remove/unload diagnostics before completion. Temporary scripts under the
-original checkout's ignored `.local/` directory are not in Git; prior fault
-methodology is documented in
-[batch crash evidence](evidence/phase-0/2026-09-05-live-batch-recovery.md).
+Next work is broader Phase 0 arrival/interception and existing-filter coverage,
+plus independent alerts and actual-device notification evidence. Automatic
+interception and real scheduled Gmail delivery remain disabled. Prepare bounded
+experiments before requesting any additional owner-sent fixtures. Preserve all
+durable recovery rows and use revision-guarded repeat forms.
 
 The original checkout is `/Users/robertguss/.codex/worktrees/1373/email-sucks`.
 Another saved checkout has unrelated changes; do not overwrite them. All durable
