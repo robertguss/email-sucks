@@ -19,6 +19,9 @@ A fresh 17:34 UTC archive restored independently on the owner Mac. Full-row jour
 hashes match live; restored app has Gmail and jobs disabled. The isolated database
 is `email_sucks_history_restore_20260905`; keep it in restore mode. Private history
 evidence is under `~/.config/email-sucks/hosted-cougar-cedar/history-recovery/`.
+After these successful checks, a final read-only SSH check failed because the
+1Password SSH agent stopped signing. Deployment and restore had already passed;
+renew SSH signing before further hosted work.
 Continue remaining arrival/device and scheduled/Check Now/panic race proofs;
 external alert workspace/destination input remains pending. [Evidence](evidence/phase-0/2026-09-05-history-recovery.md).
 

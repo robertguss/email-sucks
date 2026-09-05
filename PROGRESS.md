@@ -64,7 +64,9 @@ remains a separate open gate; the four-ID diagnostic does not establish it.
 [History evidence](docs/evidence/phase-0/2026-09-05-history-recovery.md).
 No new owner email is pending. Both filter experiments are disabled; ordinary mail
 is restored unread to Inbox and the earlier deliberate Trash fixture stays excluded.
-Agent sending remains unauthorized. SSH access is restored.
+Agent sending remains unauthorized. SSH signing became unavailable again after
+the successful deployment/live/restore checks; unlock 1Password before further
+hosted work.
 
 Operational setup next needs the owner's existing Better Stack/Sentry workspace
 and independent alert destination. The monitor code and runbook are ready; then
