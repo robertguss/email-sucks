@@ -4,7 +4,20 @@ Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide
 describes the existing deployment, not instructions to provision a replacement
 VM. No secrets are stored here.
 
-## Current session update — 14:03 UTC
+## Current session update — bounded filters active
+
+Owner settings consent is verified. The two tracked filters were activated through
+the reviewed service and independently inspected: active, zero pending/errors,
+zero observed messages, original three filters unchanged. No agent email send is
+authorized. Await one owner-sent fixture using the active marker in the app,
+then inspect under a write guard and perform tracked cleanup. Exact recovery
+record is private on the owner Mac under
+`~/.config/email-sucks/hosted-cougar-cedar/filter-overlap/recovery.md`, with full
+before/activation/inspection snapshots beside it. Do not reset the experiment,
+roll back to a pre-filter image or delete ownership rows. Current image remains
+`6679507`. [Activation evidence](evidence/phase-0/2026-09-05-filter-activation.md).
+
+## Previous session update — 14:03 UTC
 
 The reviewed monitor and filter-error preservation fix are deployed at `6679507`.
 All 186 backend and nine Python runner tests passed. Hosted systemd check-only

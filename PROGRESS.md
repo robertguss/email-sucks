@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (filter lifecycle and monitor code deployed; hosted worker-outage dry run passed)
+Last updated: 2026-09-05 UTC (settings consent verified; two bounded filters active; awaiting one fixture)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -29,11 +29,12 @@ worker-outage detection/recovery passed. The monitor timer is installed but
 inactive/disabled: no external workspace, heartbeat or alert delivery is configured.
 [Monitor evidence](docs/evidence/phase-0/2026-09-05-operational-monitor.md).
 
-No filter experiment is active. The batch remains released at revision three with
-no pending errors and no disconnect. The connected grant still lacks settings
-permission as of 14:03 UTC. Owner consent has been requested through the deployed
-form; no message send is authorized.
-[Filter evidence](docs/evidence/phase-0/2026-09-05-filter-lifecycle.md).
+The owner completed settings consent; the grant and valid token were verified at
+14:16 UTC. Both bounded test filters are now active and independently read back:
+zero pending/errors, no baseline changes, zero observed messages. The three
+original filters remain unchanged. A private offline recovery copy contains the
+exact owned IDs, label and criteria. The next action is one owner-sent fixture;
+agent sending is not authorized. [Activation evidence](docs/evidence/phase-0/2026-09-05-filter-activation.md).
 
 **Latest verified result:** the three existing sender filters are configured to route matches
 to Trash and do not overlap the five controlled fixtures. A private full snapshot
@@ -55,12 +56,12 @@ proof remains valid.
 
 ## Next action
 
-The next provider dependency is owner Google settings consent using **Allow filter
-settings access** in the deployed app. Once verified, activate and inspect the
-tracked filters before requesting the synthetic arrival for the
-[bounded overlap experiment](docs/phase-0-filter-compatibility.md). Its live result
-must inform broader interception work; the current implementation is not proof
-that Gmail preserves exact filter criteria or action overlap.
+Await exactly one owner-sent fixture from `robertguss@gmail.com` to
+`howtocodeio@gmail.com`, subject `phase0-filter-trash-001`, with the active marker
+shown in the app as its body. Then inspect message-level labels without opening
+or marking it read, verify Trash exclusion under a write guard, disable the two
+tracked filters and verify the original inventory unchanged. Do not reset the
+one-shot experiment or add this message to the existing frozen batch.
 
 Operational setup next needs the owner's existing Better Stack/Sentry workspace
 and independent alert destination. The monitor code and runbook are ready; then
