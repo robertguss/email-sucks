@@ -22,11 +22,13 @@ interception, continuous sync and sending remain disabled. Hosted read-only
 sign-in and preview have live evidence; the controlled app hold/release now also
 has live provider evidence, including recovery after a web restart.
 
-**Current status:** work continues on the configured Mac with restored SSH and
-Gmail incognito access. The new-arrival rehearsal passed. All three original
-batch messages are released at repeat revision two, with zero pending/errors;
-the new arrival stayed outside membership, unread in Inbox with unchanged labels.
-Temporary diagnostics were removed and web restarted. No rehearsal is pending.
+**Current status:** preparation for the interrupted three-message hold is blocked
+on renewed SSH key-agent authorization. The server accepts the public key but
+1Password's agent refuses signing. The pending SCP setup command was cancelled
+before upload completed; no diagnostic installation or Hold action was performed.
+The browser repeat disclosure is open. Last verified state remains connected,
+three released batch members at repeat revision two, zero pending/errors, and the
+newcomer outside membership, unread in Inbox. Recheck access before continuing.
 
 **Latest verified result:** an email sent after interrupted delivery did not join
 the saved batch. Recovery modified only the remaining original member; all three
@@ -44,7 +46,7 @@ proof remains valid.
 
 ## Next action
 
-Prepare the next bounded Phase 0 proof: interrupted multi-message hold and
+Restore 1Password SSH signing authorization, then prepare the next bounded Phase 0 proof: interrupted multi-message hold and
 recovery, followed by broader arrival/interception cases. The new-arrival test
 now has live evidence for an arrival between interrupted release and recovery;
 it does not prove automatic interception or a continuously executing worker race.
