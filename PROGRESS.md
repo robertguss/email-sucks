@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (ordinary arrival deployed and active; awaiting owner fixture)
+Last updated: 2026-09-05 UTC (ordinary arrival and repeat cleanup passed; history recovery next)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -24,10 +24,10 @@ has live provider evidence, including recovery after a web restart.
 
 **Current status:** the reviewed ordinary-arrival implementation is live at
 `75f7f0e`. All 198 backend and 40 browser tests pass, plus compilation, formatting
-and TypeScript. One bounded Hold-only filter is active with zero pending/errors,
-zero observed fixtures and no baseline drift. Original filters, the completed
+and TypeScript. The ordinary arrival proof passed: one unread fixture was held and then restored;
+its filter is removed, with zero pending/errors and no baseline drift. Original filters, the completed
 Trash journal and released batch are unchanged. Hosted readiness and monitor
-check-only are healthy. [Activation evidence](docs/evidence/phase-0/2026-09-05-ordinary-arrival-activation.md).
+check-only are healthy. [Arrival and cleanup evidence](docs/evidence/phase-0/2026-09-05-ordinary-arrival.md).
 The monitor timer remains inactive/disabled pending external workspace and alert
 setup; its earlier [fault detection evidence](docs/evidence/phase-0/2026-09-05-operational-monitor.md) remains valid.
 
@@ -55,13 +55,12 @@ proof remains valid.
 
 ## Next action
 
-Await one owner-sent ordinary fixture using the exact sender, recipient, subject
-and fresh marker displayed in the active ordinary arrival panel. Then inspect
-message labels, disable the owned filter, restore eligible mail and verify repeat
-cleanup. Exact ownership and recovery instructions are saved privately on the
-owner Mac. See [ordinary arrival plan](docs/phase-0-ordinary-arrival.md).
-The prior Trash experiment remains complete and disabled; its retained fixture is
-intentionally excluded. Agent sending remains unauthorized. SSH access is restored.
+Continue the bounded read-only history-cursor recovery proof over already saved
+controlled message IDs. Verify expired-cursor rescan, changes during catch-up,
+atomic checkpoints and unchanged frozen batch membership before claiming a pass.
+No new owner email is pending. Both filter experiments are disabled; ordinary mail
+is restored unread to Inbox and the earlier deliberate Trash fixture stays excluded.
+Agent sending remains unauthorized. SSH access is restored.
 
 Operational setup next needs the owner's existing Better Stack/Sentry workspace
 and independent alert destination. The monitor code and runbook are ready; then

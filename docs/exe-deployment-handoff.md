@@ -4,7 +4,17 @@ Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide
 describes the existing deployment, not instructions to provision a replacement
 VM. No secrets are stored here.
 
-## Current session update — ordinary arrival active
+## Current session update — ordinary arrival passed and cleaned up
+
+The exact owner fixture arrived unread outside Inbox with the owned test label.
+Guarded tracked cleanup removed one filter and restored one message; repeat cleanup
+made zero writes. Ordinary profile is disabled, observed/restored one, zero pending,
+no error/drift. Original filters, primary Trash row and released batch revision four
+are unchanged. Diagnostic adapter removed; monitor check-only healthy. No fixture
+is pending. Current deployed image remains `75f7f0e`. Next independent work is the
+bounded read-only history-cursor proof. [Evidence](evidence/phase-0/2026-09-05-ordinary-arrival.md).
+
+## Previous session update — ordinary arrival active
 
 SSH signing is restored. Reviewed image `75f7f0e` is deployed; web/worker readiness
 and monitor check-only are healthy. The authenticated connection check passed.
