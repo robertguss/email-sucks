@@ -218,6 +218,34 @@ defmodule EmailSucks.Gmail.FilterProviderTest do
     assert {:error, :provider_unavailable} = FilterProvider.create(config, "access-test", spec())
   end
 
+  test "ordinary profile accepts only its Hold spec and rejects cross-profile payloads", %{
+    config: config
+  } do
+    ordinary =
+      spec()
+      |> put_in(["criteria", "subject"], "phase0-filter-arrival-001")
+      |> put_in(["action"], %{"addLabelIds" => ["Label_lab"], "removeLabelIds" => ["INBOX"]})
+
+    respond(Map.put(ordinary, "id", "arrival"))
+    assert {:ok, _} = FilterProvider.create(config, "access-test", ordinary, "arrival-primary-v1")
+    Req.Test.stub(__MODULE__, fn _ -> flunk("cross-profile payload must not reach Gmail") end)
+    assert {:error, :fixture_mismatch} = FilterProvider.create(config, "access-test", ordinary)
+
+    assert {:error, :fixture_mismatch} =
+             FilterProvider.create(config, "access-test", spec(), "arrival-primary-v1")
+
+    assert {:error, :fixture_mismatch} =
+             FilterProvider.create(
+               config,
+               "access-test",
+               put_in(ordinary, ["action"], %{"addLabelIds" => ["TRASH"]}),
+               "arrival-primary-v1"
+             )
+
+    assert {:error, :fixture_mismatch} =
+             FilterProvider.create(config, "access-test", ordinary, "unknown")
+  end
+
   defp respond(body, status \\ 200) do
     Req.Test.stub(__MODULE__, fn conn ->
       conn |> Plug.Conn.put_status(status) |> Req.Test.json(body)

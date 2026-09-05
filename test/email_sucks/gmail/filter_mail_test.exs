@@ -180,6 +180,53 @@ defmodule EmailSucks.Gmail.FilterMailTest do
     end
   end
 
+  test "ordinary metadata rejects the overlap fixture and accepts its own exact subject", %{
+    config: config
+  } do
+    Req.Test.stub(__MODULE__, fn conn ->
+      if conn.request_path == @base <> "messages" do
+        params = URI.decode_query(conn.query_string)
+        if params["q"], do: assert(params["q"] =~ "subject:phase0-filter-arrival-001")
+        Req.Test.json(conn, %{"messages" => [%{"id" => "m1"}]})
+      else
+        body = message("m1")
+
+        body =
+          if Process.get(:arrival),
+            do:
+              update_in(body, ["payload", "headers"], fn headers ->
+                Enum.map(headers, fn h ->
+                  if h["name"] == "Subject",
+                    do: %{h | "value" => "phase0-filter-arrival-001"},
+                    else: h
+                end)
+              end),
+            else: body
+
+        Req.Test.json(conn, body)
+      end
+    end)
+
+    assert {:error, :fixture_mismatch} =
+             FilterMail.messages(config, "token", @nonce, "arrival-primary-v1")
+
+    assert {:error, :fixture_mismatch} =
+             FilterMail.held_messages(config, "token", "Label_123", "arrival-primary-v1")
+
+    Process.put(:arrival, true)
+    assert {:ok, [_]} = FilterMail.messages(config, "token", @nonce, "arrival-primary-v1")
+
+    assert {:ok, [_]} =
+             FilterMail.held_messages(config, "token", "Label_123", "arrival-primary-v1")
+
+    Req.Test.stub(__MODULE__, fn _ -> flunk("unknown profile must not reach Gmail") end)
+    assert {:error, :fixture_mismatch} = FilterMail.empty?(config, "token", "unknown")
+    assert {:error, :fixture_mismatch} = FilterMail.messages(config, "token", @nonce, "unknown")
+
+    assert {:error, :fixture_mismatch} =
+             FilterMail.held_messages(config, "token", "Label_123", "unknown")
+  end
+
   defp message(id) do
     %{
       "id" => id,

@@ -344,18 +344,20 @@ defmodule EmailSucksWeb.GoogleControllerTest do
   end
 
   test "filter actions require CSRF and session", %{conn: conn} do
-    for action <- ~w(activate recover inspect disable) do
+    for path <- ["filters", "arrival-filters"], action <- ~w(activate recover inspect disable) do
       assert_raise Plug.CSRFProtection.InvalidCSRFTokenError, fn ->
-        conn |> put_private(:plug_skip_csrf_protection, false) |> post("/gmail/filters/#{action}")
+        conn |> put_private(:plug_skip_csrf_protection, false) |> post("/gmail/#{path}/#{action}")
       end
 
       Req.Test.stub(__MODULE__, fn _ -> flunk("unauthorized filter request") end)
-      denied = conn |> bypass_csrf() |> post("/gmail/filters/#{action}")
+      denied = conn |> bypass_csrf() |> post("/gmail/#{path}/#{action}")
       assert denied.assigns.flash["info"] =~ "Connect Gmail"
     end
 
     public = get(conn, "/")
     assert Inertia.Testing.inertia_props(public).filters == nil
+    assert Inertia.Testing.inertia_props(public).arrival_filters == nil
+    refute Inertia.Testing.inertia_props(public).gmail_filter_recovery
     refute Inertia.Testing.inertia_props(public).gmail_filter_settings
   end
 
@@ -384,6 +386,84 @@ defmodule EmailSucksWeb.GoogleControllerTest do
     assert Gmail.account(session).status == "connected"
     assert Gmail.filter_summary(session).state == "not_started"
     assert Gmail.filter_experiment(session, "arbitrary") == {:error, :invalid_transition}
+  end
+
+  test "arrival route ignores client profiles and specifications", %{conn: conn} do
+    session = filter_session(true)
+    saved_filter("primary", "disabled")
+
+    Req.Test.stub(__MODULE__, fn request ->
+      assert request.method == "GET"
+      assert request.request_path == "/gmail/v1/users/me/messages"
+      query = URI.decode_query(request.query_string)["q"]
+      assert query =~ "phase0-filter-arrival-001"
+      refute query =~ "phase0-filter-trash-001"
+      Plug.Conn.send_resp(request, 503, "")
+    end)
+
+    conn
+    |> Plug.Test.init_test_session(gmail_session: session)
+    |> bypass_csrf()
+    |> post("/gmail/arrival-filters/activate", %{
+      "profile" => "primary",
+      "subject" => "arbitrary",
+      "action" => "disable",
+      "spec" => %{"action" => %{"addLabelIds" => ["TRASH"]}}
+    })
+
+    assert Gmail.filter_summary(session).state == "disabled"
+    assert Gmail.filter_summary(session, "arrival-primary-v1").state == "not_started"
+
+    Req.Test.stub(__MODULE__, fn _ -> flunk("primary cannot be restarted via client profile") end)
+
+    conn
+    |> Plug.Test.init_test_session(gmail_session: session)
+    |> bypass_csrf()
+    |> post("/gmail/filters/activate", %{"profile" => "arrival-primary-v1"})
+
+    assert Gmail.filter_summary(session, "arrival-primary-v1").state == "not_started"
+  end
+
+  test "ordinary pending recovery has independent private props and blocks scope-less disconnect",
+       %{conn: conn} do
+    session = filter_session(false)
+    saved_filter("primary", "disabled")
+    saved_filter("arrival-primary-v1", "preparing")
+    page = conn |> Plug.Test.init_test_session(gmail_session: session) |> get("/")
+    props = Inertia.Testing.inertia_props(page)
+    assert props.filters.state == "disabled"
+    assert props.arrival_filters.state == "preparing"
+    assert props.gmail_filter_recovery
+    refute props.gmail_filter_settings
+    Req.Test.stub(__MODULE__, fn _ -> flunk("must retain access before scope-less recovery") end)
+    assert Gmail.disconnect(session) == {:error, :filter_settings_required}
+    assert Gmail.account(session).disconnect_phase == "restoring"
+  end
+
+  defp filter_session(settings) do
+    scope =
+      "https://www.googleapis.com/auth/gmail.modify" <>
+        if(settings, do: " https://www.googleapis.com/auth/gmail.settings.basic", else: "")
+
+    {:ok, session} =
+      Gmail.connect(%{subject: "subject", email: "owner@gmail.com"}, %{
+        "access_token" => "private-access",
+        "refresh_token" => "private-refresh",
+        "scope" => scope,
+        "expires_at" => System.system_time(:second) + 3600
+      })
+
+    session
+  end
+
+  defp saved_filter(id, state) do
+    EmailSucks.Repo.insert!(%EmailSucks.Gmail.FilterExperiment{
+      id: id,
+      state: state,
+      nonce: String.duplicate("a", 32),
+      baseline_ids: [],
+      baseline_digest: "test"
+    })
   end
 
   defp bypass_csrf(conn), do: Plug.Conn.put_private(conn, :plug_skip_csrf_protection, true)

@@ -1,6 +1,6 @@
 # Phase 0 experiment inventory
 
-Updated: 2026-09-05. Status: live controlled recovery and read-only filter inventory have evidence; overlapping interception/device experiments not run. This is an execution checklist, not evidence of passes. Follow the [proof plan](phase-0-gmail-reliability-proof.md) and use the [offline recovery card](phase-0-offline-recovery-card.md) before activation.
+Updated: 2026-09-05. Status: live controlled recovery, filter inventory and Trash-overlap cleanup have evidence; ordinary Hold-only arrival is being implemented, and device experiments remain open. This is an execution checklist, not evidence of passes. Follow the [proof plan](phase-0-gmail-reliability-proof.md) and use the [offline recovery card](phase-0-offline-recovery-card.md) before activation.
 
 ## Environment record
 
@@ -25,10 +25,10 @@ Verified against Google's current [Gmail scope reference](https://developers.goo
 | History list | `gmail.readonly` | Sync implementation pending |
 | Labels create | `gmail.modify` (also supports narrower `gmail.labels`) | Implemented for controlled fixtures |
 | Exact message label modification / restore | `gmail.modify` | Implemented and live-verified for single/fixed-batch fixtures |
-| Filters create/delete | `gmail.settings.basic` | Not requested or implemented; `gmail.modify` alone cannot disable interception filters |
+| Filters create/delete | `gmail.settings.basic` | Implemented for closed fixtures; owner granted settings access and live cleanup passed. `gmail.modify` alone cannot disable interception filters |
 | Message send | Later compose phase | Not implemented; no test sends authorized by this checklist |
 
-The proposed filter-overlap experiment requires `gmail.modify` plus `gmail.settings.basic` in addition to identity scopes. `gmail.modify` includes sending capabilities even when the app exposes only label changes; it is not a label-only grant. Do not request `mail.google.com` or administrative `gmail.settings.sharing`. Maintain separate application capability/activation guards when adding broad provider scopes. [Message modification](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/modify), [filter creation](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/create), [filter deletion](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/delete)
+The bounded filter experiments require `gmail.modify` plus `gmail.settings.basic` in addition to identity scopes. `gmail.modify` includes sending capabilities even when the app exposes only label changes; it is not a label-only grant. Do not request `mail.google.com` or administrative `gmail.settings.sharing`. Maintain separate application capability/activation guards when adding broad provider scopes. [Message modification](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/modify), [filter creation](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/create), [filter deletion](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings.filters/delete)
 
 External Testing authorization remains suitable for short read-only experiments. Before the two-week dogfood, choose a publishing/reauthorization strategy and rehearse expiry while interception exists; do not assume refresh tokens remain valid for the whole trial. Natural access-token expiry now has [live refresh evidence](evidence/phase-0/2026-09-05-filter-compatibility-inventory.md); refresh-token rotation and long-lived authorization remain separate. [Google token expiration](https://developers.google.com/identity/protocols/oauth2#expiration)
 
@@ -49,9 +49,9 @@ Use unique synthetic tokens such as `phase0-primary-001`, never actual bank code
 | Authentication-code-like | Synthetic code text only; emergency peek must not release | Not run |
 | Attachment | Harmless text file; metadata/body boundaries observed | Not run |
 | Existing thread | Older released message plus new held reply; inspect exact message labels | Not run |
-| Filter conflict | Known user filter overlap, then documented supported configuration | [Inspection passed for current fixtures](evidence/phase-0/2026-09-05-filter-compatibility-inventory.md); [overlap experiment prepared](phase-0-filter-compatibility.md), not run |
+| Filter conflict | Known user filter overlap, then documented supported configuration | [Inspection passed for current fixtures](evidence/phase-0/2026-09-05-filter-compatibility-inventory.md); [Trash-overlap cleanup passed](evidence/phase-0/2026-09-05-filter-overlap.md) |
 | Concurrent arrival | Freeze A/B, then receive C during retry; C remains outside batch | [Arrival between interrupted release and recovery passed](evidence/phase-0/2026-09-05-live-arrival-recovery.md); continuous-worker race not run |
-| Spam/Trash exclusion | Controlled existing fixture moved by owner; no automatic resurrection | Not run |
+| Spam/Trash exclusion | Controlled fixture excluded from restoration; no automatic resurrection | Trash overlap passed with zero recovery message writes; Spam remains untested |
 | Explicit bypass | Each claimed rule tested at arrival, including conversation mechanism | Not run |
 
 For unsupported identities or account features, record Not applicable with a reason rather than passing them. Run native notification/badge observations for held arrival, bypass, single/multiple release and release-time arrival on every actual device in scope.

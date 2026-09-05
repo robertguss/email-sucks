@@ -2,11 +2,15 @@ defmodule EmailSucks.Gmail.FilterMail do
   @moduledoc "Bounded metadata and label boundary for the controlled filter experiment."
   @base "https://gmail.googleapis.com/gmail/v1/users/me/"
   @sender "robertguss@gmail.com"
-  @subject "phase0-filter-trash-001"
+  alias EmailSucks.Gmail.FilterProfile
 
-  def empty?(config, token) do
-    with {:ok, ids} <- list(config, token, q: query(config)) do
+  def empty?(config, token, profile \\ "primary") do
+    with true <- FilterProfile.known?(profile),
+         {:ok, ids} <- list(config, token, q: query(config, profile)) do
       if ids == [], do: :ok, else: {:error, :fixture_mismatch}
+    else
+      false -> {:error, :fixture_mismatch}
+      error -> error
     end
   end
 
@@ -32,17 +36,19 @@ defmodule EmailSucks.Gmail.FilterMail do
     end
   end
 
-  def messages(config, token, nonce) do
-    if valid_nonce?(nonce) do
-      read_messages(config, token, q: query(config) <> ~s( "postman-probe-#{nonce}"))
+  def messages(config, token, nonce, profile \\ "primary") do
+    if FilterProfile.known?(profile) and valid_nonce?(nonce) do
+      read_messages(config, token, profile,
+        q: query(config, profile) <> ~s( "postman-probe-#{nonce}")
+      )
     else
       {:error, :fixture_mismatch}
     end
   end
 
-  def held_messages(config, token, label_id) do
-    if valid_id?(label_id) do
-      with {:ok, messages} <- read_messages(config, token, labelIds: label_id) do
+  def held_messages(config, token, label_id, profile \\ "primary") do
+    if FilterProfile.known?(profile) and valid_id?(label_id) do
+      with {:ok, messages} <- read_messages(config, token, profile, labelIds: label_id) do
         if Enum.all?(messages, &(label_id in &1["labelIds"])),
           do: {:ok, messages},
           else: {:error, :fixture_mismatch}
@@ -52,7 +58,8 @@ defmodule EmailSucks.Gmail.FilterMail do
     end
   end
 
-  defp query(config), do: "from:#{@sender} to:#{config[:allowed_email]} subject:#{@subject}"
+  defp query(config, profile),
+    do: "from:#{@sender} to:#{config[:allowed_email]} subject:#{FilterProfile.subject(profile)}"
 
   defp create_label(config, token, name) do
     # An uncertain create is returned as a failure. Every retry resolves this exact name first.
@@ -66,10 +73,10 @@ defmodule EmailSucks.Gmail.FilterMail do
     end
   end
 
-  defp read_messages(config, token, params) do
+  defp read_messages(config, token, profile, params) do
     with {:ok, ids} <- list(config, token, params) do
       Enum.reduce_while(ids, {:ok, []}, fn id, {:ok, messages} ->
-        case metadata(config, token, id) do
+        case metadata(config, token, id, profile) do
           {:ok, message} -> {:cont, {:ok, [message | messages]}}
           error -> {:halt, error}
         end
@@ -161,7 +168,7 @@ defmodule EmailSucks.Gmail.FilterMail do
     end
   end
 
-  defp metadata(config, token, id) do
+  defp metadata(config, token, id, profile) do
     with {:ok, body} <-
            get(config, token, "messages/" <> id,
              format: "metadata",
@@ -173,7 +180,7 @@ defmodule EmailSucks.Gmail.FilterMail do
          %{"id" => ^id, "labelIds" => labels, "payload" => %{"headers" => headers}} <- body,
          true <- is_list(labels) and Enum.all?(labels, &valid_id?/1),
          true <- is_list(headers) and Enum.all?(headers, &valid_header?/1),
-         true <- header(headers, "subject") == @subject,
+         true <- header(headers, "subject") == FilterProfile.subject(profile),
          true <- mailbox?(header(headers, "from"), @sender),
          true <- mailbox?(header(headers, "to"), config[:allowed_email]) do
       # Never return unexpected provider fields such as snippets or message bodies.

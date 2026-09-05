@@ -4,7 +4,23 @@ Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide
 describes the existing deployment, not instructions to provision a replacement
 VM. No secrets are stored here.
 
-## Current session update — overlap and separate-process proof passed
+## Current session update — ordinary arrival ready; SSH signing blocked
+
+The ordinary Hold-only profile is implemented and reviewed locally; 198 backend
+and 40 browser tests plus formatting, compilation and TypeScript pass. Both
+review findings are fixed: all known filters stop before historical restoration,
+and unknown persisted profiles cannot hide blocked recovery from health checks.
+No migration is required. Deploy this reviewed implementation once 1Password SSH
+signing works, verify prior primary disabled/new arrival not_started and batch
+released revision four, then prepare private recovery details and activate only
+the fixed ordinary profile before asking for its owner fixture. No ordinary
+filter is active and no new owner send is pending. Image remains `6679507`.
+[Implementation evidence](evidence/phase-0/2026-09-05-ordinary-arrival-implementation.md),
+[plan](phase-0-ordinary-arrival.md). A bounded read-only history-cursor recovery
+probe is the next independent implementation candidate; it must preserve frozen
+membership and does not establish full-mailbox discovery.
+
+## Previous session update — overlap and separate-process proof passed
 
 Both temporary filters are removed; the one-shot experiment is disabled with one
 excluded Trash fixture, zero restored and no error. Guarded cleanup and its retry

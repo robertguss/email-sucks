@@ -1,5 +1,6 @@
 defmodule EmailSucks.Gmail.FilterProvider do
   @moduledoc "Bounded Phase 0 filter HTTP boundary. The caller owns durable intent and cleanup."
+  alias EmailSucks.Gmail.FilterProfile
   @endpoint "https://gmail.googleapis.com/gmail/v1/users/me/settings/filters"
 
   def list(config, token) do
@@ -18,8 +19,8 @@ defmodule EmailSucks.Gmail.FilterProvider do
     end
   end
 
-  def create(config, token, specification) do
-    if experiment?(config, specification) do
+  def create(config, token, specification, profile \\ "primary") do
+    if FilterProfile.known?(profile) and experiment?(config, specification, profile) do
       case request(config, token, method: :post, url: @endpoint, json: specification) do
         {:ok, %{status: status, body: body}} when status in [200, 201] ->
           if valid_filter?(body) and Map.delete(body, "id") == specification,
@@ -46,7 +47,7 @@ defmodule EmailSucks.Gmail.FilterProvider do
     end
   end
 
-  defp experiment?(config, %{"criteria" => criteria, "action" => action} = specification)
+  defp experiment?(config, %{"criteria" => criteria, "action" => action} = specification, profile)
        when is_map(criteria) do
     email = config[:allowed_email]
     marker = criteria["query"]
@@ -55,11 +56,11 @@ defmodule EmailSucks.Gmail.FilterProvider do
     expected = %{
       "from" => "robertguss@gmail.com",
       "to" => email,
-      "subject" => "phase0-filter-trash-001",
+      "subject" => FilterProfile.subject(profile),
       "query" => marker
     }
 
-    trash? = action == %{"addLabelIds" => ["TRASH"]}
+    trash? = profile == "primary" and action == %{"addLabelIds" => ["TRASH"]}
 
     hold? =
       is_binary(label) and Regex.match?(~r/\ALabel_[a-zA-Z0-9_-]+\z/, label) and
@@ -70,7 +71,7 @@ defmodule EmailSucks.Gmail.FilterProvider do
       criteria == expected and (trash? or hold?)
   end
 
-  defp experiment?(_, _), do: false
+  defp experiment?(_, _, _), do: false
 
   defp valid_filter?(%{"id" => id, "criteria" => criteria, "action" => action} = row) do
     map_size(row) == 3 and valid_id?(id) and is_map(criteria) and is_map(action) and

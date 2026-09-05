@@ -206,6 +206,188 @@ defmodule EmailSucks.Gmail.FilterExperimentTest do
     assert :gmail_operation_failed in EmailSucks.OperationalHealth.check().failures
   end
 
+  test "ordinary profile is gated, isolated and recovers a lost accepted Hold create", %{
+    config: c
+  } do
+    assert {:error, :invalid_transition} =
+             FilterExperiment.run(c, "test", "activate", "arrival-primary-v1")
+
+    assert {:ok, _} = FilterExperiment.run(c, "test", "activate")
+    assert FilterExperiment.recovery_required?()
+
+    assert {:error, :invalid_transition} =
+             FilterExperiment.run(c, "test", "activate", "arrival-primary-v1")
+
+    Process.put(:mail, %{"m2" => ["Label_lab", "TRASH", "UNREAD"]})
+    assert {:ok, _} = FilterExperiment.run(c, "test", "disable")
+    primary = Repo.get!(FilterExperiment, "primary")
+    refute FilterExperiment.recovery_required?()
+    Process.put(:lose_create, true)
+
+    assert {:error, :provider_unavailable} =
+             FilterExperiment.run(c, "test", "activate", "arrival-primary-v1")
+
+    assert %{state: "preparing", pending: 1} = FilterExperiment.summary("arrival-primary-v1")
+
+    assert {:ok, %{state: "active", filters: 1}} =
+             FilterExperiment.run(c, "test", "recover", "arrival-primary-v1")
+
+    assert Process.get(:creates) == 3
+    arrival = Repo.get!(FilterExperiment, "arrival-primary-v1")
+    assert Map.keys(arrival.entries) == ["hold"]
+    assert arrival.nonce != primary.nonce
+    assert arrival.label_id != primary.label_id
+    assert primary == Repo.get!(FilterExperiment, "primary")
+
+    Process.put(
+      :mail,
+      Map.put(Process.get(:mail), "ordinary", [arrival.label_id, "UNREAD", "STARRED"])
+    )
+
+    Process.put(:subjects, %{"ordinary" => "phase0-filter-arrival-001"})
+    assert :ok = FilterExperiment.restore_for_disconnect(c, "test")
+    assert FilterExperiment.summary("arrival-primary-v1").restored == 1
+    assert Process.get(:mail)["m2"] == ["Label_lab", "TRASH", "UNREAD"]
+    assert Enum.sort(Process.get(:mail)["ordinary"]) == Enum.sort(["INBOX", "UNREAD", "STARRED"])
+    assert Process.get(:writes) == ["ordinary"]
+    assert primary == Repo.get!(FilterExperiment, "primary")
+    refute FilterExperiment.recovery_required?()
+
+    assert Map.keys(FilterExperiment.summaries()) |> Enum.sort() == [
+             "arrival-primary-v1",
+             "primary"
+           ]
+  end
+
+  test "unknown profiles fail closed and disconnect refuses unknown durable rows", %{config: c} do
+    Req.Test.stub(__MODULE__, fn _ -> flunk("unknown profile must not call provider") end)
+
+    assert {:error, :invalid_transition} =
+             FilterExperiment.run(c, "test", "activate", "arbitrary")
+
+    assert {:error, :invalid_transition} = FilterExperiment.summary("arbitrary")
+    assert FilterExperiment.summaries()["arrival-primary-v1"].state == "not_started"
+
+    Repo.insert!(%FilterExperiment{
+      id: "unknown",
+      state: "disabled",
+      nonce: "unknown",
+      baseline_ids: [],
+      baseline_digest: "unknown"
+    })
+
+    assert FilterExperiment.recovery_required?()
+    assert {:error, :invalid_transition} = FilterExperiment.restore_for_disconnect(c, "test")
+    assert {:error, :invalid_transition} = FilterExperiment.run(c, "test", "activate")
+  end
+
+  test "persisted cross-profile specifications are rejected before deletion", %{config: c} do
+    assert {:ok, _} = FilterExperiment.run(c, "test", "activate")
+    row = Repo.get!(FilterExperiment, "primary")
+
+    entries =
+      put_in(row.entries, ["hold", "spec", "criteria", "subject"], "phase0-filter-arrival-001")
+
+    row |> Ecto.Changeset.change(entries: entries) |> Repo.update!()
+
+    Req.Test.stub(__MODULE__, fn _ ->
+      flunk("mismatched durable profile must not call provider")
+    end)
+
+    assert {:error, :filter_drift} = FilterExperiment.run(c, "test", "disable")
+  end
+
+  test "ordinary cleanup retries late visibility without rewriting confirmed mail", %{config: c} do
+    assert {:ok, _} = FilterExperiment.run(c, "test", "activate")
+    assert {:ok, _} = FilterExperiment.run(c, "test", "disable")
+    assert {:ok, _} = FilterExperiment.run(c, "test", "activate", "arrival-primary-v1")
+
+    Process.put(:subjects, %{
+      "ordinary" => "phase0-filter-arrival-001",
+      "late" => "phase0-filter-arrival-001"
+    })
+
+    Process.put(:mail, %{"ordinary" => ["Label_arrival", "UNREAD"]})
+    Process.put(:late_arrival, "Label_arrival")
+
+    assert {:error, :filter_cleanup_pending} =
+             FilterExperiment.run(c, "test", "disable", "arrival-primary-v1")
+
+    assert {:ok, %{state: "disabled", restored: 2}} =
+             FilterExperiment.run(c, "test", "recover", "arrival-primary-v1")
+
+    assert Process.get(:writes) == ["ordinary", "late"]
+  end
+
+  test "ordinary ambiguous creation with no matching provider filter cannot be blindly retried",
+       %{config: c} do
+    assert {:ok, _} = FilterExperiment.run(c, "test", "activate")
+    assert {:ok, _} = FilterExperiment.run(c, "test", "disable")
+    Process.put(:unknown_create, true)
+
+    assert {:error, :provider_unavailable} =
+             FilterExperiment.run(c, "test", "activate", "arrival-primary-v1")
+
+    assert {:error, :filter_creation_uncertain} =
+             FilterExperiment.run(c, "test", "recover", "arrival-primary-v1")
+
+    assert {:error, :filter_creation_uncertain} =
+             FilterExperiment.run(c, "test", "disable", "arrival-primary-v1")
+
+    assert Process.get(:creates) == 3
+  end
+
+  test "disconnect stops arrival interception before a historical primary message failure", %{
+    config: c
+  } do
+    old = Application.get_env(:email_sucks, :gmail)
+
+    Application.put_env(
+      :email_sucks,
+      :gmail,
+      Keyword.merge(c,
+        client_id: "test",
+        client_secret: "secret",
+        redirect_uri: "http://localhost/callback",
+        vault_key: String.duplicate("k", 64)
+      )
+    )
+
+    on_exit(fn -> Application.put_env(:email_sucks, :gmail, old) end)
+
+    tokens = %{
+      "access_token" => "test",
+      "refresh_token" => "refresh",
+      "expires_at" => System.system_time(:second) + 3600,
+      "scope" =>
+        "https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.settings.basic"
+    }
+
+    {:ok, session} =
+      EmailSucks.Gmail.connect(%{subject: "subject", email: "owner@gmail.com"}, tokens)
+
+    assert {:ok, _} = FilterExperiment.run(c, "test", "activate")
+    Process.put(:mail, %{"historical" => ["Label_lab", "TRASH", "UNREAD"]})
+    assert {:ok, _} = FilterExperiment.run(c, "test", "disable")
+    assert {:ok, _} = FilterExperiment.run(c, "test", "activate", "arrival-primary-v1")
+    Process.put(:mail, %{"ordinary" => ["Label_arrival", "UNREAD", "STARRED"]})
+    Process.put(:subjects, %{"ordinary" => "phase0-filter-arrival-001"})
+    Process.put(:missing_message, "historical")
+    assert {:error, :not_found} = EmailSucks.Gmail.disconnect(session)
+    assert Enum.map(Process.get(:filters), & &1["id"]) == ["user"]
+    assert FilterExperiment.summary().error == "not_found"
+    assert EmailSucks.Gmail.account(session).disconnect_phase == "restoring"
+    assert EmailSucks.Gmail.account(session).credentials != ""
+    refute Process.get(:revoked)
+    assert Process.get(:writes) == ["ordinary"]
+    assert Enum.sort(Process.get(:mail)["ordinary"]) == Enum.sort(["INBOX", "UNREAD", "STARRED"])
+    deletes = Process.get(:deletes)
+    assert {:error, :not_found} = EmailSucks.Gmail.disconnect(session)
+    assert Process.get(:deletes) == deletes
+    assert Process.get(:writes) == ["ordinary"]
+    refute Process.get(:revoked)
+  end
+
   defp provider(conn) do
     case {conn.method, conn.request_path} do
       {"POST", "/revoke"} ->
@@ -219,8 +401,10 @@ defmodule EmailSucks.Gmail.FilterExperimentTest do
         Req.Test.json(conn, %{"filter" => Process.get(:filters)})
 
       {"POST", "/gmail/v1/users/me/settings/filters"} ->
-        row = Repo.get!(FilterExperiment, "primary", log: false)
-        assert Enum.any?(row.entries, fn {_, e} -> e["state"] == "creating" end)
+        assert Enum.any?(Repo.all(FilterExperiment), fn row ->
+                 Enum.any?(row.entries, fn {_, e} -> e["state"] == "creating" end)
+               end)
+
         {:ok, body, conn} = Plug.Conn.read_body(conn)
         spec = Jason.decode!(body)
         n = Process.get(:creates) + 1
@@ -244,12 +428,13 @@ defmodule EmailSucks.Gmail.FilterExperimentTest do
           else: Req.Test.json(conn, %{})
 
       {"GET", "/gmail/v1/users/me/labels"} ->
-        Req.Test.json(conn, %{"labels" => List.wrap(Process.get(:lab_label))})
+        Req.Test.json(conn, %{"labels" => Process.get(:lab_labels, [])})
 
       {"POST", "/gmail/v1/users/me/labels"} ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
-        label = Map.put(Jason.decode!(body), "id", "Label_lab")
-        Process.put(:lab_label, label)
+        id = if Process.get(:lab_labels, []) == [], do: "Label_lab", else: "Label_arrival"
+        label = Map.put(Jason.decode!(body), "id", id)
+        Process.put(:lab_labels, Process.get(:lab_labels, []) ++ [label])
         Req.Test.json(conn, label)
 
       {"GET", "/gmail/v1/users/me/messages"} ->
@@ -263,17 +448,25 @@ defmodule EmailSucks.Gmail.FilterExperimentTest do
         Req.Test.json(conn, %{"messages" => Enum.map(ids, &%{"id" => &1})})
 
       {"GET", "/gmail/v1/users/me/messages/" <> id} ->
-        Req.Test.json(conn, %{
-          "id" => id,
-          "labelIds" => Process.get(:mail)[id],
-          "payload" => %{
-            "headers" => [
-              %{"name" => "From", "value" => "robertguss@gmail.com"},
-              %{"name" => "To", "value" => "owner@gmail.com"},
-              %{"name" => "Subject", "value" => "phase0-filter-trash-001"}
-            ]
-          }
-        })
+        if Process.get(:missing_message) == id do
+          assert Enum.map(Process.get(:filters), & &1["id"]) == ["user"]
+          Plug.Conn.send_resp(conn, 404, "")
+        else
+          Req.Test.json(conn, %{
+            "id" => id,
+            "labelIds" => Process.get(:mail)[id],
+            "payload" => %{
+              "headers" => [
+                %{"name" => "From", "value" => "robertguss@gmail.com"},
+                %{"name" => "To", "value" => "owner@gmail.com"},
+                %{
+                  "name" => "Subject",
+                  "value" => Map.get(Process.get(:subjects, %{}), id, "phase0-filter-trash-001")
+                }
+              ]
+            }
+          })
+        end
 
       {"POST", "/gmail/v1/users/me/messages/" <> suffix} ->
         [id, "modify"] = String.split(suffix, "/")
@@ -288,8 +481,10 @@ defmodule EmailSucks.Gmail.FilterExperimentTest do
 
         Process.put(:mail, Map.put(Process.get(:mail), id, labels))
 
-        if Process.delete(:late_arrival),
-          do: Process.put(:mail, Map.put(Process.get(:mail), "late", ["Label_lab", "UNREAD"]))
+        if late = Process.delete(:late_arrival) do
+          label = if is_binary(late), do: late, else: "Label_lab"
+          Process.put(:mail, Map.put(Process.get(:mail), "late", [label, "UNREAD"]))
+        end
 
         Process.put(:writes, Process.get(:writes) ++ [id])
         Req.Test.json(conn, %{"id" => id})

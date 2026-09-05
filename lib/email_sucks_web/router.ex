@@ -26,6 +26,7 @@ defmodule EmailSucksWeb.Router do
     post "/gmail/controlled/:action", GoogleController, :controlled, log: false
     post "/gmail/batch/:action", GoogleController, :batch, log: false
     post "/gmail/filters/:action", GoogleController, :filters, log: false
+    post "/gmail/arrival-filters/:action", GoogleController, :arrival_filters, log: false
     get "/gmail/messages", GoogleController, :messages, log: false
     get "/", PageController, :home
     get "/phase-0/contract", PageController, :contract

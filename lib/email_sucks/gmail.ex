@@ -244,8 +244,12 @@ defmodule EmailSucks.Gmail do
     end
   end
 
-  def filter_summary(session) do
-    if account(session), do: FilterExperiment.summary(), else: nil
+  def filter_summary(session, profile \\ "primary") do
+    if account(session), do: FilterExperiment.summary(profile), else: nil
+  end
+
+  def filter_recovery_required?(session) do
+    if account(session), do: FilterExperiment.recovery_required?(), else: false
   end
 
   def filter_settings_access?(session) do
@@ -257,7 +261,7 @@ defmodule EmailSucks.Gmail do
     end
   end
 
-  def filter_experiment(session, action) do
+  def filter_experiment(session, action, profile \\ "primary") do
     with_access(session, fn account, tokens ->
       result =
         cond do
@@ -268,7 +272,7 @@ defmodule EmailSucks.Gmail do
             {:error, :filter_settings_required}
 
           true ->
-            FilterExperiment.run(config(), tokens["access_token"], action)
+            FilterExperiment.run(config(), tokens["access_token"], action, profile)
         end
 
       if result == {:error, :reconnect_required},
@@ -282,7 +286,7 @@ defmodule EmailSucks.Gmail do
   end
 
   defp filter_disconnect_access(tokens) do
-    if FilterExperiment.summary().state in ["not_started", "disabled"] or
+    if not FilterExperiment.recovery_required?() or
          Google.filter_settings_access?(tokens),
        do: :ok,
        else: {:error, :filter_settings_required}

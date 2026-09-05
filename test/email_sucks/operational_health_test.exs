@@ -100,6 +100,50 @@ defmodule EmailSucks.OperationalHealthTest do
     assert OperationalHealth.check().failures == [:worker_queue_unavailable]
   end
 
+  test "ordinary arrival recovery remains visible after the primary experiment is disabled" do
+    for {id, state} <- [{"primary", "disabled"}, {"arrival-primary-v1", "preparing"}] do
+      Repo.insert!(%FilterExperiment{
+        id: id,
+        state: state,
+        nonce: "marker",
+        baseline_ids: [],
+        baseline_digest: "digest",
+        error: if(state == "preparing", do: "provider_error"),
+        baseline_changed: true
+      })
+    end
+
+    failures = OperationalHealth.check().failures
+    assert :gmail_recovery_pending in failures
+    assert :gmail_operation_failed in failures
+    assert :gmail_access_unavailable in failures
+    assert :gmail_filter_baseline_changed in failures
+
+    Repo.get!(FilterExperiment, "arrival-primary-v1")
+    |> Ecto.Changeset.change(state: "disabled", error: nil)
+    |> Repo.update!()
+
+    assert OperationalHealth.check().failures == [:worker_queue_unavailable]
+  end
+
+  test "unsupported filter ownership cannot hide blocked recovery behind healthy known profiles" do
+    Repo.insert!(%FilterExperiment{
+      id: "unsupported-profile",
+      state: "active",
+      nonce: "private-marker",
+      baseline_ids: [],
+      baseline_digest: "private-digest"
+    })
+
+    assert FilterExperiment.recovery_required?()
+    assert FilterExperiment.restore_for_disconnect([], "unused") == {:error, :invalid_transition}
+    result = OperationalHealth.check()
+    assert :gmail_recovery_pending in result.failures
+    assert :gmail_operation_failed in result.failures
+    refute Jason.encode!(result) =~ "unsupported-profile"
+    refute Jason.encode!(result) =~ "private"
+  end
+
   for state <- ~w(available scheduled retryable executing discarded) do
     test "#{state} jobs distinguish overdue work from future work" do
       now = DateTime.utc_now()

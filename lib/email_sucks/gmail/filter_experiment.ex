@@ -1,8 +1,17 @@
 defmodule EmailSucks.Gmail.FilterExperiment do
-  @moduledoc "One opt-in, fixed-fixture filter proof. Intent and ownership survive every provider call."
+  @moduledoc "Opt-in, immutable fixed-fixture filter proofs. Intent and ownership survive every provider call."
   use Ecto.Schema
   alias EmailSucks.Repo
-  alias EmailSucks.Gmail.{Controlled, FilterMail, FilterProvider, Google, Projection}
+
+  alias EmailSucks.Gmail.{
+    Controlled,
+    FilterMail,
+    FilterProvider,
+    FilterProfile,
+    Google,
+    Projection
+  }
+
   @primary_key {:id, :string, autogenerate: false}
   @derive {Inspect, only: [:id, :state]}
   schema "gmail_filter_experiments" do
@@ -19,52 +28,72 @@ defmodule EmailSucks.Gmail.FilterExperiment do
     field :error, :string
   end
 
-  def summary, do: summarize(Repo.get(__MODULE__, "primary", log: false))
+  def summary(profile \\ "primary") do
+    if FilterProfile.known?(profile),
+      do: summarize(Repo.get(__MODULE__, profile, log: false)),
+      else: {:error, :invalid_transition}
+  end
 
-  def run(config, token, action) when action in ~w(activate recover inspect disable) do
+  def summaries, do: Map.new(FilterProfile.ids(), &{&1, summary(&1)})
+
+  def recovery_required? do
+    Enum.any?(
+      Repo.all(__MODULE__, log: false),
+      &(&1.state != "disabled" or not FilterProfile.known?(&1.id))
+    )
+  end
+
+  def run(config, token, action, profile \\ "primary")
+
+  def run(config, token, action, profile)
+      when action in ~w(activate recover inspect disable) and
+             profile in ["primary", "arrival-primary-v1"] do
     Controlled.exclusive(fn ->
-      row = Repo.get(__MODULE__, "primary", log: false)
+      row = Repo.get(__MODULE__, profile, log: false)
 
       result =
-        case {action, row} do
-          {"activate", nil} ->
-            with :ok <- FilterMail.empty?(config, token),
-                 {:ok, filters} <- FilterProvider.list(config, token) do
-              row =
-                Repo.insert!(
-                  %__MODULE__{
-                    id: "primary",
-                    state: "preparing",
-                    nonce: Base.encode16(:crypto.strong_rand_bytes(16), case: :lower),
-                    baseline_ids: Enum.map(filters, & &1["id"]),
-                    baseline_digest: fingerprint(filters)
-                  },
-                  log: false
-                )
+        with :ok <- valid_entries(row, config) do
+          case {action, row} do
+            {"activate", nil} ->
+              with :ok <- activation_allowed(profile),
+                   :ok <- FilterMail.empty?(config, token, profile),
+                   {:ok, filters} <- FilterProvider.list(config, token) do
+                row =
+                  Repo.insert!(
+                    %__MODULE__{
+                      id: profile,
+                      state: "preparing",
+                      nonce: Base.encode16(:crypto.strong_rand_bytes(16), case: :lower),
+                      baseline_ids: Enum.map(filters, & &1["id"]),
+                      baseline_digest: fingerprint(filters)
+                    },
+                    log: false
+                  )
 
+                prepare(row, config, token)
+              end
+
+            {"activate", _} ->
+              {:error, :invalid_transition}
+
+            {_, nil} ->
+              {:error, :invalid_transition}
+
+            {"inspect", %{state: state}} when state not in ["active", "disabled"] ->
+              {:error, :invalid_transition}
+
+            {"disable", row} ->
+              disable(row, config, token)
+
+            {"recover", %{state: "preparing"} = row} ->
               prepare(row, config, token)
-            end
 
-          {"activate", _} ->
-            {:error, :invalid_transition}
+            {"recover", %{state: state} = row} when state in ["disabling", "disabled"] ->
+              disable(row, config, token)
 
-          {_, nil} ->
-            {:error, :invalid_transition}
-
-          {"inspect", %{state: state}} when state not in ["active", "disabled"] ->
-            {:error, :invalid_transition}
-
-          {"disable", row} ->
-            disable(row, config, token)
-
-          {"recover", %{state: "preparing"} = row} ->
-            prepare(row, config, token)
-
-          {"recover", %{state: state} = row} when state in ["disabling", "disabled"] ->
-            disable(row, config, token)
-
-          {_, row} ->
-            inspect_filters(row, config, token)
+            {_, row} ->
+              inspect_filters(row, config, token)
+          end
         end
 
       case result do
@@ -75,7 +104,7 @@ defmodule EmailSucks.Gmail.FilterExperiment do
           error
 
         {:error, reason} = error ->
-          if row = Repo.get(__MODULE__, "primary", log: false),
+          if row = Repo.get(__MODULE__, profile, log: false),
             do: save(row, error: Atom.to_string(reason))
 
           error
@@ -83,17 +112,74 @@ defmodule EmailSucks.Gmail.FilterExperiment do
     end)
   end
 
-  def run(_, _, _), do: {:error, :invalid_transition}
+  def run(_, _, _, _), do: {:error, :invalid_transition}
 
   def restore_for_disconnect(config, token) do
-    if Repo.get(__MODULE__, "primary", log: false) do
-      case run(config, token, "disable") do
-        {:ok, %{state: "disabled"}} -> :ok
-        error -> error
+    Controlled.exclusive(fn -> restore_profiles(config, token) end)
+  end
+
+  defp restore_profiles(config, token) do
+    rows = Repo.all(__MODULE__, log: false)
+
+    if Enum.all?(rows, &FilterProfile.known?(&1.id)) do
+      rows = Enum.sort_by(rows, &Enum.find_index(FilterProfile.ids(), fn id -> id == &1.id end))
+
+      with {:ok, rows} <-
+             profile_phase(rows, fn row ->
+               with :ok <- valid_entries(row, config), do: remove_filters(row, config, token)
+             end),
+           {:ok, _} <-
+             profile_phase(rows, fn row ->
+               with {:ok, row} <- finish_disable(row, config, token),
+                    do: {:ok, save(row, error: nil)}
+             end) do
+        :ok
       end
     else
-      :ok
+      {:error, :invalid_transition}
     end
+  end
+
+  # Attempt every profile, preserving the first failure and each row's durable error.
+  # No message restoration begins until all owned interception is confirmed absent.
+  defp profile_phase(rows, operation) do
+    results =
+      Enum.map(rows, fn row ->
+        case operation.(row) do
+          {:error, reason} = error ->
+            save(Repo.get!(__MODULE__, row.id, log: false), error: Atom.to_string(reason))
+            error
+
+          result ->
+            result
+        end
+      end)
+
+    case Enum.find(results, &match?({:error, _}, &1)) do
+      nil -> {:ok, Enum.map(results, &elem(&1, 1))}
+      error -> error
+    end
+  end
+
+  defp valid_entries(nil, _), do: :ok
+  defp valid_entries(%{label_id: nil, entries: entries}, _) when entries == %{}, do: :ok
+
+  defp valid_entries(row, config) do
+    expected =
+      FilterProfile.specifications(row.id, config[:allowed_email], row.nonce, row.label_id)
+
+    actual = Map.new(row.entries, fn {key, entry} -> {key, entry["spec"]} end)
+    if actual == expected, do: :ok, else: {:error, :filter_drift}
+  end
+
+  defp activation_allowed(profile) do
+    rows = Repo.all(__MODULE__, log: false)
+
+    if Enum.all?(rows, &(&1.state == "disabled" and FilterProfile.known?(&1.id))) and
+         (profile == "primary" or
+            Enum.any?(rows, &(&1.id == "primary" and &1.state == "disabled"))),
+       do: :ok,
+       else: {:error, :invalid_transition}
   end
 
   defp prepare(row, config, token) do
@@ -108,22 +194,11 @@ defmodule EmailSucks.Gmail.FilterExperiment do
 
   defp specifications(%{label_id: nil} = row, config, token) do
     with {:ok, label} <- FilterMail.label(config, token, row.nonce) do
-      criteria = %{
-        "from" => "robertguss@gmail.com",
-        "to" => config[:allowed_email],
-        "subject" => "phase0-filter-trash-001",
-        "query" => "\"postman-probe-#{row.nonce}\""
-      }
-
       entries =
         Map.new(
-          [
-            {"trash", %{"addLabelIds" => ["TRASH"]}},
-            {"hold", %{"addLabelIds" => [label], "removeLabelIds" => ["INBOX"]}}
-          ],
-          fn {key, action} ->
-            {key,
-             %{"state" => "planned", "spec" => %{"criteria" => criteria, "action" => action}}}
+          FilterProfile.specifications(row.id, config[:allowed_email], row.nonce, label),
+          fn {key, spec} ->
+            {key, %{"state" => "planned", "spec" => spec}}
           end
         )
 
@@ -153,7 +228,8 @@ defmodule EmailSucks.Gmail.FilterExperiment do
           case FilterProvider.create(
                  Keyword.put(config, :filter_lab_label_id, row.label_id),
                  token,
-                 entry["spec"]
+                 entry["spec"],
+                 row.id
                ) do
             {:ok, filter} ->
               if filter["id"] in row.baseline_ids do
@@ -184,6 +260,10 @@ defmodule EmailSucks.Gmail.FilterExperiment do
   end
 
   defp disable(row, config, token) do
+    with {:ok, row} <- remove_filters(row, config, token), do: finish_disable(row, config, token)
+  end
+
+  defp remove_filters(row, config, token) do
     row = save(row, state: "disabling")
 
     with {:ok, row} <-
@@ -194,8 +274,13 @@ defmodule EmailSucks.Gmail.FilterExperiment do
            ),
          {:ok, filters} <- FilterProvider.list(config, token),
          row = record_baseline_change(row, filters),
-         :ok <- all_absent(row, filters),
-         {:ok, row} <- snapshot_mail(row, config, token),
+         :ok <- all_absent(row, filters) do
+      {:ok, row}
+    end
+  end
+
+  defp finish_disable(row, config, token) do
+    with {:ok, row} <- snapshot_mail(row, config, token),
          {:ok, row} <- restore_mail(row, config, token),
          :ok <- no_eligible_held_mail(row, config, token) do
       {:ok, save(row, state: "disabled")}
@@ -260,7 +345,9 @@ defmodule EmailSucks.Gmail.FilterExperiment do
   defp inspect_filters(row, config, token) do
     with {:ok, filters} <- FilterProvider.list(config, token),
          :ok <- originals_unchanged(row, filters),
-         true <- row.state == "active" and map_size(row.entries) == 2,
+         true <-
+           row.state == "active" and
+             Enum.sort(Map.keys(row.entries)) == Enum.sort(FilterProfile.keys(row.id)),
          true <-
            Enum.all?(row.entries, fn {_, e} ->
              case resolve(row, e, filters) do
@@ -268,7 +355,7 @@ defmodule EmailSucks.Gmail.FilterExperiment do
                _ -> false
              end
            end),
-         {:ok, messages} <- FilterMail.messages(config, token, row.nonce) do
+         {:ok, messages} <- FilterMail.messages(config, token, row.nonce, row.id) do
       {:ok, save(row, observed: length(messages), excluded: Enum.count(messages, &excluded?/1))}
     else
       false -> {:error, :filter_drift}
@@ -279,7 +366,7 @@ defmodule EmailSucks.Gmail.FilterExperiment do
   defp no_eligible_held_mail(%{label_id: nil}, _, _), do: :ok
 
   defp no_eligible_held_mail(row, config, token) do
-    with {:ok, messages} <- FilterMail.held_messages(config, token, row.label_id) do
+    with {:ok, messages} <- FilterMail.held_messages(config, token, row.label_id, row.id) do
       if Enum.all?(messages, &excluded?/1), do: :ok, else: {:error, :filter_cleanup_pending}
     end
   end
@@ -293,7 +380,7 @@ defmodule EmailSucks.Gmail.FilterExperiment do
   defp snapshot_mail(%{label_id: nil} = row, _, _), do: {:ok, row}
 
   defp snapshot_mail(row, config, token) do
-    with {:ok, messages} <- FilterMail.held_messages(config, token, row.label_id) do
+    with {:ok, messages} <- FilterMail.held_messages(config, token, row.label_id, row.id) do
       {:ok,
        save(row,
          mail: Map.merge(Map.new(messages, &{&1["id"], "pending"}), row.mail)

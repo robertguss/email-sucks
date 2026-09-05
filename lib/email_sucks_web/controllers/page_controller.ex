@@ -18,6 +18,10 @@ defmodule EmailSucksWeb.PageController do
       controlled: EmailSucks.Gmail.controlled_summary(get_session(conn, :gmail_session)),
       batch: EmailSucks.Gmail.batch_summary(get_session(conn, :gmail_session)),
       filters: EmailSucks.Gmail.filter_summary(get_session(conn, :gmail_session)),
+      arrival_filters:
+        EmailSucks.Gmail.filter_summary(get_session(conn, :gmail_session), "arrival-primary-v1"),
+      gmail_filter_recovery:
+        EmailSucks.Gmail.filter_recovery_required?(get_session(conn, :gmail_session)),
       gmail_filter_settings:
         EmailSucks.Gmail.filter_settings_access?(get_session(conn, :gmail_session)),
       csrf_token: get_csrf_token(),

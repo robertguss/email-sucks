@@ -61,8 +61,13 @@ defmodule EmailSucksWeb.GoogleController do
     end
   end
 
-  def filters(conn, %{"action" => action}) do
-    case Gmail.filter_experiment(get_session(conn, :gmail_session), action) do
+  def filters(conn, %{"action" => action}), do: filter_action(conn, action, "primary")
+
+  def arrival_filters(conn, %{"action" => action}),
+    do: filter_action(conn, action, "arrival-primary-v1")
+
+  defp filter_action(conn, action, profile) do
+    case Gmail.filter_experiment(get_session(conn, :gmail_session), action, profile) do
       {:ok, %{state: state}} ->
         conn
         |> put_flash(
