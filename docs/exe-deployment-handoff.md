@@ -1,6 +1,6 @@
 # Deployment and session handoff
 
-Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide describes the existing deployment, not instructions to provision a replacement VM. No secrets are stored here.
+Updated 2026-09-05 UTC. **Session update at 11:52 UTC:** the owner chose to continue in the original app. SSH and Gmail browser access are restored. The arrival rehearsal is now paused at batch revision two with one saved released member and two pending; Gmail has two released and one still held. Diagnostics were removed and readiness passed. Awaiting the owner’s new `phase0-arrival-001` message before recovery. Historical access-blocker/stopping-point details below are superseded by this update and PROGRESS.md. Read [PROGRESS.md](../PROGRESS.md) first. This guide describes the existing deployment, not instructions to provision a replacement VM. No secrets are stored here.
 
 ## Where the app runs
 
