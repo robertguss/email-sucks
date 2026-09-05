@@ -59,7 +59,8 @@ starting intent before any filter journal/provider write exists. No cross-model 
 
 ## Hosted validation
 
-Pending reviewed deployment. The fresh 18:34 UTC encrypted archive was copied to
+Reviewed implementation is pushed at `d034e6e`; deployment awaits owner unlock
+of 1Password for SSH signing. Live remains `58e23a5`, with no trial active. The fresh 18:34 UTC encrypted archive was copied to
 the owner Mac, checksum matched and full decryption authenticated. Before live
 activation, verify migrations/readiness, web-only queue configuration, old journal
 fingerprints and the authenticated trial page. Save original filters and the exact

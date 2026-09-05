@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (usable saved delivery deployed and verified)
+Last updated: 2026-09-05 UTC (controlled trial implemented; deployment awaiting SSH unlock)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -65,8 +65,12 @@ Build the [usable controlled delivery experiment](tasks/plan.md), following its
 [task checklist](tasks/todo.md). The owner agreed to evaluate technical and product
 viability together: a real finite batch view, bounded test intake, visible next
 delivery, Check Now and review. The saved test batch view is deployed and verified.
-The durable Gmail scheduling design is recorded in ADR 0003; implementation of
-bounded intake, scheduled execution and Check Now is underway. Retain all remaining
+The controlled trial is implemented and pushed at `d034e6e`: bounded intake,
+five-minute delivery, durable Check Now, trial-only stop/restore and per-delivery
+review. All 253 backend / 60 browser tests and review fixes pass. Deployment is
+waiting for the owner to unlock 1Password for SSH signing. No trial filter is
+active; live remains `58e23a5`. After deployment, verify the runtime and request
+the first owner-sent fixture. [Trial evidence](docs/evidence/phase-0/2026-09-05-delivery-trial.md). Retain all remaining
 Phase 0 gates before broader everyday-mailbox use. This supersedes diagnostic-by-
 diagnostic expansion as the immediate work order; it does not mark Phase 0 complete.
 

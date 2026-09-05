@@ -12,6 +12,28 @@ with a real saved batch view. Phase 0 remains open; the experiment does not auth
 broad mailbox interception or waive operational/device gates. The history proof
 below is complete and no longer the next implementation milestone.
 
+## Current stopping point — trial ready; SSH signing locked
+
+Controlled trial implementation is committed and pushed at `d034e6e`. 253 backend
+and 60 browser tests pass, plus formatting, compilation with warnings as errors and
+TypeScript. Review `email-sucks-trial-review-20260905-144036` completed; all three
+findings are fixed with regressions. See [trial evidence](evidence/phase-0/2026-09-05-delivery-trial.md).
+
+The next SSH archive transfer waited for 1Password signing. Its lock screen requires
+the owner account password before Touch ID can be used. The waiting transfer was
+terminated; build/migration/deployment has not run. After owner unlock, resume
+archive `d034e6e`, build with both compose files, then `.local/deploy-trial.sh`.
+Do not use only the base compose file. Live remains `58e23a5`, no trial is active.
+
+Fresh 18:34 UTC encrypted backup is copied/checksummed/fully authenticated on the
+owner Mac. Private `hosted-cougar-cedar/delivery-trial/before.json` contains the three
+original filters and five journal fingerprints; `recovery.md` is prepared. After
+migration compare fingerprints, verify web `gmail_delivery: 1` and credential-free
+worker, readiness and monitor. Then activate the trial, save exact owned filter
+and marker on the private recovery card, and request the first owner fixture.
+Do not send email as the agent. Trial Stop cleans up only its own profile;
+account disconnect remains all-profile. User evaluation/live timing remain open.
+
 ## Current session update — usable saved delivery verified
 
 Image `58e23a5` is live. `/batch` displays all three saved messages with persistent
