@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (ordinary arrival implementation reviewed; SSH signing blocks deployment)
+Last updated: 2026-09-05 UTC (ordinary arrival deployed and active; awaiting owner fixture)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -22,12 +22,14 @@ interception, continuous sync and sending remain disabled. Hosted read-only
 sign-in and preview have live evidence; the controlled app hold/release now also
 has live provider evidence, including recovery after a web restart.
 
-**Current status:** the reviewed filter lifecycle and operational monitor code are
-live at `6679507`. All 186 backend tests and nine monitor runner tests pass; the
-33 browser tests passed for the unchanged filter UI. Hosted systemd dry-run and
-worker-outage detection/recovery passed. The monitor timer is installed but
-inactive/disabled: no external workspace, heartbeat or alert delivery is configured.
-[Monitor evidence](docs/evidence/phase-0/2026-09-05-operational-monitor.md).
+**Current status:** the reviewed ordinary-arrival implementation is live at
+`75f7f0e`. All 198 backend and 40 browser tests pass, plus compilation, formatting
+and TypeScript. One bounded Hold-only filter is active with zero pending/errors,
+zero observed fixtures and no baseline drift. Original filters, the completed
+Trash journal and released batch are unchanged. Hosted readiness and monitor
+check-only are healthy. [Activation evidence](docs/evidence/phase-0/2026-09-05-ordinary-arrival-activation.md).
+The monitor timer remains inactive/disabled pending external workspace and alert
+setup; its earlier [fault detection evidence](docs/evidence/phase-0/2026-09-05-operational-monitor.md) remains valid.
 
 **Latest verified results:** the owner-sent overlap fixture arrived unread in Trash,
 outside Inbox, with its test label. Guarded cleanup made zero message writes,
@@ -53,17 +55,13 @@ proof remains valid.
 
 ## Next action
 
-The ordinary Hold-only arrival slice is implemented locally with an independent
-`arrival-primary-v1` journal and fixed fixture criteria. All 198 backend and 40
-browser tests pass, as do formatting, compilation and TypeScript checks. Independent
-review is complete and both findings are fixed. Deployment is blocked by the Mac
-1Password SSH agent failing to sign; unlock/authorize the existing agent, then
-deploy and verify tracked activation before requesting one owner-sent fixture.
-[Implementation evidence](docs/evidence/phase-0/2026-09-05-ordinary-arrival-implementation.md). See [ordinary arrival plan](docs/phase-0-ordinary-arrival.md). Broader
-receiving/thread cases remain separate, preserving the completed one-shot journal.
-The overlap experiment is complete and disabled; no owner send is pending and
-agent sending remains unauthorized. Its retained Trash fixture is intentionally
-excluded, not stranded recovery work.
+Await one owner-sent ordinary fixture using the exact sender, recipient, subject
+and fresh marker displayed in the active ordinary arrival panel. Then inspect
+message labels, disable the owned filter, restore eligible mail and verify repeat
+cleanup. Exact ownership and recovery instructions are saved privately on the
+owner Mac. See [ordinary arrival plan](docs/phase-0-ordinary-arrival.md).
+The prior Trash experiment remains complete and disabled; its retained fixture is
+intentionally excluded. Agent sending remains unauthorized. SSH access is restored.
 
 Operational setup next needs the owner's existing Better Stack/Sentry workspace
 and independent alert destination. The monitor code and runbook are ready; then

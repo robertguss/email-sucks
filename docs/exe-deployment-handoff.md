@@ -4,7 +4,19 @@ Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide
 describes the existing deployment, not instructions to provision a replacement
 VM. No secrets are stored here.
 
-## Current session update — ordinary arrival ready; SSH signing blocked
+## Current session update — ordinary arrival active
+
+SSH signing is restored. Reviewed image `75f7f0e` is deployed; web/worker readiness
+and monitor check-only are healthy. The authenticated connection check passed.
+One ordinary Hold-only filter is active with zero pending/errors/observed fixtures,
+no baseline drift and the original three filters unchanged. Primary remains
+disabled; batch remains released revision four. Exact owned criteria/ID/marker and
+before/inspection snapshots are private on the owner Mac under
+`~/.config/email-sucks/hosted-cougar-cedar/ordinary-arrival/`.
+Await one owner fixture from the active panel before inspection and tracked cleanup.
+No agent send is authorized. [Activation evidence](evidence/phase-0/2026-09-05-ordinary-arrival-activation.md).
+
+## Previous session update — ordinary arrival ready; SSH signing blocked
 
 The ordinary Hold-only profile is implemented and reviewed locally; 198 backend
 and 40 browser tests plus formatting, compilation and TypeScript pass. Both

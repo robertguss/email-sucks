@@ -1,8 +1,8 @@
 # Bounded ordinary-arrival proof
 
-Status: implemented and independently reviewed; both findings fixed. All 198 backend
-and 40 browser tests pass. Deployment awaits restored 1Password SSH signing.
-[Implementation evidence](evidence/phase-0/2026-09-05-ordinary-arrival-implementation.md).
+Status: reviewed implementation deployed at `75f7f0e`; one bounded filter is
+active and verified, awaiting the owner fixture. All 198 backend and 40 browser
+tests pass. [Activation evidence](evidence/phase-0/2026-09-05-ordinary-arrival-activation.md).
 This is the next Phase0 experiment, not general interception or scheduled intake.
 
 ## Fixed boundary
