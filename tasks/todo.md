@@ -41,7 +41,8 @@ implement intake and recovery as separate small units before activation.
 - [x] Arrivals during release remain for the next batch; completion leads to the real review view.
 Verification: local scheduler/manual/recovery tests and browser flow pass (253
 backend / 60 browser total). Review fixes, deployment and empty live Check Now pass. Trial active; first owner
-fixture and attended timing/stop evaluation pending.
+fixture passed manual Check Now; a second fixture for timed delivery and stop
+evaluation remains pending.
 Dependencies: 1–3. Likely scope: scheduling facade, delivery page and integration tests;
 separate backend and UI units if needed.
 

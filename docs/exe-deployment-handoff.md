@@ -12,7 +12,7 @@ with a real saved batch view. Phase 0 remains open; the experiment does not auth
 broad mailbox interception or waive operational/device gates. The history proof
 below is complete and no longer the next implementation milestone.
 
-## Current stopping point — trial live; first owner fixture needed
+## Current stopping point — manual delivery passed; timed fixture needed
 
 Image `d034e6e` is deployed and the controlled trial is active. 253 backend / 60
 browser tests and all review fixes pass. Fresh 21:28 UTC backup was copied to the
@@ -26,12 +26,18 @@ under `~/.config/email-sucks/hosted-cougar-cedar/delivery-trial/` includes befor
 post-deploy, activated and empty-check JSON, plus the exact offline recovery card.
 An empty Check Now completed through Oban on attempt one without changing the
 scheduled occurrence. First due time is 21:35:22 UTC, recurring every five minutes.
-No trial fixture has been sent yet. Browser `trialTab` currently shows expanded
-send instructions at `/batch`. Ask owner to send from the exact sender to the
-configured recipient, using the displayed subject and body marker; do not send as
-agent. On 'sent', inspect only this profile's held mail and observe timed delivery.
-Then test another arrival with Check Now and trial Stop/restore, preserving old
-experiments. Record actual owner feedback; full Phase 0 remains open.
+The first owner fixture was observed unread outside Inbox, then delivered by a
+manual Check Now run at 22:35:55 UTC (attempt one). Exact membership, unread and
+unrelated labels, and the 22:40:22 scheduled occurrence were preserved. Browser
+shows one available unreviewed conversation. Operational health is green. Private
+`first-arrival.json` and `first-manual-delivery.json` retain the evidence; the
+scheduled 22:35:22 run was empty. Do not mislabel this as timed delivery.
+
+Next: owner sends one more message using the same displayed criteria/marker and
+leaves Check Now untouched. On 'sent', promptly snapshot held exact metadata and
+watch the scheduled due run. Then verify readback/UI and trial Stop/restore,
+preserving old experiments. Do not send as agent. Record actual owner feedback;
+full Phase 0 remains open. `trialTab` remains on the real delivery view.
 
 Trial Stop is profile-specific; account disconnect retains all-profile cleanup.
 Do not restart/reset the trial after completed stop. General interception remains

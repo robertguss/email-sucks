@@ -69,10 +69,22 @@ The authenticated page activated the exact trial profile. Live readback confirms
 one owned Hold filter with exact saved specification; all three original filters
 are unchanged. Exact filter/nonce/label and recovery details are saved privately.
 An empty Check Now ran through the real Oban executor and completed on attempt one;
-the future scheduled occurrence remained unchanged. No trial message has been sent
-or released yet. The first scheduled time is 21:35:22 UTC, then every five minutes.
-The trial remains active awaiting the owner's first fixture.
+the future scheduled occurrence remained unchanged. The schedule began at
+21:35:22 UTC and repeats every five minutes.
 
-Then observe owner-sent held arrival → scheduled delivery and another arrival →
-Check Now, followed by stop/restore and the owner's actual feedback. Agent email
+The first owner fixture was observed unread outside Inbox under the exact trial
+label. The 22:35:22 scheduled run completed empty. A subsequent manual Check Now
+run released the exact single frozen message at 22:35:55 UTC, completed on attempt
+one with no error, removed only its trial label and added Inbox. Unread and every
+other label were preserved. The 22:40:22 scheduled time did not change. The browser
+shows one available conversation left to review; operational health is green.
+Private before/after metadata and run/job evidence are saved. This verifies manual
+delivery, not a nonempty scheduled delivery. The agent did not invoke Check Now
+for this message; do not infer who initiated the recorded request.
+
+Trial remains active. A second owner fixture is needed for timed delivery; leave
+Check Now untouched while observing the schedule.
+
+Next observe owner-sent held arrival → scheduled delivery, followed by stop/restore
+and the owner's actual feedback. Agent email
 sending is not authorized. Unobserved steps remain open.

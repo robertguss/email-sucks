@@ -70,8 +70,11 @@ five-minute delivery, durable Check Now, trial-only stop/restore and per-deliver
 review. All 253 backend / 60 browser tests and review fixes pass. Deployment and
 runtime checks passed. The exact trial is active, original filters/journals are
 unchanged, and an empty Check Now completed without shifting the scheduled time.
-Await the first owner-sent matching fixture; verify held arrival and timed delivery,
-then a second fixture for Check Now, followed by stop/restore and owner feedback. [Trial evidence](docs/evidence/phase-0/2026-09-05-delivery-trial.md). Retain all remaining
+The first owner fixture passed held arrival and manual Check Now at 22:35:55 UTC:
+one exact message returned unread to Inbox; other labels and schedule unchanged.
+It is visible in the real review page. Await a second fixture for automatic timed
+delivery, then stop/restore and owner feedback. Do not count the manual run as
+scheduled delivery evidence. [Trial evidence](docs/evidence/phase-0/2026-09-05-delivery-trial.md). Retain all remaining
 Phase 0 gates before broader everyday-mailbox use. This supersedes diagnostic-by-
 diagnostic expansion as the immediate work order; it does not mark Phase 0 complete.
 
