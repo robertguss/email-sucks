@@ -274,10 +274,30 @@ defmodule EmailSucks.Gmail.Google do
   @fixture_sender "robertguss@gmail.com"
   @controlled_label "Postman/Controlled-primary-001"
 
-  def controlled_fixture(config, token) do
+  def controlled_fixture(config, token), do: fixture(config, token, @fixture_subject)
+
+  def batch_fixtures(config, token) do
+    Enum.reduce_while(
+      ~w(phase0-batch-001 phase0-batch-002 phase0-batch-003),
+      {:ok, []},
+      fn subject, {:ok, found} ->
+        case fixture(config, token, subject) do
+          {:ok, message} ->
+            if Enum.any?(found, &(&1["id"] == message["id"])),
+              do: {:halt, {:error, :fixture_mismatch}},
+              else: {:cont, {:ok, found ++ [message]}}
+
+          error ->
+            {:halt, error}
+        end
+      end
+    )
+  end
+
+  defp fixture(config, token, subject) do
     with {:ok, body} <-
            mail_get(config, token, "",
-             q: "in:inbox from:#{@fixture_sender} subject:#{@fixture_subject}",
+             q: "in:inbox from:#{@fixture_sender} subject:#{subject}",
              maxResults: 2
            ),
          %{"messages" => [%{"id" => id}]} <- body,
@@ -287,7 +307,7 @@ defmodule EmailSucks.Gmail.Google do
            "INBOX" in message["labelIds"] and
              not Enum.any?(["TRASH", "SPAM", "DRAFT"], &(&1 in message["labelIds"])),
          true <-
-           header(message, "subject") == @fixture_subject and
+           header(message, "subject") == subject and
              mailbox?(header(message, "from"), @fixture_sender) and
              mailbox?(header(message, "to"), config[:allowed_email]) do
       {:ok, message}
@@ -319,17 +339,20 @@ defmodule EmailSucks.Gmail.Google do
     end
   end
 
-  def controlled_label(config, token) do
+  def controlled_label(config, token), do: label(config, token, @controlled_label)
+  def batch_label(config, token), do: label(config, token, "Postman/Controlled-batch")
+
+  defp label(config, token, name) do
     with {:ok, body} <- api_get(config, token, "labels", fields: "labels(id,name)"),
          {:ok, labels} <- items(body, "labels", &(is_binary(&1["id"]) and is_binary(&1["name"]))) do
-      case Enum.filter(labels, &(&1["name"] == @controlled_label)) do
+      case Enum.filter(labels, &(&1["name"] == name)) do
         [%{"id" => id}] ->
           if valid_id?(id), do: {:ok, id}, else: {:error, :provider_unavailable}
 
         [] ->
           # If creation times out, the next attempt resolves the same name before creating.
           with {:ok, %{"id" => id}} <-
-                 api_post(config, token, "labels", %{name: @controlled_label}),
+                 api_post(config, token, "labels", %{name: name}),
                true <- valid_id?(id) do
             {:ok, id}
           else

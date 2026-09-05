@@ -118,42 +118,17 @@ defmodule EmailSucks.Gmail.Controlled do
   defp intent(row, _, _, _), do: {:ok, row}
 
   defp reconcile(row, config, token) do
-    with {:ok, message} <- Google.controlled_message(config, token, row.message_id),
-         :ok <- usable(message) do
-      if matches?(row, message) do
-        {:ok, verified(row)}
-      else
-        if row.state in ["hold_pending", "release_pending"] do
-          {add, remove} =
-            if row.state == "hold_pending",
-              do: {[row.label_id], ["INBOX"]},
-              else: {["INBOX"], [row.label_id]}
-
-          with {:ok, _} <- Google.modify_message(config, token, row.message_id, add, remove),
-               {:ok, actual} <- Google.controlled_message(config, token, row.message_id),
-               :ok <- usable(actual),
-               true <- matches?(row, actual) do
-            {:ok, verified(row)}
-          else
-            false -> {:error, :verification_failed}
-            error -> error
-          end
-        else
-          {:error, :verification_failed}
-        end
-      end
+    with :ok <-
+           EmailSucks.Gmail.Projection.reconcile(
+             config,
+             token,
+             row.message_id,
+             row.label_id,
+             row.state in ["hold_pending", "held"],
+             row.state in ["hold_pending", "release_pending"]
+           ) do
+      {:ok, verified(row)}
     end
-  end
-
-  defp usable(message) do
-    if Enum.any?(["TRASH", "SPAM", "DRAFT"], &(&1 in message["labelIds"])),
-      do: {:error, :fixture_mismatch},
-      else: :ok
-  end
-
-  defp matches?(row, message) do
-    held = row.state in ["hold_pending", "held"]
-    row.label_id in message["labelIds"] == held and "INBOX" in message["labelIds"] != held
   end
 
   defp verified(row) do

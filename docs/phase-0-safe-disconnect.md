@@ -1,11 +1,11 @@
 # Safe disconnect for the controlled prototype
 
-The app now offers a reviewed **Disconnect Gmail safely** action. It is separate from browser sign-out. Its scope is the one durable controlled-message experiment; this prototype has no automatic interception filters or general held-mail inventory.
+The app now offers a reviewed **Disconnect Gmail safely** action. It is separate from browser sign-out. Its scope is the durable single-message experiment and the [three-message batch](phase-0-controlled-batch.md); this prototype has no automatic interception filters or general held-mail inventory.
 
 ## Order and recovery
 
 1. Save `restoring` on the account and pause ordinary mailbox operations.
-2. If an experiment exists, release its frozen message ID to Inbox and read Gmail back. Missing, trashed, spam, or unverified messages stop disconnect and retain credentials. With no experiment, no mailbox search or mutation is needed.
+2. If experiments exist, release the single frozen message and every saved batch member to Inbox and read Gmail back. Missing, trashed, spam, or unverified messages stop disconnect and retain credentials. With no experiments, no mailbox search or mutation is needed.
 3. Save `revoking` before calling Google's revoke endpoint with the saved refresh token in a form body. A retry at this stage does not refresh access or read/change mail again.
 4. On HTTP 200, clear local credentials, session access and pending OAuth flows atomically. Keep the pinned account identity and controlled recovery record.
 

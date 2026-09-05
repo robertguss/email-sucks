@@ -193,7 +193,12 @@ defmodule EmailSucks.Gmail do
           with_access(
             session,
             fn account, tokens ->
-              with :ok <- Controlled.restore_for_disconnect(config(), tokens["access_token"]) do
+              with :ok <- Controlled.restore_for_disconnect(config(), tokens["access_token"]),
+                   :ok <-
+                     EmailSucks.Gmail.Batch.restore_for_disconnect(
+                       config(),
+                       tokens["access_token"]
+                     ) do
                 account =
                   account
                   |> Ecto.Changeset.change(disconnect_phase: "revoking")
@@ -234,6 +239,21 @@ defmodule EmailSucks.Gmail do
       {:error, :invalid_ciphertext} -> {:error, :reconnect_required}
       error -> error
     end
+  end
+
+  def batch_summary(session) do
+    if account(session), do: EmailSucks.Gmail.Batch.summary(), else: nil
+  end
+
+  def batch(session, action) do
+    with_access(session, fn account, tokens ->
+      result = EmailSucks.Gmail.Batch.run(config(), tokens["access_token"], action)
+
+      if result in [{:error, :missing_scope}, {:error, :reconnect_required}],
+        do: update_current(account, status: "reconnect_required")
+
+      result
+    end)
   end
 
   def controlled_summary(session) do

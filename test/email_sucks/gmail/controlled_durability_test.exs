@@ -17,6 +17,7 @@ defmodule EmailSucks.Gmail.ControlledDurabilityTest do
 
     on_exit(fn ->
       Sandbox.checkout(Repo, sandbox: false)
+      Repo.delete_all(EmailSucks.Gmail.Batch, log: false)
       Repo.delete_all(Controlled, log: false)
       Repo.delete_all(Account, log: false)
       Sandbox.checkin(Repo)
@@ -145,6 +146,90 @@ defmodule EmailSucks.Gmail.ControlledDurabilityTest do
 
     assert {:ok, :already_invalid} = retry_disconnect(session, 100)
     assert Repo.one!(Account).credentials == ""
+  end
+
+  test "batch release survives a killed second member and excludes competing work" do
+    {:ok, session} =
+      Gmail.connect(%{subject: "subject", email: "owner@gmail.com"}, %{
+        "access_token" => "test",
+        "refresh_token" => "test",
+        "expires_at" => System.system_time(:second) + 3600
+      })
+
+    Repo.insert!(
+      %EmailSucks.Gmail.Batch{
+        id: "primary",
+        state: "held",
+        label_id: "Label_batch",
+        entries: Map.new(~w(1 2 3), &{&1, %{"state" => "held", "error" => nil}})
+      },
+      log: false
+    )
+
+    {:ok, provider} = Agent.start_link(fn -> %{released: [], writes: []} end)
+    parent = self()
+
+    Req.Test.stub(__MODULE__, fn conn ->
+      path = String.replace_prefix(conn.request_path, "/gmail/v1/users/me/messages/", "")
+
+      case {conn.method, String.split(path, "/")} do
+        {"GET", [id]} ->
+          labels =
+            if id in Agent.get(provider, & &1.released),
+              do: ["INBOX", "UNREAD"],
+              else: ["Label_batch", "UNREAD"]
+
+          Req.Test.json(conn, %{"id" => id, "labelIds" => labels})
+
+        {"POST", [id, "modify"]} ->
+          Agent.update(provider, fn s ->
+            %{s | released: [id | s.released], writes: [id | s.writes]}
+          end)
+
+          if id == "2" do
+            send(parent, :second_applied)
+
+            receive do
+              :never -> :ok
+            end
+          end
+
+          Req.Test.json(conn, %{"id" => id})
+      end
+    end)
+
+    {pid, monitor} =
+      spawn_monitor(fn ->
+        :ok = Sandbox.checkout(Repo, sandbox: false)
+
+        receive do
+          :start -> Gmail.batch(session, "release")
+        end
+      end)
+
+    Req.Test.allow(__MODULE__, self(), pid)
+    send(pid, :start)
+    assert_receive :second_applied, 3000
+    assert %{released: 1, pending: 2} = Gmail.batch_summary(session)
+    assert {:error, :operation_in_progress} = Gmail.batch(session, "release")
+    assert {:error, :operation_in_progress} = Gmail.disconnect(session)
+    Process.exit(pid, :kill)
+    assert_receive {:DOWN, ^monitor, :process, ^pid, :killed}
+    # The crashed checkout must release its connection lock before recovery.
+    result =
+      Enum.reduce_while(1..100, nil, fn _, _ ->
+        case Gmail.batch(session, "recover") do
+          {:error, :operation_in_progress} ->
+            Process.sleep(10)
+            {:cont, nil}
+
+          result ->
+            {:halt, result}
+        end
+      end)
+
+    assert {:ok, %{released: 3, state: "released"}} = result
+    assert Enum.sort(Agent.get(provider, & &1.writes)) == ~w(1 2 3)
   end
 
   defp retry_disconnect(session, retries) do

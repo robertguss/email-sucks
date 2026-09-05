@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import RecentMessages from '../components/RecentMessages';
+import GmailBatch, { type BatchStatus } from '../components/GmailBatch';
 import GmailDisconnect from '../components/GmailDisconnect';
 
 type Props = {
@@ -10,11 +11,12 @@ type Props = {
   gmail_checked: boolean;
   gmail_disconnect_phase?: 'restoring' | 'revoking' | null;
   controlled?: { state: string; verified_at: number | null; repeat_revision?: number } | null;
+  batch?: BatchStatus | null;
   csrf_token: string;
   notice: string | null;
 };
 
-export default function PhaseZero({ gmail_configured, gmail_connected, gmail_email, gmail_reconnect, gmail_checked, gmail_disconnect_phase, controlled, csrf_token, notice }: Props) {
+export default function PhaseZero({ gmail_configured, gmail_connected, gmail_email, gmail_reconnect, gmail_checked, gmail_disconnect_phase, controlled, batch, csrf_token, notice }: Props) {
   return (
     <main className="preview">
       <Head title="Inbox preview · Deliberate email" />
@@ -81,6 +83,7 @@ export default function PhaseZero({ gmail_configured, gmail_connected, gmail_ema
           </form>
         </section>
       )}
+      {gmail_connected && <GmailBatch batch={batch ?? null} csrfToken={csrf_token} />}
       {gmail_email && <GmailDisconnect phase={gmail_disconnect_phase ?? null} csrfToken={csrf_token} />}
       {gmail_email && (
         <details className="connection-details">
@@ -104,7 +107,7 @@ export default function PhaseZero({ gmail_configured, gmail_connected, gmail_ema
         </details>
       )}
       <footer className="preview-footer">
-        <p>Only the controlled test can change a message. Automatic interception and sending are not enabled.</p>
+        <p>Only the controlled tests can change messages. Automatic interception and sending are not enabled.</p>
         <Link href="/phase-0/contract">Read the delivery contract</Link>
       </footer>
     </main>

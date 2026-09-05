@@ -13,7 +13,7 @@ for (const phase of [null, 'restoring', 'revoking']) {
       await page.setViewportSize({ width, height: 1100 });
       await page.goto('/');
       if (phase === null) {
-        await expect(page.getByRole('button', { name: 'Restore test message and revoke access' })).not.toBeVisible();
+        await expect(page.getByRole('button', { name: 'Restore test mail and revoke access' })).not.toBeVisible();
         await page.getByText('Disconnect Gmail safely', { exact: true }).click();
       } else {
         await expect(page.getByRole('heading', { name: 'Finish disconnecting' })).toBeVisible();
@@ -26,7 +26,7 @@ for (const phase of [null, 'restoring', 'revoking']) {
       await page.screenshot({ path: `../.local/disconnect-${phase ?? 'review'}-${width}.png`, fullPage: true });
       await page.route('**/gmail/disconnect', route => route.fulfill({ contentType: 'text/html', body: 'Submitted' }));
       const request = page.waitForRequest('**/gmail/disconnect');
-      await page.getByRole('button', { name: phase ? 'Resume safe disconnect' : 'Restore test message and revoke access' }).click();
+      await page.getByRole('button', { name: phase ? 'Resume safe disconnect' : 'Restore test mail and revoke access' }).click();
       const submitted = await request;
       expect(submitted.method()).toBe('POST');
       expect(Object.fromEntries(new URLSearchParams(submitted.postData()!))).toEqual({ _csrf_token: 'fixture-csrf', confirm: 'disconnect' });

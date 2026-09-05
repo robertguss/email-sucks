@@ -276,6 +276,22 @@ defmodule EmailSucksWeb.GoogleControllerTest do
     end
   end
 
+  test "batch actions require CSRF and a current session", %{conn: conn} do
+    for action <- ["hold", "release", "recover"] do
+      assert_raise Plug.CSRFProtection.InvalidCSRFTokenError, fn ->
+        conn |> put_private(:plug_skip_csrf_protection, false) |> post("/gmail/batch/#{action}")
+      end
+
+      Req.Test.stub(__MODULE__, fn _ -> flunk("unauthorized batch provider request") end)
+
+      denied =
+        conn |> bypass_csrf() |> post("/gmail/batch/#{action}", %{"message_ids" => ["arbitrary"]})
+
+      assert redirected_to(denied) == "/"
+      assert denied.assigns.flash["info"] =~ "Connect Gmail"
+    end
+  end
+
   test "disconnect requires CSRF, explicit intent and a current session", %{conn: conn} do
     assert_raise Plug.CSRFProtection.InvalidCSRFTokenError, fn ->
       conn

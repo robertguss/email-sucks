@@ -8,6 +8,8 @@ This is the current status and next-action tracker. The [product specification](
 
 **Phase 0 is in progress; its exit gate has not passed.** The authenticated app previews five Inbox messages and now implements one controlled message hold/release with durable recovery. Automatic interception, continuous sync and sending remain disabled. Hosted read-only sign-in and preview have live evidence; the controlled app hold/release now also has live provider evidence, including recovery after a web restart.
 
+**Active work:** bounded three-fixture Gmail batch: freeze membership before writes, track each message independently, recover partial outcomes, and include the batch in safe disconnect. Implementation and live evidence pending.
+
 **Latest verified result:** live request crashes after accepted Gmail hold and release writes both recovered across web restart with zero repeated writes. The same fixture remains released and unread. [Crash evidence](docs/evidence/phase-0/2026-09-05-live-crash-recovery.md).
 
 **Latest implemented slice:** safe disconnect for the controlled experiment: durable restore-before-revoke ordering, paused mailbox actions, serialized OAuth/refresh/recovery, and explicit retry states. See the [safe disconnect contract](docs/phase-0-safe-disconnect.md). The preceding hold/restart/release flow retains [live provider and authenticated incognito evidence](docs/evidence/phase-0/2026-09-05-controlled-app-flow.md).
