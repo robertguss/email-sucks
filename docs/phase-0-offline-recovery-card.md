@@ -1,6 +1,12 @@
 # Gmail recovery card
 
-**Preparation copy — not yet rehearsed on the test account. No interception exists in the current prototype.** Before any activation, fill in the private fields below, verify these steps in the actual Gmail interface, and save/print a copy outside Render and this application. Do not store credentials on this card.
+**General interception preparation copy. The one-fixture app-outage recovery was rehearsed on 2026-09-05; no interception exists in the current prototype.** Before any activation, fill in the private fields below, verify these steps in the actual Gmail interface, and save/print a copy outside the exe.dev VM and this application. Do not store credentials on this card.
+
+## Current controlled prototype: rehearsed steps
+
+The actual label is `Postman/Controlled-primary-001`, not the future `Postman/Held`. Open that label in Gmail, select only the `phase0-primary-001` synthetic fixture checkbox, and choose **Move to → Inbox**. Verify Inbox membership and unread status without opening the message. Gmail retained the controlled label during the rehearsal; its count did not mean mail was still held. After the app returns, use **Release to Inbox** to reconcile the record and remove that residual controlled label. There are no app-owned interception filters to delete in this prototype.
+
+These steps passed with both app processes stopped. See [dated evidence](evidence/phase-0/2026-09-05-independent-recovery.md). A private copy is saved outside the app; the general interception, revoked-access, all-page and new-arrival rehearsals below remain open.
 
 ## Private activation record
 

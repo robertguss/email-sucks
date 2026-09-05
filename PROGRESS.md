@@ -12,7 +12,7 @@ This is the current status and next-action tracker. The [product specification](
 
 ## Next action
 
-The controlled repeat-test action and safe disconnect are deployed at `c3f5621`; 129 backend and 18 browser checks passed. The owner-authorized live rehearsal now starts with a held fixture: safe disconnect restored and verified it before Google accepted revocation, cleared local credentials/session, then reconnect and provider read-back confirmed Inbox membership and unread status. [Evidence](docs/evidence/phase-0/2026-09-05-held-disconnect.md). The account is connected again and the fixture is released. Next: rehearse independent recovery with the app unavailable; device notification behavior and live mid-request crash recovery also remain open. The manual Gmail filter exercise is superseded and must not be repeated. The owner has authorized implementation, verification, pushing to main and deployment to the existing exe.dev VM. Group any human Google instructions into one manageable batch.
+The controlled repeat-test action and safe disconnect are deployed at `c3f5621`; 129 backend and 18 browser checks passed. The owner-authorized live rehearsal now starts with a held fixture: safe disconnect restored and verified it before Google accepted revocation, cleared local credentials/session, then reconnect and provider read-back confirmed Inbox membership and unread status. [Evidence](docs/evidence/phase-0/2026-09-05-held-disconnect.md). The account is connected again and the fixture is released. Direct Gmail recovery with web/worker stopped and an independent local encrypted restore now also passed for the fixture; [evidence](docs/evidence/phase-0/2026-09-05-independent-recovery.md). Next dependencies are owner device details and independent alert/storage account setup; live mid-request crash recovery also remains open. The manual Gmail filter exercise is superseded and must not be repeated. The owner has authorized implementation, verification, pushing to main and deployment to the existing exe.dev VM. Group any human Google instructions into one manageable batch.
 
 The owner waived manual export of disposable test mail. Product-wide recovery requirements remain in force. Native notification proof needs actual owner devices, and full Phase 0 acceptance still needs empirical evidence.
 
@@ -60,10 +60,10 @@ Checked items require their stated evidence; implementation alone does not pass 
 - [ ] **0.2 — Interception matrix:** prove primary address, aliases, forwarding, Bcc, lists, existing threads, unusual mail and filter conflicts; document unsupported cases.
 - [ ] **0.3 — Notification/badge matrix:** observe held arrival, bypass and release on actual devices; choose and prove the app alert behavior.
 - [ ] **Real finite release:** implement per-message progress and prove fixed membership through retries, partial success, lost responses, worker crashes and concurrent arrivals. The [synthetic journal](docs/evidence/phase-0/2026-09-04-release-journal.md) now covers claims, partial outcomes and stale workers; synthetic account recovery races now pass; live Gmail effects and provider recovery races remain unproven.
-- [ ] **0.4 — Panic and direct Gmail recovery:** [offline recovery card](docs/phase-0-offline-recovery-card.md) prepared but not filled/rehearsed; disable interception before restoring held mail, and rehearse with the app unavailable.
+- [ ] **0.4 — Panic and direct Gmail recovery:** [offline recovery card](docs/phase-0-offline-recovery-card.md) now includes rehearsed one-fixture direct Gmail recovery with web/worker stopped and a private offline copy. General interception, all-page, revoked-access and new-arrival proof remain open.
 - [ ] **Safe disconnect:** the [controlled flow](docs/phase-0-safe-disconnect.md) implements restore/verify before revoke with durable retries; live restoration from held, accepted revocation, cleanup and reconnect passed for the single fixture; future general interception recovery and live mid-request crash recovery remain unproven. Browser sign-out remains separate.
 - [ ] **Independent monitoring:** configure Sentry and Better Stack with redaction; test meaningful failed-work and missed-heartbeat alerts, including total VM outage.
-- [ ] **Backups and restore:** configure independent encrypted PostgreSQL exports and R2 copies; restore both into isolated environments with Gmail writes/jobs disabled and verify reconciliation and measured losses/recovery time.
+- [ ] **Backups and restore:** one-off encrypted hosted export restored successfully on the owner Mac with stale held metadata, Gmail disabled and no Oban process; configure scheduled independent PostgreSQL exports and R2 copies; restore both into isolated environments with Gmail writes/jobs disabled and verify reconciliation and measured losses/recovery time.
 - [ ] **Exit review:** review the recorded evidence and explicitly accept provider/device limitations and state semantics. Only then move to full product implementation.
 
 ### Remaining external decisions and proof
@@ -104,6 +104,7 @@ The state contract resolves implementation semantics under the autonomous-work i
 
 | Date | Result | Reference |
 |---|---|---|
+| 2026-09-05 | Direct Gmail app-outage recovery and independent local restore passed for one fixture | [Evidence](docs/evidence/phase-0/2026-09-05-independent-recovery.md); full operational gates remain open |
 | 2026-09-05 | Controlled safe disconnect from held passed live; repeat action deployed | 129 backend / 18 browser tests; [evidence](docs/evidence/phase-0/2026-09-05-held-disconnect.md) |
 | 2026-09-04 | Durable scheduling, provider/notification fault tests, encrypted restore and read-only inventory | 98 backend / seven browser tests; current build and restore rehearsal pass |
 | 2026-09-04 | Recovery fence, finite batch review and DST occurrence resolution | 78 backend tests; local evidence above |
