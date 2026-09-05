@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated: 2026-09-05 UTC (ordinary arrival and repeat cleanup passed; history recovery next)
+Last updated: 2026-09-05 UTC (bounded history recovery and isolated restore passed)
 
 This is the current status and next-action tracker. **Resuming in another app:**
 read the
@@ -22,14 +22,16 @@ interception, continuous sync and sending remain disabled. Hosted read-only
 sign-in and preview have live evidence; the controlled app hold/release now also
 has live provider evidence, including recovery after a web restart.
 
-**Current status:** the reviewed ordinary-arrival implementation is live at
-`75f7f0e`. All 198 backend and 40 browser tests pass, plus compilation, formatting
-and TypeScript. The ordinary arrival proof passed: one unread fixture was held and then restored;
-its filter is removed, with zero pending/errors and no baseline drift. Original filters, the completed
-Trash journal and released batch are unchanged. Hosted readiness and monitor
-check-only are healthy. [Arrival and cleanup evidence](docs/evidence/phase-0/2026-09-05-ordinary-arrival.md).
-The monitor timer remains inactive/disabled pending external workspace and alert
-setup; its earlier [fault detection evidence](docs/evidence/phase-0/2026-09-05-operational-monitor.md) remains valid.
+**Current status:** reviewed history recovery image `9ef7fe7` is live. All 218
+backend and 44 browser tests pass, plus compilation, formatting and TypeScript.
+The four saved fixtures passed initial/incremental reads, real Google rejection
+of a deliberately old cursor and automatic rescan, with zero mailbox writes. An
+injected provider failure preserved the checkpoint; authenticated rescan recovered
+and operational health is green. A fresh encrypted backup restored independently
+with all recovery journals matching. [History evidence](docs/evidence/phase-0/2026-09-05-history-recovery.md).
+Both filter experiments are disabled; ordinary mail was restored unread to Inbox.
+Original filters and previous recovery journals remain unchanged. The monitor
+timer remains inactive/disabled pending external workspace and alert setup.
 
 **Latest verified results:** the owner-sent overlap fixture arrived unread in Trash,
 outside Inbox, with its test label. Guarded cleanup made zero message writes,
@@ -55,11 +57,11 @@ proof remains valid.
 
 ## Next action
 
-The bounded read-only history-cursor probe is implemented locally over four saved
-controlled IDs. All 218 backend and 44 browser tests pass; simplification and independent review
-are complete, including both connection-state fixes. Next, commit, migrate and
-deploy from an authenticated fresh backup, then perform guarded live reads.
-[History proof plan](docs/phase-0-history-recovery.md).
+Bounded read-only history recovery is verified and deployed. Continue the remaining
+Phase 0 proof matrix: broader identity/Bcc/thread/bypass arrival cases and
+scheduled release versus Check Now/panic recovery races. General mailbox sync
+remains a separate open gate; the four-ID diagnostic does not establish it.
+[History evidence](docs/evidence/phase-0/2026-09-05-history-recovery.md).
 No new owner email is pending. Both filter experiments are disabled; ordinary mail
 is restored unread to Inbox and the earlier deliberate Trash fixture stays excluded.
 Agent sending remains unauthorized. SSH access is restored.

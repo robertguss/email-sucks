@@ -4,7 +4,25 @@ Updated 2026-09-05 UTC. Read [PROGRESS.md](../PROGRESS.md) first. This guide
 describes the existing deployment, not instructions to provision a replacement
 VM. No secrets are stored here.
 
-## Current session update — ordinary arrival passed and cleaned up
+## Current session update — history recovery and restore passed
+
+Reviewed image `9ef7fe7` is deployed with the additive history journal migration.
+218 backend and 44 browser tests pass. Four fixed saved messages passed initial,
+incremental and forced-old-cursor recovery with zero mailbox writes. Google
+returned a real HTTP404; this does not establish natural saved-cursor expiry.
+Injected HTTP503 retained the checkpoint and failed semantic health. Authenticated
+rescan recovered to revision four, all four available, no error; monitor check-only
+is healthy. Both filters remain disabled and the source batch remains released
+revision four. No owner fixture is pending.
+
+A fresh 17:34 UTC archive restored independently on the owner Mac. Full-row journal
+hashes match live; restored app has Gmail and jobs disabled. The isolated database
+is `email_sucks_history_restore_20260905`; keep it in restore mode. Private history
+evidence is under `~/.config/email-sucks/hosted-cougar-cedar/history-recovery/`.
+Continue remaining arrival/device and scheduled/Check Now/panic race proofs;
+external alert workspace/destination input remains pending. [Evidence](evidence/phase-0/2026-09-05-history-recovery.md).
+
+## Previous session update — ordinary arrival passed and cleaned up
 
 The exact owner fixture arrived unread outside Inbox with the owned test label.
 Guarded tracked cleanup removed one filter and restored one message; repeat cleanup

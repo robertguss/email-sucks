@@ -23,9 +23,43 @@ preserving its checkpoint; pending disconnect and reconnect failures stay visibl
 
 ## Deployment and live proof
 
-Pending deployment. Pre-migration backup from 17:09 UTC was copied to the owner Mac,
-SHA-256 matched, the complete archive authenticated and PostgreSQL's archive
-catalog read successfully. The next proof will use only saved message IDs and
-force an old outbound cursor; it does not claim natural checkpoint expiry.
+Reviewed image `9ef7fe7` deployed at 17:32 UTC. The additive history table migrated
+successfully; web and worker run the same image and readiness passed. The
+pre-migration archive was copied off the VM, checksum matched and fully
+authenticated before migration.
+
+A temporary transport guard allowed only profile, history and exact metadata GETs
+for the four saved IDs. Its self-test rejected a write locally. Initial scan
+committed revision one; incremental scan committed revision two. Replacing only
+one outbound start cursor with `1` produced a real Google HTTP404. The automatic
+full rescan succeeded at revision three, with all four messages available. This
+was forced old-cursor rejection, not natural expiry of the saved checkpoint.
+
+The proof made 22 reads and zero Gmail writes. Before/after metadata and fixed
+membership matched exactly; the entire single, batch and two filter journals were
+unchanged. Both filter experiments remain disabled, and the batch remains released
+at revision four. Private snapshots remain on the owner Mac.
+
+An injected read-only HTTP503 then retained the successful cursor, observations,
+membership, revision, mode and timestamp. The live UI showed the failed check
+alongside last-successful counts. Operational health reported
+`gmail_operation_failed`; the host monitor correctly failed its check-only run
+with `worker_unhealthy`. An authenticated **Rescan saved messages** action recovered
+all four members at revision four, cleared the error and restored healthy monitor
+checks. External notification delivery was not tested or enabled.
+
+## Fresh restore proof
+
+The 17:34 UTC encrypted backup was copied to the owner Mac and its SHA-256 matched
+`fafed52925a560cb94aba5df017dcfdf69fd1413fbf24e7d4ce0a339c9f6f22e`.
+`bin/backup-restore` authenticated the entire archive before restoring into a new
+isolated local database. Full-row hashes for all four journal tables matched the
+live database. The restored application read the successful history checkpoint
+with restore mode enabled, no Oban process and no Gmail configuration.
+
+The first local application check used the development database because that
+configuration does not consume DATABASE_URL; it read not_started and failed its
+assertion without provider calls. The corrected check explicitly selected the
+isolated restored database before application startup and passed.
 
 This is a fixed-fixture diagnostic, not full-mailbox discovery or continuous sync.
