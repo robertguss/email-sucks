@@ -23,7 +23,7 @@ Google documents that [revocation removes all scopes and tokens granted to the O
 
 Automated tests cover ordered restore/read-back/revoke, failed recovery, unverified success, uncertain revoke, invalid tokens, OAuth races, expired sessions, and a killed request with actual independent database commits. Authenticated controller tests cover the explicit POST and CSRF/session boundaries. Browser tests cover review, restoring and revoking states on mobile and desktop.
 
-Do not mark the full Phase 0 safe-disconnect proof complete from these tests. A live revoke-and-reconnect rehearsal remains optional owner work; deploying this feature does not invoke it or remove the current Google connection. Future automatic interception requires disabling and verifying app-owned filters and recovering all held pages before using this flow.
+Do not mark the full Phase 0 safe-disconnect proof complete from these tests. The owner-authorized [live revoke-and-reconnect rehearsal](evidence/phase-0/2026-09-05-safe-disconnect.md) passed with the fixture already released: Google accepted revocation, local credentials/session were cleared, and reconnection plus Inbox/unread verification succeeded. Live restoration from held during disconnect and live mid-request crash recovery remain unproven. Future automatic interception requires disabling and verifying app-owned filters and recovering all held pages before using this flow.
 
 ## Deployment and rollback
 
